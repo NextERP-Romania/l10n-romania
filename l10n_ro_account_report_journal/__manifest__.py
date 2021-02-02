@@ -15,7 +15,10 @@
     "installable": True,
     "depends": ["l10n_ro_declaration"],
     "data": [
-        "report/report_sale_purchase.xml",
+        "report/report_sale_purchase_layout.xml",
+        "report/report_sale_journal_layout.xml",
+        "report/report_purchase_journal_layout.xml",
+        "report/report_sale_purchase_journal.xml",
         "wizard/select_report_sale_purchase_view.xml",
         "security/ir.model.access.csv",
     ],

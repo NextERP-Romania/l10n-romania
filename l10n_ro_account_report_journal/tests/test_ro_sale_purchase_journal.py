@@ -284,11 +284,6 @@ class TestRoSalePurchaseJournal(InvoiceTestCommon):
             ]
         )
 
-    #         print invoices
-    #         for inv in cls.invoices:
-    #             print(f"invoice id={inv.id} date={inv.date} amount_untaxed={inv.amount_untaxed},
-    #             amount_tax={inv.amount_tax} amount_total={inv.amount_total} ")
-
     def assertInvoiceReportValues(self, expected_values_list, journal_type="sale"):
         report_obj = self.env[
             "report.l10n_ro_account_report_journal.report_sale_purchase"

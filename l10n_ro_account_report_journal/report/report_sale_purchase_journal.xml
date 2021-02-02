@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <template id="l10n_ro_account_report_journal.report_sp">
+        <t t-call="web.html_container">
+            <div>
+                <strong>Company:</strong>
+                <span t-esc="company.name" />
+            </div>
+            <div>
+                <strong>Address:</strong>
+                <address
+                    t-field="company.partner_id"
+                    t-options='{"widget": "contact", "fields": ["address","phone", "fax"], "no_marker": false, "no_tag_br": true}'
+                />
+            </div>
+            <div t-if="company.partner_id.vat">
+                <strong>CIF:</strong>
+                <span t-field="company.partner_id.vat" />
+            </div>
+            <div t-if="company.partner_id.nrc">
+                <strong>NRC:</strong>
+                <span t-field="company.partner_id.nrc" />
+            </div>
+            <h2 t-if="report_type_sale">Sale journal</h2>
+            <h2 t-if="not report_type_sale">Purchase journal</h2>
+            <h4>
+                <span>From date:</span>
+                <span t-esc="date_from" />
+                <span>to date:</span>
+                <span t-esc="date_to" />
+            </h4>
+            <t t-if="report_type_sale">
+                <t t-call="l10n_ro_account_report_journal.sale_journal_report" />
+            </t>
+            <t t-if="not report_type_sale">
+                <t t-call="l10n_ro_account_report_journal.purchase_journal_report" />
+            </t>
+        </t>
+    </template>
+    <record id="paperformat_A3_landscape" model="report.paperformat">
+        <field name="name">A3 Landscape</field>
+        <field name="default" eval="True" />
+        <field name="format">A3</field>
+        <field name="page_height">0</field>
+        <field name="page_width">0</field>
+        <field name="orientation">Landscape</field>
+        <field name="margin_top">10</field>
+        <field name="margin_bottom">10</field>
+        <field name="margin_left">5</field>
+        <field name="margin_right">5</field>
+        <field name="header_line" eval="False" />
+        <field name="header_spacing">15</field>
+        <field name="dpi">90</field>
+    </record>
+    <record id="action_report_sale" model="ir.actions.report">
+        <field name="name">Sale/Purchase Journal</field>
+        <field name="model">l10n.ro.account.report.journal</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">l10n_ro_account_report_journal.report_sp</field>
+        <field name="report_file">l10n_ro_account_report_journal.report_sp</field>
+        <field name="print_report_name">'Sale/Purchase Journal'</field>
+        <field name="paperformat_id" ref="paperformat_A3_landscape" />
+    </record>
+    <record id="action_report_sale_html" model="ir.actions.report">
+        <field name="name">Sale/Purchase Journal</field>
+        <field name="model">l10n.ro.account.report.journal</field>
+        <field name="report_type">qweb-html</field>
+        <field name="report_name">l10n_ro_account_report_journal.report_sp</field>
+        <field name="report_file">l10n_ro_account_report_journal.report_sp</field>
+        <field name="print_report_name">'Sale/Purchase Journal'</field>
+    </record>
+</odoo>

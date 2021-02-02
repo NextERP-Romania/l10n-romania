@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <template id="l10n_ro_account_report_journal.sale_purch_first_5_col">
+        <td t-att-rowspan="l['rowspan']" class="text-left" style="text-align:left;">
+            <span t-esc="l_index + 1" />
+        </td>
+        <td
+            colspan="2"
+            t-att-rowspan="l['rowspan']"
+            class="text-left"
+            style="text-align:left;"
+        >
+            <span t-esc="l['number']" />
+        </td>
+        <td
+            colspan="2"
+            t-att-rowspan="l['rowspan']"
+            class="text-left"
+            style="text-align:left;"
+        >
+            <span t-esc="l['date']" />
+        </td>
+        <td
+            colspan="4"
+            t-att-rowspan="l['rowspan']"
+            class="text-left"
+            style="text-align:left;"
+        >
+            <span t-esc="l['partner']" />
+        </td>
+        <td t-att-rowspan="l['rowspan']" class="text-left" style="text-align:left;">
+            <span t-esc="l['vat']" />
+        </td>
+    </template>
+    <template id="l10n_ro_account_report_journal.sale_purch_6-14_cols">
+        <td colspan="3" t-att-rowspan="l['rowspan']">
+            <span t-esc="l['total']" />
+        </td>
+        <td colspan="3" t-att-rowspan="l['rowspan']">
+            <span t-esc="l['total_base']" />
+        </td>
+        <td colspan="3" t-att-rowspan="l['rowspan']">
+            <span t-esc="l['total_vat']" />
+        </td>
+        <td colspan="2" t-att-rowspan="l['rowspan']">
+            <span t-esc="l['base_19']" />
+        </td>
+        <td colspan="2" t-att-rowspan="l['rowspan']">
+            <span t-esc="l['tva_19']" />
+        </td>
+        <td colspan="2" t-att-rowspan="l['rowspan']">
+            <span t-esc="l['base_9']" />
+        </td>
+        <td colspan="2" t-att-rowspan="l['rowspan']">
+            <span t-esc="l['tva_9']" />
+        </td>
+        <td colspan="2" t-att-rowspan="l['rowspan']">
+            <span t-esc="l['base_5']" />
+        </td>
+        <td colspan="2" t-att-rowspan="l['rowspan']">
+            <span t-esc="l['tva_5']" />
+        </td>
+    </template>
+    <template id="l10n_ro_account_report_journal.vat_on_payment_columns">
+        <t t-if="not l['payments']">
+            <td colspan="10" />
+            <!-- first a empty line, after will come the payments  -->
+        </t>
+        <t t-if="l['payments']">
+            <td colspan="2" style="text-align:left;">
+                <span t-esc="l['payments'][0]['number']" />
+            </td>
+            <td colspan="2" style="text-align:left;">
+                <span t-esc="l['payments'][0]['date']" />
+            </td>
+            <td colspan="2">
+                <span t-esc="l['payments'][0]['amount']" />
+            </td>
+            <td colspan="2">
+                <span t-esc="l['payments'][0]['base_exig']" />
+            </td>
+            <td colspan="2">
+                <span t-esc="l['payments'][0]['tva_exig']" />
+            </td>
+        </t>
+        <td colspan="2" t-att-rowspan="l['rowspan']">
+            <span t-esc="l['base_neex']" />
+        </td>
+        <td colspan="2" t-att-rowspan="l['rowspan']">
+            <span t-esc="l['tva_neex']" />
+        </td>
+    </template>
+    <template id="l10n_ro_account_report_journal.payments_lines">
+        <tr
+            t-foreach="l['payments'][1:]"
+            t-as="pay"
+            style="font-size: 8; text-align:right;"
+        >
+            <td colspan="2" style="text-align:left;">
+                <span t-esc="pay['number']" />
+            </td>
+            <td colspan="2" style="text-align:left;">
+                <span t-esc="pay['date']" />
+            </td>
+            <td colspan="2">
+                <span t-esc="pay['amount']" />
+            </td>
+            <td colspan="2">
+                <span t-esc="pay['base_exig']" />
+            </td>
+            <td colspan="2">
+                <span t-esc="pay['tva_exig']" />
+            </td>
+        </tr>
+    </template>
+</odoo>

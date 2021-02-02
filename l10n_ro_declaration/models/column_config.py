@@ -28,6 +28,7 @@ JOURNAL_COLUMNS = {
             "09 - BAZA",
             "10 - BAZA",
             "11 - BAZA",
+            "14 - BAZA",
             "24_1 - BAZA",
             "24_2 - BAZA",
             "25_1 - BAZA",
@@ -47,7 +48,7 @@ JOURNAL_COLUMNS = {
             "25_1 - TVA",
             "25_2 - TVA",
             "26_1 - TVA",
-            "26_2 - BAZA",
+            "26_2 - TVA",
         ],
     },
     "base_19": {
@@ -83,12 +84,14 @@ JOURNAL_COLUMNS = {
             "09 - BAZA",
             "10 - BAZA",
             "11 - BAZA",
+            "14 - BAZA",
             "24_1 - BAZA",
             "24_2 - BAZA",
             "25_1 - BAZA",
             "25_2 - BAZA",
             "26_1 - BAZA",
             "26_2 - BAZA",
+            "30 - BAZA",
         ],
     },
     "tva_neex": {
@@ -102,11 +105,9 @@ JOURNAL_COLUMNS = {
             "25_1 - TVA",
             "25_2 - TVA",
             "26_1 - TVA",
-            "26_2 - BAZA",
+            "26_2 - TVA",
         ],
     },
-    "tva_bun": {"type": "int", "tags": []},
-    "tva_serv": {"type": "int", "tags": []},
     "neimp": {"type": "int", "tags": ["30 - BAZA"]},
     "others": {"type": "int", "tags": ["03_1 - BAZA"]},
     "scutit1": {
@@ -119,19 +120,18 @@ JOURNAL_COLUMNS = {
     },  # intracomunitar bunuri
     "base_ded1": {
         "type": "int",
-        "tags": ["14 - BAZA", "22 - BAZA"],
+        "tags": ["14 - BAZA", "22_1 - BAZA"],
     },  # cu drept de deducere
+    "tva_ded1": {"type": "int", "tags": ["22_1 - TVA"]},
     "base_ded2": {
         "type": "int",
-        "tags": ["15 - BAZA", "20 - BAZA"],
+        "tags": ["15 - BAZA", "20_1 - BAZA"],
     },  # fara drept de deducere
-    "warnings": {"type": "char", "tags": []},
+    "tva_ded2": {"type": "int", "tags": ["20_1 - TVA"]},
     "base_inverse_taxation": {
         "type": "int",
         "tags": ["27_1 - BAZA", "27_2 - BAZA", "27_3 - BAZA"],
     },
-    "tva_ded1": {"type": "int", "tags": ["22 - TVA"]},
-    "tva_ded2": {"type": "int", "tags": ["20 - TVA"]},
     "tva_inverse_taxation": {
         "type": "int",
         "tags": ["27_1 - TVA", "27_2 - TVA", "27_3 - TVA"],
@@ -140,5 +140,5 @@ JOURNAL_COLUMNS = {
 
 SUMED_COLUMNS = {
     "total_base": ["base_19", "base_9", "base_5", "base_0", "base_exig"],
-    "total_vat": ["tva_19", "tva_9", "tva_5", "tva_bun", "tva_serv", "tva_exig"],
+    "total_vat": ["tva_19", "tva_9", "tva_5", "tva_exig"],
 }

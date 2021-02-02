@@ -257,9 +257,7 @@ class AnafMixin(models.AbstractModel):
                 if record.move_id.tax_cash_basis_rec_id:
                     # Cash basis entries are always treated as misc operations,
                     # applying the tag sign directly to the balance
-                    type_multiplicator = 1
-                    if record.tax_ids and record.tax_ids[0].type_tax_use == "sale":
-                        type_multiplicator = -1
+                    type_multiplicator = -1
                 else:
                     type_multiplicator = (
                         record.journal_id.type == "sale" and -1 or 1
@@ -293,35 +291,38 @@ class AnafMixin(models.AbstractModel):
 
     def get_all_tags(self):
         all_known_tags = {}
+        vatp_tags = ["tva_neex", "base_exig", "base_neex", "tva_exig"]
         for k, v in JOURNAL_COLUMNS.items():
-            for tag in v["tags"]:
-                if tag in all_known_tags.keys():
-                    all_known_tags[tag] += [k]
-                else:
-                    all_known_tags[tag] = [k]
+            if k not in vatp_tags:
+                for tag in v["tags"]:
+                    if tag in all_known_tags.keys():
+                        all_known_tags[tag] += [k]
+                    else:
+                        all_known_tags[tag] = [k]
         return all_known_tags
 
-    def get_vatp_not_eligible(self, line, vals):
+    def get_vatp_not_eligible(self, move, vals, sign):
         nd_tax_base = JOURNAL_COLUMNS["base_neex"]["tags"]
         nd_tax_vat = JOURNAL_COLUMNS["tva_neex"]["tags"]
-        for tag in line.tax_tag_ids:
-            type_multiplicator = line.journal_id.type == "sale" and -1 or 1
-            tag_amount = type_multiplicator * line.balance
-            if tag.tax_report_line_ids:
-                # Then, the tag comes from a report line, and hence has a + or - sign (also in its name)
-                for report_line in tag.tax_report_line_ids:
-                    tag_id = report_line.tag_name
+        for line in move.line_ids:
+            for tag in line.tax_tag_ids:
+                type_multiplicator = line.journal_id.type == "sale" and 1 or -1
+                tag_amount = type_multiplicator * line.balance
+                if tag.tax_report_line_ids:
+                    # Then, the tag comes from a report line, and hence has a + or - sign (also in its name)
+                    for report_line in tag.tax_report_line_ids:
+                        tag_id = report_line.tag_name
+                        if tag_id in nd_tax_base:
+                            vals["base_neex"] += sign * tag_amount
+                        elif tag_id in nd_tax_vat:
+                            vals["tva_neex"] += sign * tag_amount
+                else:
+                    # Then, it's a financial tag (sign is always +, and never shown in tag name)
+                    tag_id = tag.name
                     if tag_id in nd_tax_base:
-                        vals["base_neex"] += tag_amount
+                        vals["base_neex"] += sign * tag_amount
                     elif tag_id in nd_tax_vat:
-                        vals["tva_neex"] += tag_amount
-            else:
-                # Then, it's a financial tag (sign is always +, and never shown in tag name)
-                tag_id = tag.name
-                if tag_id in nd_tax_base:
-                    vals["base_neex"] += tag_amount
-                elif tag_id in nd_tax_vat:
-                    vals["tva_neex"] += tag_amount
+                        vals["tva_neex"] += sign * tag_amount
         return vals
 
     def get_payment_vals(self, vals, sign, invoice):
@@ -333,44 +334,68 @@ class AnafMixin(models.AbstractModel):
                 "411"
             ) or line.account_id.code.startswith("401"):
                 break
-        # find all the reconciliation till date to
-        all_reconcile = self.env["account.move"].search(
-            [
-                ("tax_cash_basis_move_id", "=", invoice.id),
-                ("date", "<=", self.date_to),
-            ]
+
+        vatp_tags = JOURNAL_COLUMNS["base_neex"]["tags"]
+        res = self.with_context(move_ids=invoice.ids)._get_anaf_vat_report_data(
+            self.company_id.id, invoice.invoice_date, invoice.invoice_date
         )
-        for move in all_reconcile:
-            if move.date < self.date_to:
-                for move_line in move.line_ids:
-                    vals = self.get_vatp_not_eligible(move_line, vals)
-            if move.date >= self.date_from and self.date_to:
-                # is payment in period and we are going also to show it, and also substract it
-                vals["rowspan"] += 1
-                payment = {
-                    "number": move.ref,
-                    "date": move.date,
-                    "amount": move.amount_total,
-                    "base_19": 0,
-                    "base_9": 0,
-                    "base_5": 0,
-                    "tva_19": 0,
-                    "tva_9": 0,
-                    "tva_5": 0,
-                }
-                res = self.with_context(move_ids=move.ids)._get_anaf_vat_report_data(
-                    self.company_id.id, self.date_from, self.date_to
+        if res:
+            for _key, value in res.items():
+                if _key in vatp_tags:
+                    vals["base_neex"] += value
+        # find all the reconciliation till date to
+        partial_rec = invoice.mapped("line_ids.matched_debit_ids") + invoice.mapped(
+            "line_ids.matched_credit_ids"
+        )
+
+        for partial in partial_rec:
+            moves = partial.mapped("debit_move_id") + partial.mapped("credit_move_id")
+            partials = (
+                moves.filtered(lambda m: m.date <= self.date_to).mapped("move_id")
+                - invoice
+            )
+            for payment in partials:
+                moves = self.env["account.move"].search(
+                    [("tax_cash_basis_rec_id", "=", partial.id)]
                 )
-                if res:
-                    for _key, value in res.items():
-                        if _key in all_known_tags.keys():
-                            for tagx in all_known_tags[_key]:
-                                new_sign = sign
-                                if "tva" in tagx:
-                                    new_sign = -1 * new_sign
-                                if tagx in payment:
-                                    payment[tagx] += new_sign * value
-                vals["payments"].append(payment)
+                for move in moves:
+                    if move.date <= self.date_to:
+                        vals = self.get_vatp_not_eligible(move, vals, sign)
+                    if move.date >= self.date_from:
+                        # is payment in period and we are going also
+                        # to show it, and also substract it
+                        vals["rowspan"] += 1
+                        payment = {
+                            "number": move.ref,
+                            "date": move.date,
+                            "amount": payment.amount_total,
+                            "base_19": 0,
+                            "base_9": 0,
+                            "base_5": 0,
+                            "tva_19": 0,
+                            "tva_9": 0,
+                            "tva_5": 0,
+                        }
+                        res = self.with_context(
+                            move_ids=move.ids
+                        )._get_anaf_vat_report_data(
+                            self.company_id.id, self.date_from, self.date_to
+                        )
+                        if res:
+                            for _key, value in res.items():
+                                if _key in all_known_tags.keys():
+                                    for tagx in all_known_tags[_key]:
+                                        if tagx in payment:
+                                            payment[tagx] += sign * value
+                        vals["payments"].append(payment)
+        if vals.get("base_neex"):
+            vals["base_neex"] = round(
+                sign * invoice.amount_untaxed_signed - vals.get("base_neex"), 2
+            )
+        if vals.get("tva_neex"):
+            vals["tva_neex"] = round(
+                sign * invoice.amount_tax_signed - vals.get("tva_neex"), 2
+            )
         return vals
 
     def get_journal_line_vals(self, invoice, vals=False, journal_type=True, sign=1):
@@ -381,7 +406,6 @@ class AnafMixin(models.AbstractModel):
             journal_columns = self.get_journal_columns()
             sumed_colums = self.get_sumed_columns()
             vals = self.add_new_row(journal_columns, sumed_colums)
-        # vatp_tags = ["tva_neex", "base_exig", "base_neex", "tva_exig"]
         all_known_tags = self.get_all_tags()
         (
             country_code,
@@ -391,7 +415,7 @@ class AnafMixin(models.AbstractModel):
         new_sign = sign
         if journal_type and invoice.move_type in [
             "in_invoice",
-            "in_refund",
+            "out_refund",
             "in_receipt",
         ]:
             new_sign = -1 * sign
@@ -419,7 +443,6 @@ class AnafMixin(models.AbstractModel):
         for line in invoice.line_ids:
             if line.tax_tag_ids and not line.tax_exigible:  # VAT on payment
                 put_payments = True
-                vals = self.get_vatp_not_eligible(line, vals)
 
         if put_payments:
             vals = self.get_payment_vals(vals, new_sign, invoice)
@@ -438,6 +461,7 @@ class AnafMixin(models.AbstractModel):
             # put the aggregated values ( summed columns)
             vals[_key] = sum([vals[x] for x in value])
         if identifier_type == "1":
+            vals["base_ded1"] = 0.0
             vals["scutit1"] = 0.0
         else:
             vals["base_0"] = 0.0

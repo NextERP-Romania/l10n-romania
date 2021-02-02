@@ -26,8 +26,8 @@ class SaleJournalReport(models.TransientModel):
         else:
             types = ["in_invoice", "in_refund", "in_receipt"]
         invoices = anaf.get_period_invoices(types)
-        invoices += anaf.get_period_vatp_invoices(types)
-
+        invoices |= anaf.get_period_vatp_invoices(types)
+        invoices = invoices.sorted(key=lambda r: r.invoice_date or r.date)
         if journal_type == "sale":
             types = ["in_invoice", "in_refund", "in_receipt"]
             supp_tags_name = [
@@ -50,7 +50,6 @@ class SaleJournalReport(models.TransientModel):
             invoices |= supp_invoices
         show_warnings = data["show_warnings"]
         report_type_sale = journal_type == "sale"
-
         report_lines, totals = self.compute_report_lines(
             anaf, invoices, report_type_sale
         )
@@ -83,8 +82,7 @@ class SaleJournalReport(models.TransientModel):
         journal_columns = anaf.get_journal_columns()
         sumed_colums = anaf.get_sumed_columns()
         empty_row = anaf.add_new_row(journal_columns, sumed_colums)
-        # sign = 1 if report_type_sale else -1
-        sign = 1
+        sign = 1 if report_type_sale else -1
         report_lines = []
 
         for inv1 in invoices:
@@ -101,5 +99,4 @@ class SaleJournalReport(models.TransientModel):
         for key in int_float_keys:
             totals[key] = round(sum([x[key] for x in report_lines]), 2)
         totals["payments"] = []
-
         return report_lines, totals

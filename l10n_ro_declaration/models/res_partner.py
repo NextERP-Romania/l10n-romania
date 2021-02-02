@@ -34,6 +34,7 @@ class ResPartner(models.Model):
         vat_number) from vat and country partner
         """
         self.ensure_one()
+        country_code = identifier_type = vat_number = False
         if self.vat:
             vat_number = self.vat
             prefix = self._map_anaf_country_code(vat_number[:2].upper())

@@ -47,21 +47,22 @@ class AccountMove(models.Model):
         store=True,
     )
 
-    @api.depends("partner_id")
+    @api.depends("commercial_partner_id")
     def _compute_vat_store(self):
         for record in self:
-            record.invoice_partner_display_vat = record.partner_id.vat or ""
+            record.invoice_partner_display_vat = record.commercial_partner_id.vat or ""
 
-    @api.depends("partner_id")
+    @api.depends("commercial_partner_id")
     def _compute_partner_type(self):
         for invoice in self:
-            (
-                country_code,
-                identifier_type,
-                vat_number,
-            ) = invoice.commercial_partner_id._parse_anaf_vat_info()
+            identifier_type = "1"
+            if invoice.commercial_partner_id:
+                (
+                    country_code,
+                    identifier_type,
+                    vat_number,
+                ) = invoice.commercial_partner_id._parse_anaf_vat_info()
             invoice.partner_type = identifier_type
-        return True
 
     @api.depends(
         "partner_id",
@@ -70,7 +71,6 @@ class AccountMove(models.Model):
         "invoice_origin_d394",
         "fiscal_position_id",
     )
-
     def _compute_operation_type(self):
         fp = self.company_id.property_inverse_taxation_position_id
         if not fp:
@@ -89,33 +89,33 @@ class AccountMove(models.Model):
                 ]
             )
         for inv in self:
-            (
-                country_code,
-                identifier_type,
-                vat_number,
-            ) = inv.commercial_partner_id._parse_anaf_vat_info()
-            if inv.move_type in ("out_invoice", "out_refund"):
-                if inv.fiscal_position_id == fp:
-                    oper_type = "V"
-                elif identifier_type in ("1", "2") and inv.special_regim:
-                    oper_type = "LS"
-                elif identifier_type in ("3", "4"):
-                    oper_type = "V"
+            if inv.commercial_partner_id:
+                (
+                    country_code,
+                    identifier_type,
+                    vat_number,
+                ) = inv.commercial_partner_id._parse_anaf_vat_info()
+                if inv.move_type in ("out_invoice", "out_refund"):
+                    if inv.fiscal_position_id == fp:
+                        oper_type = "V"
+                    elif identifier_type in ("1", "2") and inv.special_regim:
+                        oper_type = "LS"
+                    elif identifier_type in ("3", "4"):
+                        oper_type = "V"
+                    else:
+                        oper_type = "L"
                 else:
-                    oper_type = "L"
-            else:
-                if inv.partner_type == "2" and inv.invoice_origin_d394:
-                    oper_type = "N"
-                elif inv.partner_type in ("3", "4"):
-                    oper_type = "C"
-                elif inv.fiscal_position_id == fp:
-                    oper_type = "C"
-                elif inv.special_regim:
-                    oper_type = "AS"
-                elif inv.fiscal_position_id == tva_fp:
-                    oper_type = "AI"
-                else:
-                    oper_type = "A"
-            inv.operation_type = oper_type
+                    if inv.partner_type == "2" and inv.invoice_origin_d394:
+                        oper_type = "N"
+                    elif inv.partner_type in ("3", "4"):
+                        oper_type = "C"
+                    elif inv.fiscal_position_id == fp:
+                        oper_type = "C"
+                    elif inv.special_regim:
+                        oper_type = "AS"
+                    elif inv.fiscal_position_id == tva_fp:
+                        oper_type = "AI"
+                    else:
+                        oper_type = "A"
+                inv.operation_type = oper_type
         return True
-
