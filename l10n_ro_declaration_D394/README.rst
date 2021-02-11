@@ -23,7 +23,7 @@ Romania - D394 ANAF Declaration
     :target: https://runbot.odoo-community.org/runbot/177/14.0
     :alt: Try me on Runbot
 
-|badge1| |badge2| |badge3| |badge4| |badge5| 
+|badge1| |badge2| |badge3| |badge4| |badge5|
 
 This module add the posibility to run the D394 Romanian ANAF declaration.
 
@@ -50,7 +50,7 @@ To use this module, you need to be an account adviser and go to:
 
 Invoicing -> Reporting -> ANAF Declaration -> D394 Declaration
 
-* Run the D300 declaration for the period that you want.
+* Run the D394 declaration for the period that you want.
 
 Bug Tracker
 ===========
@@ -99,7 +99,7 @@ promote its widespread use.
 
 Current `maintainer <https://odoo-community.org/page/maintainer-role>`__:
 
-|maintainer-feketemihai| 
+|maintainer-feketemihai|
 
 This module is part of the `OCA/l10n-romania <https://github.com/OCA/l10n-romania/tree/14.0/l10n_ro_declaration_D394>`_ project on GitHub.
 
