@@ -127,6 +127,9 @@ class ResPartner(models.Model):
         }
         for field in AnafFiled_OdooField_Overwrite:
             anaf_value = result.get(field[1], "")
+            if type(self._fields[field[0]]) in  [fields.Date, fields.Datetime]: 
+                if not  anaf_value.strip():
+                    anaf_value = False
             if field[2] == "over_all_the_time":
                 res[field[0]] = anaf_value
             elif field[2] == "write_if_empty&add_date" and anaf_value:
