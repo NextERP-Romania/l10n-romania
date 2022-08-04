@@ -4,17 +4,17 @@ Without this module you need to set the account in invoice for landed_cost_produ
 With this module, only for companies that have romanian accounting ("l10n_ro_config",  if company_id.l10n_ro_accounting):
 1. will use in invoice line the expense account of landed_cost_product & the same account in stock_landed_cost
 Aditional
-2. if you have a invoice that has landed cost and recived products will put in created landed cost also the coresponding pickings 
+2. if you have a invoice that has landed cost and recived products will put in created landed cost also the coresponding pickings
 
 future if is not goig to be in another module 3. you can not create landed cost if the inoice is not posted ( did not create the accounting entries)
 
 
 Test:
-storable products with automated inventory valuation & conting fifo or average: p1 marfuri 371,p2 auxiliare 3021 ,p3   materii prime 301  
+storable products with automated inventory valuation & conting fifo or average: p1 marfuri 371,p2 auxiliare 3021 ,p3   materii prime 301
 transport_landed_cost  - service expense 624 & Control Policy    On ordered quantities
 crane_landed_cost - service expense  628
 
-Romanian company recieve 10 p1 at 100   & 20 p2 at 200 & 30 pr at 300   and a transport of 8  
+Romanian company recieve 10 p1 at 100   & 20 p2 at 200 & 30 pr at 300   and a transport of 8
 and another invoice with tax of 50 for the p1 and p2
 
 
