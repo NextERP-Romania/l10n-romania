@@ -112,7 +112,11 @@ class AccountMove(models.Model):
                 for line in invoice_lines:
                     add_diff = False
                     if line.product_id.cost_method != "standard":
+                        # alex: why do you need this line, if this is installed is
+                        #    going to work, if not will not work
                         add_diff = not invoice.company_id.l10n_ro_stock_acc_price_diff
+                    else:  # if the method is standard we do not do any price difference
+                        continue
 
                     if not add_diff:
                         # se reevalueaza stocul
