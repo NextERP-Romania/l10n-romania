@@ -508,6 +508,7 @@ class StockMove(models.Model):
                     svls |= (
                         self.env["stock.valuation.layer"].sudo().create(new_svl_vals)
                     )
+        svls._compute_l10n_ro_svl_tracking()
         return svls
 
     def _is_usage_giving(self):

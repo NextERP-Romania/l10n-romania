@@ -41,7 +41,7 @@ class AccountEdiXmlCIUSRO(models.Model):
         return vals_list
 
     def _get_invoice_tax_totals_vals_list(self, invoice, taxes_vals):
-        balance_sign = -1 if invoice.is_inbound() else 1
+        balance_sign = 1
         return [
             {
                 "currency": invoice.currency_id,
