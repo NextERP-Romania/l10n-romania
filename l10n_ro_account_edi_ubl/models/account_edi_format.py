@@ -185,6 +185,7 @@ class AccountEdiXmlCIUSRO(models.Model):
             )
         return res
 
+
     def _l10n_ro_anaf_call(self, func, anaf_config, params, data=None, method="POST"):
 
         content, status_code = anaf_config._l10n_ro_einvoice_call(
