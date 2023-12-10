@@ -66,7 +66,7 @@ class AccountEdiXmlCIUSRO(models.Model):
 
     def _get_invoice_line_price_vals(self, line):
         vals = super()._get_invoice_line_price_vals(line)
-        vals["base_quantity"] = line.quantity
+        vals["base_quantity"] = 1
         return vals
 
     def _export_invoice_vals(self, invoice):
@@ -154,3 +154,10 @@ class AccountEdiXmlCIUSRO(models.Model):
                 )
 
         return constraints
+
+    def _import_fill_invoice_line_taxes(self, journal, tax_nodes, invoice_line_form, inv_line_vals, logs):
+        if not invoice_line_form.account_id:
+            invoice_line_form.account_id = journal.default_account_id
+        if not inv_line_vals.get("account_id"):
+            inv_line_vals["account_id"] = journal.default_account_id.id
+        return super()._import_fill_invoice_line_taxes(journal, tax_nodes, invoice_line_form, inv_line_vals, logs)

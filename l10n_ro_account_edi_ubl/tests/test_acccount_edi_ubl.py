@@ -4,7 +4,10 @@
 import base64
 import logging
 
+from unittest.mock import patch
+
 from odoo import fields
+from odoo.exceptions import UserError
 from odoo.modules.module import get_module_resource
 from odoo.tests import tagged
 
@@ -143,7 +146,9 @@ class TestAccountEdiUbl(AccountEdiTestCommon):
             ],
         }
         cls.invoice = cls.env["account.move"].create(invoice_values)
-
+        cls.invoice.journal_id.edi_format_ids = [
+            (6, 0, cls.env.ref("l10n_ro_account_edi_ubl.edi_ubl_cius_ro").ids)
+        ]
         invoice_values.update(
             {
                 "move_type": "out_refund",
@@ -211,39 +216,115 @@ class TestAccountEdiUbl(AccountEdiTestCommon):
         self.invoice.with_context(test_data=data).action_process_edi_web_services(
             with_commit=False
         )
-        docs = self.invoice.edi_document_ids.filtered(
-            lambda d: d.state == "to_send" and d.blocking_level == "error"
-        )
-        docs.blocking_level = False
+        doc = self.invoice.edi_document_ids[0]
+        expected_error = "<p>Valorile acceptate pentru parametrul standard sunt UBL, CII sau RASP</p>"
+        self.assertTrue(doc.error.startswith(expected_error), "Error response: %s"% doc.error)
+        self.assertRecordValues(self.invoice, [{'edi_state': 'to_send'}])
+
+        doc.blocking_level = False
 
         # procesare step 1 - succes
         data = self.expected_success_values
         self.invoice.with_context(test_data=data).action_process_edi_web_services(
             with_commit=False
         )
+        doc = self.invoice.edi_document_ids[0]
+        self.assertRecordValues(doc, [{'error': False}])
+        self.assertRecordValues(self.invoice, [{'edi_state': 'to_send'}])
 
         # procesare step 2 - in prelucrare
         data = self.expected_stare_mesaj_in_prelucrare
         self.invoice.with_context(test_data=data).action_process_edi_web_services(
             with_commit=False
         )
-        docs.blocking_level = False
+        doc = self.invoice.edi_document_ids[0]
+        self.assertRecordValues(doc, [{'error': False}])
+        self.assertRecordValues(self.invoice, [{'edi_state': 'to_send'}])
+        doc.blocking_level = False
 
         # procesare step 2 - not_ok
         data = self.expected_stare_mesaj_not_ok
         self.invoice.with_context(test_data=data).action_process_edi_web_services(
             with_commit=False
         )
-        docs.blocking_level = False
+        self.assertRecordValues(doc, [{'error': False}])
+        self.assertRecordValues(self.invoice, [{'edi_state': 'to_send'}])
+        doc.blocking_level = False
 
         # procesare step 2 - ok
         data = self.expected_stare_mesaj_ok
         self.invoice.with_context(test_data=data).action_process_edi_web_services(
             with_commit=False
         )
-        docs.blocking_level = False
+        doc = self.invoice.edi_document_ids[0]
+        self.assertRecordValues(doc, [{'error': False}])
+        self.assertRecordValues(self.invoice, [{'edi_state': 'sent'}])
+        doc.blocking_level = False
 
     def test_download_invoice(self):
         data = self.invoice_zip
         self.invoice.l10n_ro_edi_download = "1234"
         self.invoice.with_context(test_data=data).l10n_ro_download_zip_anaf()
+
+    def test_l10n_ro_get_anaf_efactura_messages(self):
+        self.env.company.vat = "RO23685159"
+        anaf_config = self.env.company.l10n_ro_account_anaf_sync_id
+        anaf_config.access_token = "test"
+        anaf_messages = b'''{"mesaje": [{"data_creare": "202312120940", "cif": "23685159", "id_solicitare": "5004552043", "detalii": "Factura cu id_incarcare=5004552043 emisa de cif_emitent=8486152 pentru cif_beneficiar=23685159", "tip": "FACTURA PRIMITA", "id": "3006372781"}], "serial": "1234AA456", "cui": "8000000000", "titlu": "Lista Mesaje disponibile din ultimele 1 zile"}'''
+        expected_msg = [{"data_creare": "202312120940", "cif": "23685159", "id_solicitare": "5004552043", "detalii": "Factura cu id_incarcare=5004552043 emisa de cif_emitent=8486152 pentru cif_beneficiar=23685159", "tip": "FACTURA PRIMITA", "id": "3006372781"}]
+        with patch(
+            'odoo.addons.l10n_ro_account_anaf_sync.models.l10n_ro_account_anaf_sync.AccountANAFSync'
+            '._l10n_ro_einvoice_call', return_value=(anaf_messages, 200)
+        ):
+            self.assertEqual(
+                self.env.company._l10n_ro_get_anaf_efactura_messages(),
+                expected_msg
+            )
+
+    def test_l10n_ro_create_anaf_efactura(self):
+        anaf_config = self.env.company.l10n_ro_account_anaf_sync_id
+        anaf_config.access_token = "test"
+        messages = [
+            {
+                "data_creare": "202312120940",
+                "cif": "23685159",
+                "id_solicitare": "5004552043",
+                "detalii": "Factura cu id_incarcare=5004552043 emisa de cif_emitent=8486152 pentru cif_beneficiar=23685159",
+                "tip": "FACTURA PRIMITA",
+                "id": "3006372781"
+            }
+        ]
+
+        signed_zip_file = open(
+            get_module_resource(
+                "l10n_ro_account_edi_ubl", "tests", "semnatura_5004552043.zip"
+            ), mode="rb"
+        ).read()
+        with patch(
+            'odoo.addons.l10n_ro_account_edi_ubl.models.res_company.ResCompany'
+            '._l10n_ro_get_anaf_efactura_messages', return_value=messages
+        ), patch(
+            'odoo.addons.l10n_ro_account_anaf_sync.models.l10n_ro_account_anaf_sync.AccountANAFSync'
+            '._l10n_ro_einvoice_call', return_value=(signed_zip_file, 200)
+        ):
+            self.env.company._l10n_ro_create_anaf_efactura()
+            invoice = self.env["account.move"].search([("l10n_ro_edi_download", "=", "3006372781")])
+            self.assertEqual(len(invoice), 1)
+            self.assertEqual(invoice.l10n_ro_edi_download, '3006372781')
+            self.assertEqual(invoice.l10n_ro_edi_transaction, '5004552043')
+            self.assertEqual(invoice.move_type, 'in_invoice')
+            self.assertEqual(invoice.partner_id.vat, 'RO8486152')
+            self.assertEqual(invoice.partner_id.name, 'TOTAL SECURITY SA')
+            self.assertEqual(invoice.ref, 'ETTS/2023 /000130')
+            self.assertEqual(invoice.payment_reference, 'ETTS/2023 /000130')
+            self.assertEqual(invoice.currency_id.name, 'RON')
+            self.assertEqual(invoice.invoice_date, fields.Date.from_string('2023-12-06'))
+            self.assertEqual(invoice.invoice_date_due, fields.Date.from_string('2023-12-21'))
+            self.assertEqual(invoice.amount_untaxed, 3964.80)
+            self.assertEqual(invoice.amount_tax, 753.31)
+            self.assertEqual(invoice.amount_total, 4718.11)
+            self.assertEqual(invoice.amount_residual, 4718.11)
+            self.assertEqual(invoice.invoice_line_ids[0].name, 'PAZA_NEINARMAT')
+            self.assertEqual(invoice.invoice_line_ids[0].quantity, 168)
+            self.assertEqual(invoice.invoice_line_ids[0].price_unit, 23.6)
+            self.assertEqual(invoice.invoice_line_ids[0].balance, 3964.80)

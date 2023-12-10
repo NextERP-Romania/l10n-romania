@@ -183,6 +183,7 @@ class AccountEdiXmlCIUSRO(models.Model):
             )
         return res
 
+
     def _l10n_ro_anaf_call(self, func, anaf_config, params, data=None, method="POST"):
 
         content, status_code = anaf_config._l10n_ro_einvoice_call(
@@ -223,3 +224,11 @@ class AccountEdiXmlCIUSRO(models.Model):
         res.update({"id_descarcare": id_descarcare})
 
         return res
+
+    def _infer_xml_builder_from_tree(self, tree):
+        self.ensure_one()
+        customization_id = tree.find('{*}CustomizationID')
+        if customization_id is not None:
+            if customization_id.text == 'urn:cen.eu:en16931:2017#compliant#urn:efactura.mfinante.ro:CIUS-RO:1.0.1':
+                return self.env['account.edi.xml.cius_ro']
+        return super()._infer_xml_builder_from_tree(tree)
