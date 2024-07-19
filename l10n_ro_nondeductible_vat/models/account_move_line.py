@@ -10,33 +10,14 @@ class AccountMoveLine(models.Model):
     _name = "account.move.line"
     _inherit = ["account.move.line", "l10n.ro.mixin"]
 
-    @api.model_create_multi
-    def create(self, vals_list):
-        lines = super().create(vals_list)
+
+    def l10n_ro_fix_nondeductible_vat_lines(self):
         moves = self.env["account.move"]
         to_remove_lines = self.env["account.move.line"]
-        for line in lines.filtered(lambda l: l.company_id.l10n_ro_accounting):
+        for line in self.filtered(lambda l: l.company_id.l10n_ro_accounting):
             move = line.move_id
             company = line.company_id
             tax_rep_line = line.tax_repartition_line_id
-            new_account = line.account_id
-            # Set the account to the non deductible account or the
-            # company non deductible account
-            if tax_rep_line.l10n_ro_nondeductible:
-                if company.l10n_ro_nondeductible_account_id:
-                    new_account = company.l10n_ro_nondeductible_account_id
-                if line.account_id.l10n_ro_nondeductible_account_id:
-                    new_account = line.account_id.l10n_ro_nondeductible_account_id
-            # Use company cash basis base account not to increase balances
-            # of invoice accounts
-            if (
-                move.move_type == "entry"
-                and tax_rep_line.l10n_ro_skip_cash_basis_account_switch
-                and company.account_cash_basis_base_account_id
-            ):
-                new_account = company.account_cash_basis_base_account_id
-            if line.account_id != new_account:
-                line.account_id = new_account
             # Remove the lines marked to be removed from stock non deductible
             if (
                 line.display_type == "tax"
@@ -47,4 +28,16 @@ class AccountMoveLine(models.Model):
                 to_remove_lines |= line
         to_remove_lines.with_context(dynamic_unlink=True).sudo().unlink()
         moves._sync_dynamic_lines(container={"records": moves, "self": moves})
+        return to_remove_lines
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        lines = super().create(vals_list)
+        to_remove_lines = lines.l10n_ro_fix_nondeductible_vat_lines()
         return lines - to_remove_lines
+    
+    def _convert_to_tax_line_dict(self):
+        res = super()._convert_to_tax_line_dict()
+        if res.get('tax_repartition_line_id') and res.get('tax_repartition_line_id').l10n_ro_nondeductible and self.acount_id.l10n_ro_nondeductible_account_id:
+            res['account_id'] = self.acount_id.l10n_ro_nondeductible_account_id
+        return res
