@@ -141,6 +141,13 @@ class ResCompany(models.Model):
         "tax repartition lines marked as not deductible. If the line account does not have "
         "a non deductible account set, this account will be used.",
     )
+    
+    l10n_ro_stock_acc_price_diff = fields.Boolean(
+        string="Romania - Stock Valuation Update",
+        help="If this field is checked and the company use Romanian Accounting,"
+        "the currency rate differences between reception and invoice "
+        "will be reflected in the stock valuation.",
+    )
 
     def _check_is_l10n_ro_record(self, company=False):
         if not company:
