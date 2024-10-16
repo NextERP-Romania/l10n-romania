@@ -64,7 +64,7 @@ class TestSaleStockPickingValued(TestStockPickingValued):
             self.assertEqual(picking.l10n_ro_amount_untaxed, 200.0)
             self.assertEqual(picking.l10n_ro_amount_tax, 38.0)
             self.assertEqual(picking.l10n_ro_amount_total, 238.0)
-            
+
     def test_06_order_kit(self):
         module_name = "sale_mrp"
         module = (

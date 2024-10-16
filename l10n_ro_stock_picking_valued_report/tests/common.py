@@ -124,7 +124,7 @@ class TestStockPickingValued(TestStockCommon):
                 "company_id": company.id,
             }
         )
-        
+
         cls.UoM = cls.env["uom.uom"]
         cls.categ_unit = cls.env.ref("uom.product_uom_categ_unit")
 

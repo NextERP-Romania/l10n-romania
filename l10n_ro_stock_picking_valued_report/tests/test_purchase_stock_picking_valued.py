@@ -149,7 +149,7 @@ class TestPurchaseStockPickingValued(TestStockPickingValued):
         line_key = self._get_agg_lines_key(move_line)
         self.assertEqual(agg_lines[line_key]["l10n_ro_price_unit"], 110.0)
         self.assertEqual(agg_lines[line_key]["l10n_ro_additional_charges"], 20.0)
-        
+
     def test_08_move_line_kit(self):
         module_name = "purchase_mrp"
         module = (
@@ -164,7 +164,7 @@ class TestPurchaseStockPickingValued(TestStockPickingValued):
             picking.move_ids.quantity = 12.0
             picking.button_validate()
             picking._action_done()
-            
+
             for move_line in picking.move_line_ids:
                 move_line._compute_l10n_ro_valued_fields()
                 self.assertEqual(round(move_line.l10n_ro_price_tax, 2), 4.56)
@@ -174,16 +174,13 @@ class TestPurchaseStockPickingValued(TestStockPickingValued):
         self.purchase_order4.button_confirm()
 
         for picking in self.purchase_order4.picking_ids:
-          
             picking.action_assign()
             for move in picking.move_ids:
                 move.quantity = move.product_uom_qty
-           
+
             picking.button_validate()
             picking._action_done()
-            
-            
-          
+
             taxes = []
             for move_line in picking.move_line_ids:
                 move_line._compute_l10n_ro_valued_fields()
@@ -194,7 +191,6 @@ class TestPurchaseStockPickingValued(TestStockPickingValued):
         self.purchase_order5.button_confirm()
 
         for picking in self.purchase_order5.picking_ids:
-           
             picking.action_assign()
             for move in picking.move_ids:
                 move.quantity = move.product_uom_qty
