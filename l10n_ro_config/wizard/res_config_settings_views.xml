@@ -329,6 +329,29 @@
                             help="Add valued reports for stock operations."
                         >
                             <field name="module_l10n_ro_stock_picking_valued_report" />
+                            <div
+                                class="content-group"
+                                invisible="not module_l10n_ro_stock_picking_valued_report"
+                            >
+
+                                <div
+                                    class="row mt-2"
+                                    invisible="not module_l10n_ro_stock_picking_valued_report"
+                                >
+                                    <field
+                                        name="l10n_ro_print_delivery_price"
+                                        class="col flex-grow-0 ml16 mr0 pe-2"
+                                    />
+                                    <div class="col ps-0">
+                                        <label for="l10n_ro_print_delivery_price" />
+                                        <div
+                                            class="text-muted"
+                                        > For delivery order to customer or intern transfer order, this variable sets
+                                            whether if the unit price and total are printed on the delivery slip.</div>
+                                    </div>
+                                </div>
+                            </div>
+
                         </setting>
 
                         <setting
