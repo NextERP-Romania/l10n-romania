@@ -1,111 +1,84 @@
-# Template pentru .github/workflows/sync-from-oca.yml — se pune în repo-ul
+# Workflow pentru .github/workflows/sync-from-oca.yml — se pune în repo-ul
 # `NextERP-Romania/l10n-romania` (și echivalent în alte repo-uri fork-uite din OCA).
 #
 # Scop:
-#   1. Sincronizează periodic fork-ul NextERP-Romania cu upstream-ul OCA
-#      (commits noi din OCA/l10n-romania → branch-uri 16.0/17.0/18.0/19.0)
-#   2. Deschide PR cu modificările (fără auto-merge, ca să le poți revizui)
-#   3. Notifică `odoo-nexterp` să regenereze documentația (repository_dispatch)
+#   În fiecare noapte, oglindește (mirror) toate branch-urile de versiune
+#   (8.0 … 19.0) din `OCA/l10n-romania` în fork-ul NextERP-Romania, astfel
+#   încât branch-urile fork-ului să fie IDENTICE cu cele din OCA.
+#
+#   ATENȚIE: aceasta este o sincronizare prin force-push. Orice commit local
+#   existent pe aceste branch-uri în fork va fi suprascris. Dacă ai modificări
+#   proprii, ține-le pe branch-uri separate (ex. `nexterp-19.0`), nu pe `19.0`.
 #
 # Setări necesare:
-#   - Settings → Actions → "Read and write permissions" + "Allow PRs"
-#   - Secret `REGEN_PAT` (PAT cu scope `repo` pentru a apela API-ul lui odoo-nexterp)
+#   - Settings → Actions → "Read and write permissions"
+#   - Secret `REGEN_PAT` (PAT cu scope `repo`); altfel se folosește GITHUB_TOKEN.
 
 name: Sync from OCA
 
 on:
   schedule:
-    - cron: '0 2 * * *'   # zilnic la 02:00 UTC (înainte de regenerarea de docs din odoo-nexterp)
+    - cron: '0 2 * * *'   # zilnic la 02:00 UTC
   workflow_dispatch:
     inputs:
       branches:
-        description: 'CSV branches to sync (default: 19.0)'
+        description: 'CSV branches to mirror (gol = toate versiunile 8.0…19.0)'
         required: false
-        default: '19.0'
+        default: ''
+
+permissions:
+  contents: write
 
 jobs:
-  sync:
+  mirror:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        branch: ['19.0']   # extinde pentru sync pe mai multe versiuni: ['16.0', '17.0', '18.0', '19.0']
     steps:
       - name: Checkout fork (NextERP-Romania)
         uses: actions/checkout@v4
         with:
-          ref: ${{ matrix.branch }}
           fetch-depth: 0
           token: ${{ secrets.REGEN_PAT || secrets.GITHUB_TOKEN }}
 
-      - name: Add OCA remote and fetch
+      - name: Mirror OCA version branches into fork
         run: |
+          set -euo pipefail
           git config user.name "nexterp-bot"
           git config user.email "bot@nexterp.ro"
           git remote add oca https://github.com/OCA/l10n-romania.git
-          git fetch oca ${{ matrix.branch }}
 
-      - name: Try fast-forward merge
-        id: merge
-        run: |
-          # Strategie: merge fast-forward dacă e posibil, altfel produce un commit de merge
-          # cu strategia "ours" pentru fișierele cu conflict (te lasă pe tine să rezolvi pe PR).
-          BEFORE=$(git rev-parse HEAD)
-          if git merge --ff-only oca/${{ matrix.branch }}; then
-            echo "strategy=fast-forward" >> $GITHUB_OUTPUT
+          # Determină lista de branch-uri de sincronizat.
+          INPUT="${{ github.event.inputs.branches }}"
+          if [ -n "$INPUT" ]; then
+            # Branch-uri date manual prin workflow_dispatch (CSV).
+            BRANCHES=$(echo "$INPUT" | tr ',' ' ')
           else
-            git merge --no-edit oca/${{ matrix.branch }} || {
-              echo "strategy=conflict" >> $GITHUB_OUTPUT
-              git merge --abort
-              # Alternativă: creează branch separat cu merge-ul nereușit pentru rezolvare manuală
-              git checkout -b auto/sync-oca-${{ matrix.branch }}-conflict
-              git merge --no-commit oca/${{ matrix.branch }} || true
-              git add -A
-              git commit -m "WIP: merge OCA/${{ matrix.branch }} (cu conflicte de rezolvat)"
-            }
-          fi
-          AFTER=$(git rev-parse HEAD)
-          if [ "$BEFORE" = "$AFTER" ]; then
-            echo "changed=false" >> $GITHUB_OUTPUT
-          else
-            echo "changed=true" >> $GITHUB_OUTPUT
+            # Toate branch-urile din OCA care arată ca o versiune Odoo (ex. 8.0 … 19.0).
+            BRANCHES=$(git ls-remote --heads oca \
+              | sed -E 's#.*refs/heads/##' \
+              | grep -E '^[0-9]+\.0$' \
+              | sort -V)
           fi
 
-      - name: Push sync branch + open PR
-        if: steps.merge.outputs.changed == 'true'
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.REGEN_PAT || secrets.GITHUB_TOKEN }}
-          branch: auto/sync-oca-${{ matrix.branch }}
-          base: ${{ matrix.branch }}
-          delete-branch: true
-          title: "🔄 Sync from OCA/l10n-romania ${{ matrix.branch }}"
-          commit-message: |
-            chore: sync from OCA/l10n-romania ${{ matrix.branch }}
-          body: |
-            ## Sync automată din upstream OCA
+          echo "Branch-uri de oglindit:"
+          echo "$BRANCHES"
 
-            Acest PR aduce modificările din `OCA/l10n-romania` (branch `${{ matrix.branch }}`)
-            în fork-ul nostru.
+          for BR in $BRANCHES; do
+            echo "::group::Mirror $BR"
+            git fetch oca "$BR"
+            # Suprascrie branch-ul din fork (origin) ca să fie identic cu OCA.
+            git push --force origin "refs/remotes/oca/$BR:refs/heads/$BR" || \
+              git push --force origin "FETCH_HEAD:refs/heads/$BR"
+            echo "::endgroup::"
+          done
 
-            **Strategie folosită:** `${{ steps.merge.outputs.strategy }}`
-
-            - `fast-forward` — merge curat, niciun conflict.
-            - `conflict` — există conflicte; verifică branch-ul `auto/sync-oca-${{ matrix.branch }}-conflict`
-              și rezolvă manual înainte de merge.
-
-            După merge-ul acestui PR, workflow-ul `odoo-nexterp/regen-knowledge.yml` va fi
-            apelat pentru a regenera documentația Knowledge.
-          labels: |
-            sync
-            automated
-
-      # Trigger regenerarea de docs în odoo-nexterp (după ce sync-ul s-a făcut)
+      # Notifică odoo-nexterp să regenereze documentația Knowledge după sync.
       - name: Trigger knowledge regen in odoo-nexterp
-        if: steps.merge.outputs.strategy == 'fast-forward'
+        if: success() && env.REGEN_PAT != ''
+        env:
+          REGEN_PAT: ${{ secrets.REGEN_PAT }}
         run: |
           curl -X POST \
-            -H "Authorization: Bearer ${{ secrets.REGEN_PAT }}" \
+            -H "Authorization: Bearer ${REGEN_PAT}" \
             -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/NextERP-Romania/odoo-nexterp/dispatches \
-            -d '{"event_type":"knowledge-regen","client_payload":{"source":"l10n-romania","branch":"${{ matrix.branch }}"}}'
+            -d '{"event_type":"knowledge-regen","client_payload":{"source":"l10n-romania","branch":"all"}}'
