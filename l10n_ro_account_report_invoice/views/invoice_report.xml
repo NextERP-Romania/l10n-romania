@@ -15,7 +15,9 @@
                     t-as="bank"
                     id="partner_bank"
                 >
-                    <t t-if="bank.l10n_ro_print_report">
+                    <t
+                        t-if="bank.l10n_ro_print_report and bank.company_id.id == o.company_id.id"
+                    >
                         <div t-if="bank.bank_name">
                             <strong>Bank:</strong>
                             <span t-field="bank.bank_name" />
