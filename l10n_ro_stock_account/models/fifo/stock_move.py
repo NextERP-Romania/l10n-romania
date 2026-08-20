@@ -278,6 +278,42 @@ class StockMove(models.Model):
             )
         return res
 
+    def _l10n_ro_qty_to_product_uom(self, quantity, uom=None):
+        """``quantity``, expressed in ``uom`` (the move's own UoM by default),
+        converted to the product's reference UoM.
+
+        The FIFO stack — ``_run_fifo_layers``, the ``quantity`` / ``value``
+        pairs it returns, and core's ``_split`` — speaks the product's
+        reference UoM. ``stock.move.quantity`` and ``product_uom_qty`` are
+        expressed in the *move's* UoM. The two coincide only when the move
+        happens to use the reference UoM, so every crossing between the two
+        worlds goes through here or through its inverse.
+        """
+        self.ensure_one()
+        return (uom or self.product_uom)._compute_quantity(
+            quantity, self.product_id.uom_id, round=False
+        )
+
+    def _l10n_ro_qty_from_product_uom(self, quantity, uom=None):
+        """Inverse of :meth:`_l10n_ro_qty_to_product_uom`."""
+        self.ensure_one()
+        return self.product_id.uom_id._compute_quantity(
+            quantity, uom or self.product_uom, round=False
+        )
+
+    @api.model
+    def _l10n_ro_fifo_split_uom(self, move, move_vals):
+        """UoM in which ``move_vals['quantity']`` is expressed, for a move split
+        off ``move``.
+
+        Core ``_split`` keeps the original move's UoM, unless converting the
+        quantity back and forth is not exact — then it creates the split in the
+        product's reference UoM instead and says so through ``product_uom``.
+        """
+        if move_vals.get("product_uom"):
+            return self.env["uom.uom"].browse(move_vals["product_uom"])
+        return move.product_uom
+
     def _split_for_fifo_assignment(self):
         """Splits moves based on FIFO list coming from product
         _run_fifo_layers."""
@@ -295,15 +331,22 @@ class StockMove(models.Model):
         self.invalidate_recordset(["product_uom_qty", "quantity", "product_qty"])
         fifo_split_vals_list = []
         for move in self:
-            quantity_to_ship = move.product_uom._compute_quantity(
-                move.quantity, move.product_id.uom_id, round=False
-            )
+            quantity_to_ship = move._l10n_ro_qty_to_product_uom(move.quantity)
             fifo_list = move.product_id.with_context(
                 location=move.location_id.ids
             )._run_fifo_layers(quantity_to_ship, location=move.location_id)
             quantity = quantity_to_ship
             vals_before = len(fifo_split_vals_list)
-            while quantity >= move.quantity and fifo_list:
+            # Keep consuming while there is something left to allocate. The
+            # old condition compared ``quantity`` against ``move.quantity``,
+            # which only held because the two were kept equal on every
+            # iteration — and stopped holding as soon as the remainder was not
+            # representable in the move's UoM: two units left on a move written
+            # in dozens round up to 0.17 (2.04 units), so the comparison went
+            # false and the last FIFO layer was silently skipped, leaving that
+            # part of the move unvalued. If the stack runs dry early, the
+            # safety net below reports it.
+            while not move.product_id.uom_id.is_zero(quantity) and fifo_list:
                 fifo_split_vals_list, quantity = self._l10n_ro_process_fifo_split(
                     move, fifo_list, quantity, fifo_split_vals_list
                 )
@@ -312,21 +355,36 @@ class StockMove(models.Model):
             # (`quantity_to_ship`), not more, not less. If it doesn't, stop
             # instead of silently shipping/valuing the wrong amount -
             # nothing has been marked done yet at this point.
+            # The comparison is made in the MOVE's UoM, because that is the
+            # granularity at which a move can actually hold a quantity: in
+            # Odoo 19 every UoM shares the "Product Unit" precision, so a
+            # remainder of 2 units left on a move written in dozens is stored
+            # as 0.17 - which reads back as 2.04 units. That residue is a
+            # representational limit, not a lost slice, and comparing in the
+            # product's UoM would reject a perfectly good split. A genuinely
+            # dropped layer is orders of magnitude larger than this tolerance,
+            # so the safety net keeps its teeth.
             split_qty_for_move = sum(
-                vals.get("quantity", 0.0) for vals in fifo_split_vals_list[vals_before:]
+                self._l10n_ro_fifo_split_uom(move, vals)._compute_quantity(
+                    vals.get("quantity", 0.0), move.product_uom, round=False
+                )
+                for vals in fifo_split_vals_list[vals_before:]
             )
             accounted_for = move.quantity + split_qty_for_move
-            if move.product_uom.compare(accounted_for, quantity_to_ship):
+            shipping = move._l10n_ro_qty_from_product_uom(quantity_to_ship)
+            if move.product_uom.compare(accounted_for, shipping):
                 raise UserError(
                     self.env._(
                         "Verificare de consistență FIFO eșuată la transferul"
                         " %(picking)s, produsul %(product)s: se livrează"
-                        " %(shipping)s dar %(accounted)s a fost procesat la"
-                        " validare. Nimic nu a fost livrat încă - anulează și"
-                        " reia operația (verifică rezervarea/cantitatea).",
+                        " %(shipping)s %(uom)s dar %(accounted)s a fost"
+                        " procesat la validare. Nimic nu a fost livrat încă -"
+                        " anulează și reia operația (verifică"
+                        " rezervarea/cantitatea).",
                         picking=move.picking_id.display_name,
                         product=move.product_id.display_name,
-                        shipping=quantity_to_ship,
+                        shipping=shipping,
+                        uom=move.product_uom.name,
                         accounted=accounted_for,
                     )
                 )
@@ -368,11 +426,16 @@ class StockMove(models.Model):
                 }
             )
             quantity -= fifo_quantity
-            move.quantity = quantity
+            # ``quantity`` is in the product's reference UoM, ``move.quantity``
+            # in the move's own.
+            move.quantity = move._l10n_ro_qty_from_product_uom(quantity)
         else:
             quantity = 0
+            # ``fifo_item`` values are per unit of the product's reference UoM,
+            # so the quantity they multiply has to be in that UoM too.
+            move_qty = move._l10n_ro_qty_to_product_uom(move.quantity)
             move_vals = {
-                "value_manual": fifo_item["value"] / fifo_quantity * move.quantity,
+                "value_manual": fifo_item["value"] / fifo_quantity * move_qty,
                 "price_unit": fifo_item["value"] / fifo_quantity,
             }
             # No-split case: the whole move is on negative stock (forced value).
@@ -382,8 +445,11 @@ class StockMove(models.Model):
                 and move.company_id.fifo_location_negative_compensation
             ):
                 unit = fifo_item["value"] / fifo_quantity if fifo_quantity else 0
-                move_vals["fifo_neg_pending_qty"] = move.quantity
-                move_vals["fifo_neg_origin_value"] = unit * move.quantity
+                # ``fifo_neg_pending_qty`` is matched against
+                # ``_get_valued_qty()`` on the compensating incoming move, which
+                # is in the product's reference UoM.
+                move_vals["fifo_neg_pending_qty"] = move_qty
+                move_vals["fifo_neg_origin_value"] = unit * move_qty
             move.write(move_vals)
             new_move_vals_list = []
             if fifo_item:
@@ -402,7 +468,11 @@ class StockMove(models.Model):
     ):
         """Updates the move vals for a FIFO split move."""
         new_move_vals["picking_id"] = move.picking_id.id
-        new_move_vals["quantity"] = fifo_quantity
+        # ``fifo_quantity`` is in the product's reference UoM; ``quantity`` on
+        # the split move is read in that move's own UoM.
+        new_move_vals["quantity"] = move._l10n_ro_qty_from_product_uom(
+            fifo_quantity, uom=self._l10n_ro_fifo_split_uom(move, new_move_vals)
+        )
         new_move_vals["date"] = move.date
         # Mark split moves generated from a 'forced value' (negative stock on
         # the location) so they get compensated on the next incoming move.

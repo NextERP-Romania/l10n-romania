@@ -1,3 +1,30 @@
+## 19.0.1.9.1
+
+- Fix the FIFO split on a move expressed in a secondary unit of measure
+  (dozens, boxes, pallets) for a product stocked in its reference unit.
+  `_run_fifo_layers`, core's `_split` and the `quantity` / `value` pairs the
+  FIFO stack returns all speak the product's **reference** UoM, while
+  `stock.move.quantity` and `product_uom_qty` are expressed in the **move's**
+  UoM. The split mixed the two, which coincide only when a move happens to use
+  the reference UoM:
+
+  - the consistency check compared a quantity in the move's UoM against one
+    converted to the product's, so any secondary-UoM move was refused with
+    "shipping 12.0 but 1.0 was accounted for";
+  - the loop that walks the stack stopped as soon as the remainder was not
+    representable in the move's UoM — two units left on a move in dozens round
+    up to 0.17 — silently skipping the last FIFO layer and leaving that part of
+    the move unvalued;
+  - the quantity written onto each split move, the value of the terminal slice
+    and `fifo_neg_pending_qty` were all off by the conversion factor.
+
+  Conversions are now explicit, through `_l10n_ro_qty_to_product_uom` /
+  `_l10n_ro_qty_from_product_uom`, and the consistency check is made in the
+  move's own UoM — the granularity at which a move can actually hold a
+  quantity. Covered by `tests/test_ro_stock_fifo_uom.py`, including a test that
+  pins the sub-precision residue this leaves (a layer boundary rarely falls on
+  a whole number of the move's UoM).
+
 ## 19.0.1.8.0
 
 - Fix dropship moves retroactively repricing unrelated real stock of the
