@@ -170,21 +170,32 @@ class StockMove(models.Model):
         if returned is not None:
             return returned
         Ledger = self.env["l10n.ro.retail.markup.line"]
-        markup, vat = Ledger._l10n_ro_carried(
-            warehouse, self.product_id, self.company_id, exclude=exclude
-        )
-        # The quants are already updated when the entries are built, so the
-        # quantity that carried the balance is the one still on hand plus the
-        # one that just left.
-        qty_on_hand = Ledger._l10n_ro_carried_qty(
+        # Both halves of the rate come from the ledger: the balance carried and
+        # the quantity carrying it. Taking the quantity from the quants instead
+        # looks equivalent - normally the two agree exactly - but they part
+        # company as soon as the ledger has a gap, and then the rate is
+        # nonsense. Stock that was already in the shop when this module was
+        # installed is the usual gap: the quants know about it, the ledger does
+        # not, and dividing a small recorded markup by a large on-hand quantity
+        # dribbles out a fraction of a leu per sale and never closes 378.
+        #
+        # This move's own rows are written after the entry is built, so what
+        # the ledger holds here is the position before it.
+        qty_before, _cost, markup, vat = Ledger._l10n_ro_balance(
             warehouse, self.product_id, self.company_id
         )
-        qty_before = qty_on_hand + qty
+        rounding = self.product_id.uom_id.rounding
         if float_is_zero(
-            qty_before, precision_rounding=self.product_id.uom_id.rounding
+            markup, precision_rounding=self.company_id.currency_id.rounding
+        ) and float_is_zero(
+            vat, precision_rounding=self.company_id.currency_id.rounding
         ):
             return 0.0, 0.0
-        ratio = min(qty / qty_before, 1.0)
+        if float_compare(qty_before, qty, precision_rounding=rounding) <= 0:
+            # The ledger accounts for no more than what is leaving, so
+            # everything it carries goes with it and both accounts close.
+            return markup, vat
+        ratio = qty / qty_before
         return markup * ratio, vat * ratio
 
     # ------------------------------------------------------------------

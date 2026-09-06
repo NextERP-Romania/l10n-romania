@@ -860,3 +860,38 @@ class TestRetailStockAccount(TestRetailCommon):
         self._set_initial_stock(self.location, product, 10)
         move = self._do_transfer(self.location, self.loc_mag1, product, 4)
         self.assertFalse(move.l10n_ro_retail_markup_line_ids)
+
+    def test_release_rate_ignores_stock_the_ledger_never_saw(self):
+        """Stock that predates the module must not dilute the rate.
+
+        A shop that already held goods when this module was installed has
+        quants the ledger knows nothing about. Measuring the release against
+        the quantity on hand then spreads the little markup that *is* recorded
+        over everything on the shelf, so each sale releases a fraction of a leu
+        and 378 never closes. The rate is taken from the ledger on both sides,
+        so what is recorded is released in full and the accounts close.
+        """
+        # 40 units already on the shelf, invisible to the ledger - exactly what
+        # installing the module onto a running shop leaves behind.
+        self._set_initial_stock(self.loc_mag1, self.product_retail, 40)
+        # Drop the rows that entry produced: what is left is 40 units on hand
+        # that the ledger has no record of.
+        self.env["l10n.ro.retail.markup.line"].sudo().search(
+            [("product_id", "=", self.product_retail.id)]
+        ).unlink()
+
+        # Then two units arrive the normal way and are recorded. The helper
+        # sets the count, so 42 is an increase of two over the 40 already there.
+        self._set_initial_stock(self.loc_mag1, self.product_retail, 42)
+        markup_before, vat_before = self._carried(
+            self.warehouse_mag1, self.product_retail
+        )
+        self.assertAlmostEqual(markup_before, 100.0, places=2)  # 2 * 50
+
+        # Selling more than the ledger accounts for releases all of it.
+        self._do_sale_delivery(self.warehouse_mag1, self.product_retail, 20, 119.0)
+        markup_after, vat_after = self._carried(
+            self.warehouse_mag1, self.product_retail
+        )
+        self.assertAlmostEqual(markup_after, 0.0, places=2)
+        self.assertAlmostEqual(vat_after, 0.0, places=2)
