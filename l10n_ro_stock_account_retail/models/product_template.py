@@ -14,7 +14,7 @@ class ProductTemplate(models.Model):
         company_dependent=True,
         string="Markup Account (378)",
         domain=ACCOUNT_DOMAIN,
-        help="Markup account (adaos comercial) for this product. "
+        help="Markup account for this product. "
         "If empty, falls back to category, then to company default.",
     )
     l10n_ro_account_deferred_vat_id = fields.Many2one(
@@ -22,6 +22,6 @@ class ProductTemplate(models.Model):
         company_dependent=True,
         string="Deferred VAT Account (4428)",
         domain=ACCOUNT_DOMAIN,
-        help="Deferred VAT account (TVA neexigibila) for this product. "
+        help="Deferred VAT account for this product. "
         "If empty, falls back to category, then to company default.",
     )

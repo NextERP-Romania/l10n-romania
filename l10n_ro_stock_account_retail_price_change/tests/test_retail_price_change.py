@@ -179,7 +179,7 @@ class TestRetailPriceChange(TestRetailCommon):
             doc.ids,
         )[0]
         html = html.decode() if isinstance(html, bytes) else html
-        self.assertIn("Proces-verbal privind modificarea pretului", html)
-        self.assertIn("Adaos comercial (378)", html)
-        self.assertIn("TVA neexigibila (4428)", html)
+        self.assertIn("Retail Price Change Report", html)
+        self.assertIn("Commercial Markup (378)", html)
+        self.assertIn("Deferred VAT (4428)", html)
         self.assertIn(doc.name, html)

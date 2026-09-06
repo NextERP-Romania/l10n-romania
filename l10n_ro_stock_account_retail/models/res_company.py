@@ -14,7 +14,7 @@ class ResCompany(models.Model):
         string="Default Retail Markup Account (378)",
         check_company=True,
         domain=ACCOUNT_DOMAIN,
-        help="Default markup account (adaos comercial) used as a fallback "
+        help="Default markup account used as a fallback "
         "when no override is set on the location, product, or category.",
     )
     l10n_ro_account_deferred_vat_id = fields.Many2one(
@@ -22,7 +22,7 @@ class ResCompany(models.Model):
         string="Default Retail Deferred VAT Account (4428)",
         check_company=True,
         domain=ACCOUNT_DOMAIN,
-        help="Default deferred VAT account (TVA neexigibila) used as a "
+        help="Default deferred VAT account used as a "
         "fallback when no override is set on the location, product, or "
         "category.",
     )

@@ -4,7 +4,7 @@
         <field name="name">l10n.ro.retail.price.change.form</field>
         <field name="model">l10n.ro.retail.price.change</field>
         <field name="arch" type="xml">
-            <form string="Proces Verbal de Schimbare Pret">
+            <form string="Retail Price Change">
                 <header>
                     <button
                         name="action_load_products"
@@ -115,7 +115,7 @@
         <field name="model">l10n.ro.retail.price.change</field>
         <field name="arch" type="xml">
             <list
-                string="Procese Verbale Schimbare Pret"
+                string="Retail Price Changes"
                 decoration-info="state == 'draft'"
                 decoration-muted="state == 'cancel'"
             >
@@ -169,7 +169,7 @@
     </record>
 
     <record id="action_retail_price_change" model="ir.actions.act_window">
-        <field name="name">Schimbari de Pret (Marfa in Magazin)</field>
+        <field name="name">Retail Price Changes</field>
         <field name="res_model">l10n.ro.retail.price.change</field>
         <field name="view_mode">list,form</field>
         <field name="search_view_id" ref="view_retail_price_change_search" />
@@ -177,7 +177,7 @@
 
     <menuitem
         id="menu_retail_price_change"
-        name="Schimbari de Pret Retail"
+        name="Retail Price Changes"
         parent="stock.menu_stock_warehouse_mgmt"
         action="action_retail_price_change"
         sequence="100"

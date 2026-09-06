@@ -27,7 +27,7 @@ class RetailMarkupLine(models.Model):
     """
 
     _name = "l10n.ro.retail.markup.line"
-    _description = "Retail Markup Ledger Line (Adaos si TVA neexigibila)"
+    _description = "Retail Markup Ledger Line"
     _order = "date desc, id desc"
 
     company_id = fields.Many2one(

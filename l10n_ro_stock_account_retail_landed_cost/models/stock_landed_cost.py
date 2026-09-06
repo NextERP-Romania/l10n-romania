@@ -136,7 +136,7 @@ class StockLandedCost(models.Model):
                     "%(warehouse)s, which carries only %(markup).2f of markup: "
                     "the goods would cost more than they are priced at.\n\n"
                     "Raise the shelf price by at least %(per_unit).2f a unit "
-                    "with a Proces Verbal de Schimbare Pret before validating, "
+                    "with a retail price change before validating, "
                     "or tick 'Allow Selling Below Cost' on the warehouse if "
                     "the shop genuinely sells this below cost.",
                     cost=self.display_name,

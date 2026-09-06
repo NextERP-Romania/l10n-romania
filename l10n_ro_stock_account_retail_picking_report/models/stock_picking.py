@@ -10,6 +10,7 @@ class StockPicking(models.Model):
     l10n_ro_retail_incoming = fields.Boolean(
         string="Reception Into a Shop",
         compute="_compute_l10n_ro_retail_incoming",
+        store=True,
         help="At least one line brings goods into a retail location from "
         "outside it. Such a transfer prints as a reception note showing the "
         "cost, the markup and the shelf price.",

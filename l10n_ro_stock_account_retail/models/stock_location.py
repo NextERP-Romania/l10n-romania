@@ -21,7 +21,7 @@ class StockLocation(models.Model):
         string="Markup Account (378)",
         company_dependent=True,
         domain=ACCOUNT_DOMAIN,
-        help="Account used for the commercial markup (adaos comercial) "
+        help="Account used for the commercial markup "
         "between cost and retail price without VAT. Applies to this location "
         "and, unless they override it, to its sublocations. Overrides the "
         "product / category / company defaults.",
@@ -32,7 +32,7 @@ class StockLocation(models.Model):
         company_dependent=True,
         domain=ACCOUNT_DOMAIN,
         help="Account used for the VAT included in the retail price but "
-        "not yet collected (TVA neexigibila). Applies to this location and, "
+        "not yet collected. Applies to this location and, "
         "unless they override it, to its sublocations. Overrides the "
         "product / category / company defaults.",
     )

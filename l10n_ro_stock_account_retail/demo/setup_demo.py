@@ -23,6 +23,8 @@ Builds:
 # pylint: disable=print-used
 import random as _random
 
+from odoo.exceptions import UserError
+
 env = env  # noqa: F821 (provided by `odoo shell`)
 log = lambda *a: print("[demo]", *a)  # noqa: E731
 _random.seed(42)
@@ -548,6 +550,429 @@ log(f"Posted PVSP: {docs.mapped('name')}")
 
 
 # -----------------------------------------------------------------------------
+# Helpers shared by the case sections below
+# -----------------------------------------------------------------------------
+installed_modules = set(
+    env["ir.module.module"].search([("state", "=", "installed")]).mapped("name")
+)
+
+
+def make_transfer_to_location(date_str, src_location, dest_location, lines):
+    """A done internal transfer between two explicit locations."""
+    picking = env["stock.picking"].create(
+        {
+            "picking_type_id": main_wh.int_type_id.id,
+            "location_id": src_location.id,
+            "location_dest_id": dest_location.id,
+            "company_id": company.id,
+            "scheduled_date": date_str,
+        }
+    )
+    for product, qty in lines:
+        env["stock.move"].create(
+            {
+                "product_id": product.id,
+                "product_uom_qty": qty,
+                "product_uom": product.uom_id.id,
+                "location_id": src_location.id,
+                "location_dest_id": dest_location.id,
+                "picking_id": picking.id,
+                "date": date_str,
+            }
+        )
+    picking.action_confirm()
+    picking.action_assign()
+    for m in picking.move_ids:
+        m.quantity = m.product_uom_qty
+        m.picked = True
+    picking.with_context(force_period_date=date_str)._action_done()
+    picking.move_ids.write({"date": date_str})
+    return picking
+
+
+def make_transfer_between(date_str, src_warehouse, dest_warehouse, lines):
+    return make_transfer_to_location(
+        date_str, src_warehouse.lot_stock_id, dest_warehouse.lot_stock_id, lines
+    )
+
+
+def make_return(picking, date_str, ratio=1.0):
+    """Return part of a done picking, through the standard return wizard, so
+    ``origin_returned_move_id`` is set and the retail legs settle against the
+    original move rather than against today's price."""
+    wizard = (
+        env["stock.return.picking"]
+        .with_context(active_id=picking.id, active_model="stock.picking")
+        .create({})
+    )
+    for line in wizard.product_return_moves:
+        line.quantity = max(round(line.quantity * ratio, 2), 1.0)
+    result = wizard.action_create_returns()
+    ret = env["stock.picking"].browse(result["res_id"])
+    ret.action_assign()
+    for m in ret.move_ids:
+        m.quantity = m.product_uom_qty
+        m.picked = True
+    ret.with_context(force_period_date=date_str)._action_done()
+    ret.move_ids.write({"date": date_str})
+    return ret
+
+
+def make_po_into(date_str, warehouse, products_qty):
+    """A purchase order received straight into a warehouse, not billed yet."""
+    po = PurchaseOrder.create(
+        {
+            "partner_id": supplier.id,
+            "date_order": date_str,
+            "picking_type_id": warehouse.in_type_id.id,
+            "order_line": [
+                (
+                    0,
+                    0,
+                    {
+                        "product_id": product.id,
+                        "product_qty": qty,
+                        "price_unit": product.standard_price,
+                        "tax_ids": [(6, 0, tax_purchase.ids)],
+                        "date_planned": date_str,
+                    },
+                )
+                for product, qty in products_qty
+            ],
+        }
+    )
+    po.button_confirm()
+    for picking in po.picking_ids:
+        picking.action_assign()
+        for m in picking.move_ids:
+            m.quantity = m.product_uom_qty
+            m.picked = True
+        picking.with_context(force_period_date=date_str)._action_done()
+        picking.move_ids.write({"date": date_str})
+    return po
+
+
+# -----------------------------------------------------------------------------
+# Case: manual Proces Verbal (the auto one above came from a pricelist change)
+# -----------------------------------------------------------------------------
+if "l10n.ro.retail.price.change" in env:
+    pv = env["l10n.ro.retail.price.change"].create({"warehouse_id": mag2.id})
+    pv.action_load_products()
+    for line in pv.line_ids[:5]:
+        line.new_price_with_vat = round(line.old_price_with_vat * 1.15, 2)
+    pv.action_post()
+    log(
+        f"Manual price change {pv.name}: {len(pv.line_ids)} lines, "
+        f"markup delta {sum(pv.line_ids.mapped('markup_diff_total')):.2f}"
+    )
+
+
+# -----------------------------------------------------------------------------
+# Case: transfer between two shops - source releases its markup at its own
+# shelf price, destination loads its own
+# -----------------------------------------------------------------------------
+shop_to_shop = make_transfer_between(
+    "2026-05-12", mag1, mag2, [(products[i], 2) for i in range(0, 5)]
+)
+log(f"Shop to shop transfer: {shop_to_shop.name} MAG1 -> MAG2")
+
+
+# -----------------------------------------------------------------------------
+# Case: transfer back from a shop to the depot - the markup comes off, the
+# goods go back to being valued at cost
+# -----------------------------------------------------------------------------
+shop_to_depot = make_transfer_between(
+    "2026-05-14", mag1, main_wh, [(products[i], 1) for i in range(5, 9)]
+)
+log(f"Shop to depot transfer: {shop_to_depot.name} MAG1 -> WH")
+
+
+# -----------------------------------------------------------------------------
+# Case: customer return into a shop - puts back exactly what the sale released,
+# not what today's pricelist would say
+# -----------------------------------------------------------------------------
+sale_picking = so1.picking_ids.filtered(lambda p: p.state == "done")[:1]
+sale_return = make_return(sale_picking, "2026-05-16", ratio=0.5)
+log(f"Customer return into MAG1: {sale_return.name}")
+
+
+# -----------------------------------------------------------------------------
+# Case: purchase return out of a shop
+# -----------------------------------------------------------------------------
+shop_reception = env["stock.picking"].search(
+    [
+        ("location_dest_id", "=", mag1.lot_stock_id.id),
+        ("state", "=", "done"),
+        ("picking_type_id.code", "=", "internal"),
+    ],
+    limit=1,
+)
+if shop_reception:
+    purchase_return = make_return(shop_reception, "2026-05-18", ratio=0.25)
+    log(f"Return out of MAG1: {purchase_return.name}")
+
+
+# -----------------------------------------------------------------------------
+# Case: a shelf inside MAG1 with its own 378/4428, so the parent walk is
+# exercised: the shelf inherits nothing of its own and must resolve upwards
+# -----------------------------------------------------------------------------
+shelf = env["stock.location"].search(
+    [("name", "=", "Raft Bauturi"), ("location_id", "=", mag1.lot_stock_id.id)],
+    limit=1,
+)
+if not shelf:
+    shelf = env["stock.location"].create(
+        {
+            "name": "Raft Bauturi",
+            "usage": "internal",
+            "location_id": mag1.lot_stock_id.id,
+        }
+    )
+shelf_move = make_transfer_to_location(
+    "2026-05-20", main_wh.lot_stock_id, shelf, [(products[10], 3)]
+)
+log(
+    f"Transfer into sublocation {shelf.display_name}: {shelf_move.name}; "
+    f"markup account resolved = "
+    f"{shelf._l10n_ro_get_markup_account(product=products[10]).code}"
+)
+
+
+# -----------------------------------------------------------------------------
+# Case: a clearance shop that is allowed to sell below cost
+# -----------------------------------------------------------------------------
+pl_outlet = make_pricelist("PVA MAG3 Outlet")
+outlet = make_retail_wh("MAG3 Outlet", "MG3", pl_outlet, a_378, a_4428)
+outlet.l10n_ro_retail_allow_negative_markup = True
+clearance = products[20]
+outlet_item = (
+    env["product.pricelist.item"]
+    .with_context(skip_retail_price_change=True)
+    .create(
+        {
+            "pricelist_id": pl_outlet.id,
+            "applied_on": "0_product_variant",
+            "product_id": clearance.id,
+            "compute_price": "fixed",
+            # Deliberately under cost: this is what the flag is for.
+            "fixed_price": round(clearance.standard_price * 0.8, 2),
+        }
+    )
+)
+outlet_move = make_transfer_between("2026-05-22", main_wh, outlet, [(clearance, 5)])
+outlet_markup, _outlet_vat = env["l10n.ro.retail.markup.line"]._l10n_ro_carried(
+    outlet, clearance, company
+)
+log(
+    f"Clearance shop {outlet.code}: {clearance.name} at "
+    f"{outlet_item.fixed_price} against a cost of "
+    f"{clearance.standard_price:.2f} -> markup {outlet_markup:.2f}"
+)
+
+
+# -----------------------------------------------------------------------------
+# Case: landed cost on goods held in a shop - 371 stays put, the markup drops.
+# Shown twice: one that fits inside the markup, and one that does not and is
+# therefore refused, which is the whole point of the guard.
+# -----------------------------------------------------------------------------
+if "l10n_ro_stock_account_retail_landed_cost" in installed_modules:
+    lc_product = env["product.product"].search(
+        [("name", "=", "Transport marfa")], limit=1
+    )
+    if not lc_product:
+        lc_product = env["product.product"].create(
+            {
+                "name": "Transport marfa",
+                "type": "service",
+                "is_storable": False,
+                "landed_cost_ok": True,
+                "standard_price": 0.0,
+            }
+        )
+    # A reception of its own, so the markup is whole and the arithmetic is
+    # readable rather than whatever is left of an earlier picking.
+    lc_item = products[3]
+    lc_po = make_po_into("2026-05-24", mag1, [(lc_item, 20)])
+    lc_picking = lc_po.picking_ids[:1]
+
+    def make_landed_cost(amount, date_str):
+        cost = env["stock.landed.cost"].create(
+            {
+                "company_id": company.id,
+                "date": date_str,
+                "picking_ids": [(6, 0, lc_picking.ids)],
+                "account_journal_id": journal.id,
+                "cost_lines": [
+                    (
+                        0,
+                        0,
+                        {
+                            "product_id": lc_product.id,
+                            "price_unit": amount,
+                            "split_method": "equal",
+                            "account_id": a_607.id,
+                        },
+                    )
+                ],
+            }
+        )
+        cost.compute_landed_cost()
+        return cost
+
+    Ledger = env["l10n.ro.retail.markup.line"]
+    before_markup, _ = Ledger._l10n_ro_carried(mag1, lc_item, company)
+    small = make_landed_cost(round(before_markup * 0.25, 2), "2026-05-24")
+    small.button_validate()
+    after_markup, _ = Ledger._l10n_ro_carried(mag1, lc_item, company)
+    log(
+        f"Landed cost {small.name} of {small.amount_total:.2f} on "
+        f"{lc_item.name}: markup {before_markup:.2f} -> {after_markup:.2f}, "
+        f"371 unchanged"
+    )
+
+    # Now one bigger than what is left of the markup. It has to be refused,
+    # naming the price rise that would make it work.
+    oversized = make_landed_cost(round(after_markup * 3, 2), "2026-05-25")
+    try:
+        oversized.button_validate()
+    except UserError as exc:
+        log(f"Oversized landed cost correctly refused: {exc.args[0].splitlines()[0]}")
+    else:
+        log("WARNING: an oversized landed cost was accepted")
+
+
+# -----------------------------------------------------------------------------
+# Case: a vendor bill above the reception price - the difference lands on the
+# markup, and the confirmation wizard says so before it is posted
+# -----------------------------------------------------------------------------
+if "l10n_ro_stock_account_retail_price_difference" in installed_modules:
+    company.l10n_ro_stock_acc_price_diff = True
+    pd_product = products[1]
+    pd_po = make_po_into("2026-05-26", mag1, [(pd_product, 10)])
+    pd_po.action_create_invoice()
+    pd_bill = pd_po.invoice_ids[:1]
+    pd_bill.invoice_date = "2026-05-26"
+    for line in pd_bill.invoice_line_ids:
+        line.price_unit = round(line.price_unit * 1.20, 2)
+    pd_bill.with_context(l10n_ro_approved_price_difference=True).action_post()
+    pd_markup, _pd_vat = env["l10n.ro.retail.markup.line"]._l10n_ro_carried(
+        mag1, pd_product, company
+    )
+    log(
+        f"Vendor bill {pd_bill.name} 20% above reception on "
+        f"{pd_product.name}; markup now {pd_markup:.2f}"
+    )
+
+
+# -----------------------------------------------------------------------------
+# Case: a point of sale session on MAG1, opened, sold through and closed
+# -----------------------------------------------------------------------------
+if "l10n_ro_stock_account_retail_pos" in installed_modules:
+    # `open_ui` refuses the superuser outright, and `odoo shell` is the
+    # superuser, so the whole block runs as the admin user instead.
+    pos_user = env.ref("base.user_admin")
+    pos_user.group_ids |= env.ref("point_of_sale.group_pos_manager")
+    penv = env(user=pos_user)
+
+    cash_journal = penv["account.journal"].search(
+        [("company_id", "=", company.id), ("type", "=", "cash")], limit=1
+    ) or penv["account.journal"].create(
+        {
+            "name": "Casa MAG1",
+            "code": "CSH1",
+            "type": "cash",
+            "company_id": company.id,
+        }
+    )
+    method = penv["pos.payment.method"].search(
+        [("name", "=", "Numerar MAG1")], limit=1
+    ) or penv["pos.payment.method"].create(
+        {
+            "name": "Numerar MAG1",
+            "journal_id": cash_journal.id,
+            "company_id": company.id,
+        }
+    )
+    pos_config = penv["pos.config"].search([("name", "=", "Casa MAG1")], limit=1)
+    if not pos_config:
+        pos_config = penv["pos.config"].create(
+            {
+                "name": "Casa MAG1",
+                "company_id": company.id,
+                "picking_type_id": mag1.pos_type_id.id,
+                "payment_method_ids": [(6, 0, method.ids)],
+            }
+        )
+    pos_config.open_ui()
+    pos_session = pos_config.current_session_id
+    pos_product = products[2]
+    pos_price = pos_product.with_context(pricelist=pl_buc.id).lst_price or 10.0
+    pos_total = round(pos_price * 3, 2)
+    pos_order = penv["pos.order"].create(
+        {
+            "company_id": company.id,
+            "session_id": pos_session.id,
+            "partner_id": customer.id,
+            "lines": [
+                (
+                    0,
+                    0,
+                    {
+                        "product_id": pos_product.id,
+                        "qty": 3,
+                        "price_unit": pos_price,
+                        "price_subtotal": pos_total,
+                        "price_subtotal_incl": pos_total,
+                    },
+                )
+            ],
+            "amount_tax": 0.0,
+            "amount_total": pos_total,
+            "amount_paid": 0.0,
+            "amount_return": 0.0,
+            "last_order_preparation_change": "{}",
+        }
+    )
+    penv["pos.make.payment"].with_context(
+        active_ids=pos_order.ids, active_id=pos_order.id
+    ).create({"amount": pos_total, "payment_method_id": method.id}).check()
+    pos_session.action_pos_session_closing_control()
+    closing_accounts = sorted(
+        set(pos_session.move_id.line_ids.account_id.mapped("code"))
+    )
+    stock_codes = {a_371.code, a_607.code}
+    log(
+        f"POS session {pos_session.name} closed after selling 3 x "
+        f"{pos_product.name}; closing entry touches {closing_accounts} - "
+        f"stock accounts present: {sorted(stock_codes & set(closing_accounts))}"
+    )
+
+
+# -----------------------------------------------------------------------------
+# Case: both printable documents actually render
+# -----------------------------------------------------------------------------
+Report = env["ir.actions.report"]
+if "l10n.ro.retail.price.change" in env:
+    posted_pv = env["l10n.ro.retail.price.change"].search(
+        [("state", "=", "done")], limit=1
+    )
+    if posted_pv:
+        html = Report._render_qweb_html(
+            "l10n_ro_stock_account_retail_price_change."
+            "action_report_retail_price_change",
+            posted_pv.ids,
+        )[0]
+        log(f"Price change report renders: {len(html)} bytes for {posted_pv.name}")
+if "l10n_ro_stock_account_retail_picking_report" in installed_modules:
+    nir = env["stock.picking"].search(
+        [("l10n_ro_retail_incoming", "=", True), ("state", "=", "done")], limit=1
+    )
+    if nir:
+        html = Report._render_qweb_html("stock.action_report_delivery", nir.ids)[0]
+        log(f"Goods receipt note renders: {len(html)} bytes for {nir.name}")
+
+
+# -----------------------------------------------------------------------------
 # Reporting
 # -----------------------------------------------------------------------------
 def show_account(account, at_date=None):
@@ -588,11 +1013,11 @@ def print_report(label, ctx=None):
     for r in rows:
         print(
             f"  {r.warehouse_id.code:4s} {r.product_id.name:28s} "
-            f"{r.quantity:6.1f} {r.value_total:10.2f} "
+            f"{r.quantity:6.1f} {r.cost_total:10.2f} "
             f"{r.markup_total:10.2f} {r.vat_total:10.2f} {r.retail_value:10.2f}"
         )
         totals["qty"] += r.quantity
-        totals["value"] += r.value_total
+        totals["value"] += r.cost_total
         totals["markup"] += r.markup_total
         totals["vat"] += r.vat_total
         totals["retail"] += r.retail_value
@@ -605,19 +1030,29 @@ def print_report(label, ctx=None):
 
 
 print_report("RETAIL STOCK — NOW")
-print_report(
-    "RETAIL STOCK AT 2026-04-10 (before MAG2 received)",
-    ctx={"l10n_ro_retail_at_date": "2026-04-10 23:59:59"},
-)
-print_report(
-    "RETAIL STOCK AT 2026-04-25 (after both received, before later sales)",
-    ctx={"l10n_ro_retail_at_date": "2026-04-25 23:59:59"},
-)
+
+# The report is built on the markup ledger and on the quantities on hand, so
+# it answers for today. Historical snapshots, which the previous view served
+# through an `l10n_ro_retail_at_date` context, are not available: the ledger
+# carries its own dates but the cost side comes from the quants, which do not.
+print()
+print("=" * 78)
+print("PRODUCTS WHOSE SHELF PRICE NO LONGER MATCHES WHAT THE STOCK CARRIES")
+print("=" * 78)
+to_revalue = env["l10n.ro.stock.retail.report"].search([])
+to_revalue = to_revalue.filtered(lambda r: round(r.price_gap_total, 2) != 0)
+for r in to_revalue:
+    print(
+        f"  {r.warehouse_id.code:4s} {r.product_id.name:28s} "
+        f"carried {r.retail_price_unit:8.2f} vs shelf "
+        f"{r.current_price_unit:8.2f} -> {r.price_gap_total:10.2f} to settle"
+    )
+print(f"  ----- {len(to_revalue)} products awaiting a price change -----")
 
 
 print()
 print("=" * 78)
-print("PROCESE VERBALE DE SCHIMBARE PRET")
+print("RETAIL PRICE CHANGE DOCUMENTS")
 print("=" * 78)
 for d in env["l10n.ro.retail.price.change"].search([]):
     print(

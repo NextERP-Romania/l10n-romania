@@ -8,7 +8,7 @@ from odoo.tools.float_utils import float_is_zero
 
 class RetailPriceChange(models.Model):
     _name = "l10n.ro.retail.price.change"
-    _description = "Proces Verbal de Schimbare Pret (Retail Price Change)"
+    _description = "Retail Price Change (Proces Verbal de Schimbare Pret)"
     _inherit = ["mail.thread", "mail.activity.mixin"]
     _order = "date desc, id desc"
 
@@ -265,7 +265,7 @@ class RetailPriceChange(models.Model):
                 "journal_id": self.journal_id.id,
                 "date": self.date,
                 "ref": self.env._(
-                    "Proces verbal schimbare pret %s",
+                    "Retail price change %s",
                     self.name,
                 ),
                 "line_ids": aml_vals,

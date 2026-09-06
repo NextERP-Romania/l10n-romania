@@ -8,7 +8,7 @@ class StockWarehouse(models.Model):
     _inherit = "stock.warehouse"
 
     l10n_ro_retail = fields.Boolean(
-        string="Retail Warehouse (Marfa in Magazin)",
+        string="Retail Warehouse",
         help="Mark this warehouse as retail. Goods in its internal locations "
         "are valued at retail price (PVA) on account 371, with the markup "
         "booked on 378 and the deferred VAT on 4428.",

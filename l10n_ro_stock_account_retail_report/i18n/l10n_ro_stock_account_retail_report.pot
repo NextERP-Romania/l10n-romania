@@ -1,0 +1,146 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* l10n_ro_stock_account_retail_report
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0+e\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-09-06 11:42+0000\n"
+"PO-Revision-Date: 2026-09-06 11:42+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__retail_price_unit
+msgid "Carried PVA / Unit"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__categ_id
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail_report.view_stock_retail_report_search
+msgid "Category"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__company_id
+msgid "Company"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__cost_unit
+msgid "Cost / Unit"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,help:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__retail_value
+msgid ""
+"Cost plus the markup and deferred VAT carried - what account 371 holds for "
+"this stock."
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__currency_id
+msgid "Currency"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__current_price_unit
+msgid "Current Shelf Price / Unit"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__vat_total
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail_report.view_stock_retail_report_list
+msgid "Deferred VAT Carried (4428)"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,help:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__price_gap_total
+msgid ""
+"Difference between the current shelf price and what the stock carries. "
+"Anything other than zero means a price change document is due for this "
+"product."
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__display_name
+msgid "Display Name"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__id
+msgid "ID"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__markup_total
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail_report.view_stock_retail_report_list
+msgid "Markup Carried (378)"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__product_id
+msgid "Product"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__product_tmpl_id
+msgid "Product Template"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__quantity
+msgid "Quantity On Hand"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.actions.act_window,name:l10n_ro_stock_account_retail_report.action_stock_retail_report
+#: model:ir.ui.menu,name:l10n_ro_stock_account_retail_report.menu_stock_retail_report
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail_report.view_stock_retail_report_list
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail_report.view_stock_retail_report_search
+msgid "Retail Stock"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model,name:l10n_ro_stock_account_retail_report.model_l10n_ro_stock_retail_report
+msgid "Retail Stock Report"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__retail_value
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail_report.view_stock_retail_report_list
+msgid "Retail Value (371)"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,help:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__retail_price_unit
+msgid "Retail value per unit, VAT included, as loaded."
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,help:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__current_price_unit
+msgid "Shelf price the warehouse pricelist gives today, VAT included."
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__cost_total
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail_report.view_stock_retail_report_list
+msgid "Stock Value (cost)"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__price_gap_total
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail_report.view_stock_retail_report_list
+msgid "To Revalue"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__warehouse_id
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail_report.view_stock_retail_report_search
+msgid "Warehouse"
+msgstr ""

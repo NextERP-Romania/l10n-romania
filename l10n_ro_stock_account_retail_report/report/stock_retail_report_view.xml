@@ -5,7 +5,7 @@
         <field name="model">l10n.ro.stock.retail.report</field>
         <field name="arch" type="xml">
             <list
-                string="Retail Stock (Marfa in Magazin)"
+                string="Retail Stock"
                 create="false"
                 edit="false"
                 decoration-warning="price_gap_total != 0"
@@ -55,7 +55,7 @@
     </record>
 
     <record id="action_stock_retail_report" model="ir.actions.act_window">
-        <field name="name">Retail Stock (Marfa in Magazin)</field>
+        <field name="name">Retail Stock</field>
         <field name="res_model">l10n.ro.stock.retail.report</field>
         <field name="view_mode">list</field>
         <field name="search_view_id" ref="view_stock_retail_report_search" />
@@ -63,7 +63,7 @@
 
     <menuitem
         id="menu_stock_retail_report"
-        name="Retail Stock (Marfa in Magazin)"
+        name="Retail Stock"
         parent="stock.menu_warehouse_report"
         action="action_stock_retail_report"
         sequence="100"

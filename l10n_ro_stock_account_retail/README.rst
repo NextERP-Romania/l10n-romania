@@ -52,9 +52,17 @@ where the shelf price comes from, and how the markup is booked. The
 price change document, the reporting and the point of sale treatment
 live in modules of their own:
 
-- ``l10n_ro_stock_account_retail_price_change`` — Proces Verbal de
-  Schimbare Pret, its report and the price history
+- ``l10n_ro_stock_account_retail_price_change`` — the price change
+  document, its report and the price history on the product
 - ``l10n_ro_stock_account_retail_report`` — retail stock reporting
+- ``l10n_ro_stock_account_retail_landed_cost`` — keeps 371 at the shelf
+  price when a landed cost raises the cost
+- ``l10n_ro_stock_account_retail_price_difference`` — shows what a
+  vendor bill leaves of the markup, before it is posted
+- ``l10n_ro_stock_account_retail_picking_report`` — cost, markup and
+  shelf price columns on the goods receipt note
+- ``l10n_ro_stock_account_retail_pos`` — keeps the point of sale closing
+  entry from discharging the stock a second time
 
 Configuration
 -------------
@@ -129,6 +137,17 @@ price, so a sale return puts back exactly what the sale released.
 The ledger is visible under *Inventory → Reporting → Retail Markup
 Ledger*, and ``stock.quant`` publishes the share carried by each quant
 next to its cost.
+
+Demo
+----
+
+``demo/setup_demo.py`` builds a complete Romanian retail shop and walks
+it through every case the family handles - transfers, sales, returns,
+sublocations, a clearance shop, price changes, landed costs, a purchase
+price difference, a point of sale session, and both printable documents.
+Run it with ``odoo-bin shell -d <database> < demo/setup_demo.py``. Each
+section is guarded by the module it exercises, so it runs with the
+kernel alone and covers more as more of the family is installed.
 
 **Table of contents**
 

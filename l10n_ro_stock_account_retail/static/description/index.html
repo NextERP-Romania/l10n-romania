@@ -394,9 +394,17 @@ where the shelf price comes from, and how the markup is booked. The
 price change document, the reporting and the point of sale treatment
 live in modules of their own:</p>
 <ul class="simple">
-<li><tt class="docutils literal">l10n_ro_stock_account_retail_price_change</tt> — Proces Verbal de
-Schimbare Pret, its report and the price history</li>
+<li><tt class="docutils literal">l10n_ro_stock_account_retail_price_change</tt> — the price change
+document, its report and the price history on the product</li>
 <li><tt class="docutils literal">l10n_ro_stock_account_retail_report</tt> — retail stock reporting</li>
+<li><tt class="docutils literal">l10n_ro_stock_account_retail_landed_cost</tt> — keeps 371 at the shelf
+price when a landed cost raises the cost</li>
+<li><tt class="docutils literal">l10n_ro_stock_account_retail_price_difference</tt> — shows what a
+vendor bill leaves of the markup, before it is posted</li>
+<li><tt class="docutils literal">l10n_ro_stock_account_retail_picking_report</tt> — cost, markup and
+shelf price columns on the goods receipt note</li>
+<li><tt class="docutils literal">l10n_ro_stock_account_retail_pos</tt> — keeps the point of sale closing
+entry from discharging the stock a second time</li>
 </ul>
 <div class="section" id="configuration">
 <h3>Configuration</h3>
@@ -464,6 +472,16 @@ price, so a sale return puts back exactly what the sale released.</p>
 <p>The ledger is visible under <em>Inventory → Reporting → Retail Markup
 Ledger</em>, and <tt class="docutils literal">stock.quant</tt> publishes the share carried by each quant
 next to its cost.</p>
+</div>
+<div class="section" id="demo">
+<h3>Demo</h3>
+<p><tt class="docutils literal">demo/setup_demo.py</tt> builds a complete Romanian retail shop and walks
+it through every case the family handles - transfers, sales, returns,
+sublocations, a clearance shop, price changes, landed costs, a purchase
+price difference, a point of sale session, and both printable documents.
+Run it with <tt class="docutils literal"><span class="pre">odoo-bin</span> shell <span class="pre">-d</span> &lt;database&gt; &lt; demo/setup_demo.py</tt>. Each
+section is guarded by the module it exercises, so it runs with the
+kernel alone and covers more as more of the family is installed.</p>
 <p><strong>Table of contents</strong></p>
 </div>
 </div>

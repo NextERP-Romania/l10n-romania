@@ -17,7 +17,7 @@
                     />
                     <field
                         name="l10n_ro_account_markup_id"
-                        placeholder="378 - default pentru depozite retail (marfa in magazin)"
+                        placeholder="378 - default for retail warehouses"
                     />
                 </div>
                 <div class="row mt16">
@@ -28,7 +28,7 @@
                     />
                     <field
                         name="l10n_ro_account_deferred_vat_id"
-                        placeholder="4428 - default TVA neexigibila pentru marfa in magazin"
+                        placeholder="4428 - default deferred VAT for retail warehouses"
                     />
                 </div>
             </xpath>

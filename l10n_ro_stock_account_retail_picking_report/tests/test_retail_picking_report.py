@@ -59,6 +59,6 @@ class TestRetailPickingReport(TestRetailCommon):
             "stock.action_report_delivery", move.picking_id.ids
         )[0]
         html = html.decode() if isinstance(html, bytes) else html
-        self.assertIn("Nota de receptie si constatare de diferente", html)
-        self.assertIn("Procent adaos", html)
-        self.assertIn("TVA neexigibila", html)
+        self.assertIn("Goods Receipt and Discrepancy Note", html)
+        self.assertIn("Markup %", html)
+        self.assertIn("Deferred VAT", html)

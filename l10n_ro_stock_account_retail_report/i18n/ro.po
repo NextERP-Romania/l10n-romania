@@ -1,0 +1,147 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* l10n_ro_stock_account_retail_report
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0+e\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-09-06 11:42+0000\n"
+"PO-Revision-Date: 2026-09-06 11:42+0000\n"
+"Last-Translator: NextERP Romania\n"
+"Language-Team: Romanian\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < 20)) ? 1 : 2);\n"
+"Language: ro\n"
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__retail_price_unit
+msgid "Carried PVA / Unit"
+msgstr "PVA unitar purtat"
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__categ_id
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail_report.view_stock_retail_report_search
+msgid "Category"
+msgstr "Categorie"
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__company_id
+msgid "Company"
+msgstr "Companie"
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__cost_unit
+msgid "Cost / Unit"
+msgstr "Cost unitar"
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,help:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__retail_value
+msgid ""
+"Cost plus the markup and deferred VAT carried - what account 371 holds for "
+"this stock."
+msgstr "Costul plus adaosul și TVA neexigibilă purtate - ceea ce ține contul 371 pentru acest stoc."
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__currency_id
+msgid "Currency"
+msgstr "Monedă"
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__current_price_unit
+msgid "Current Shelf Price / Unit"
+msgstr "Preț de raft actual pe bucată"
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__vat_total
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail_report.view_stock_retail_report_list
+msgid "Deferred VAT Carried (4428)"
+msgstr "TVA neexigibilă purtată (4428)"
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,help:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__price_gap_total
+msgid ""
+"Difference between the current shelf price and what the stock carries. "
+"Anything other than zero means a price change document is due for this "
+"product."
+msgstr "Diferența dintre prețul de raft actual și ce poartă stocul. Orice valoare diferită de zero înseamnă că pentru acest produs este nevoie de un proces verbal de schimbare a prețului."
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__display_name
+msgid "Display Name"
+msgstr "Nume afișat"
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__id
+msgid "ID"
+msgstr "ID"
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__markup_total
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail_report.view_stock_retail_report_list
+msgid "Markup Carried (378)"
+msgstr "Adaos purtat (378)"
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__product_id
+msgid "Product"
+msgstr "Produs"
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__product_tmpl_id
+msgid "Product Template"
+msgstr "Șablon produs"
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__quantity
+msgid "Quantity On Hand"
+msgstr "Cantitate în stoc"
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.actions.act_window,name:l10n_ro_stock_account_retail_report.action_stock_retail_report
+#: model:ir.ui.menu,name:l10n_ro_stock_account_retail_report.menu_stock_retail_report
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail_report.view_stock_retail_report_list
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail_report.view_stock_retail_report_search
+msgid "Retail Stock"
+msgstr "Stoc în magazin"
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model,name:l10n_ro_stock_account_retail_report.model_l10n_ro_stock_retail_report
+msgid "Retail Stock Report"
+msgstr "Raport stoc în magazin"
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__retail_value
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail_report.view_stock_retail_report_list
+msgid "Retail Value (371)"
+msgstr "Valoare la preț de vânzare (371)"
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,help:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__retail_price_unit
+msgid "Retail value per unit, VAT included, as loaded."
+msgstr "Valoarea de vânzare pe bucată, cu TVA inclus, așa cum a fost încărcată."
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,help:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__current_price_unit
+msgid "Shelf price the warehouse pricelist gives today, VAT included."
+msgstr "Prețul de raft dat azi de lista de prețuri a gestiunii, cu TVA inclus."
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__cost_total
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail_report.view_stock_retail_report_list
+msgid "Stock Value (cost)"
+msgstr "Valoare stoc (la cost)"
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__price_gap_total
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail_report.view_stock_retail_report_list
+msgid "To Revalue"
+msgstr "De reevaluat"
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__warehouse_id
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail_report.view_stock_retail_report_search
+msgid "Warehouse"
+msgstr "Depozit"

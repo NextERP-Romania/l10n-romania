@@ -19,7 +19,7 @@ class StockRetailReport(models.Model):
     """
 
     _name = "l10n.ro.stock.retail.report"
-    _description = "Retail stock report (Marfa in magazin)"
+    _description = "Retail Stock Report"
     _auto = False
     _order = "warehouse_id, product_id"
 
@@ -103,6 +103,20 @@ class StockRetailReport(models.Model):
                      pp.product_tmpl_id, pt.categ_id
             HAVING SUM(ml.quantity) > 0
         """
+
+    def _search(self, domain, *args, **kwargs):
+        """Make sure the ledger is on disk before reading the view.
+
+        This is a SQL view over ``l10n.ro.retail.markup.line``. The ORM
+        flushes the model being queried, but it has no way to know that this
+        one reads another table, so rows written earlier in the same
+        transaction stay in the cache and the report silently comes back
+        short. A request that only reads never notices; anything that posts
+        and then reports - a test, a wizard, an import - does.
+        """
+        self.env["l10n.ro.retail.markup.line"].flush_model()
+        self.env["stock.quant"].flush_model()
+        return super()._search(domain, *args, **kwargs)
 
     @api.depends("product_id", "warehouse_id", "quantity", "markup_total", "vat_total")
     def _compute_values(self):

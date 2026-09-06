@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <odoo>
     <record id="action_report_retail_price_change" model="ir.actions.report">
-        <field name="name">Proces Verbal Schimbare Pret</field>
+        <field name="name">Retail Price Change Report</field>
         <field name="model">l10n.ro.retail.price.change</field>
         <field name="report_type">qweb-pdf</field>
         <field
@@ -20,47 +20,43 @@
             <t t-foreach="docs" t-as="doc">
                 <t t-call="web.external_layout">
                     <div class="page">
-                        <h4 class="text-center">
-                            Proces-verbal privind modificarea pretului de vanzare
-                            cu amanuntul
-                        </h4>
+                        <h4 class="text-center">Retail Price Change Report</h4>
                         <div class="text-center mb-3">
                             <span t-field="doc.name" />
-                            din
+                            <span> of </span>
                             <span t-field="doc.date" />
                         </div>
 
                         <div class="row mb-3">
                             <div class="col-6">
-                                <strong>Gestiunea:</strong>
+                                <strong>Warehouse:</strong>
                                 <span t-field="doc.warehouse_id" />
                             </div>
                             <div class="col-6">
-                                <strong>Lista de preturi:</strong>
+                                <strong>Pricelist:</strong>
                                 <span t-field="doc.pricelist_id" />
                             </div>
                         </div>
 
                         <p>
-                            Avand in vedere evolutia cererii si a ofertei pe piata,
-                            se decide modificarea pretului de vanzare cu amanuntul
-                            pentru urmatoarele produse aflate in stoc, in limita
-                            adaosului comercial practicat. Preturile sunt exprimate
-                            cu TVA inclus.
+                            Given the movement of supply and demand on the market,
+                            the retail price of the following goods held in stock is
+                            changed, within the commercial markup practised. Prices
+                            are stated VAT included.
                         </p>
 
                         <table class="table table-sm table-bordered">
                             <thead>
                                 <tr>
-                                    <th class="text-center">Nr.</th>
-                                    <th>Denumire produs</th>
-                                    <th class="text-center">UM</th>
-                                    <th class="text-end">Cantitate</th>
-                                    <th class="text-end">Pret vechi</th>
-                                    <th class="text-end">Pret nou</th>
-                                    <th class="text-end">Valoare veche</th>
-                                    <th class="text-end">Valoare noua</th>
-                                    <th class="text-end">Diferenta</th>
+                                    <th class="text-center">No.</th>
+                                    <th>Product</th>
+                                    <th class="text-center">UoM</th>
+                                    <th class="text-end">Quantity</th>
+                                    <th class="text-end">Old Price</th>
+                                    <th class="text-end">New Price</th>
+                                    <th class="text-end">Old Value</th>
+                                    <th class="text-end">New Value</th>
+                                    <th class="text-end">Difference</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -158,17 +154,13 @@
                             </tfoot>
                         </table>
 
-                        <h6 class="mt-4">Repartizarea diferentei pe conturi</h6>
+                        <h6 class="mt-4">Breakdown of the difference by account</h6>
                         <table class="table table-sm table-bordered">
                             <thead>
                                 <tr>
-                                    <th>Denumire produs</th>
-                                    <th class="text-end">
-                                        Adaos comercial (378)
-                                    </th>
-                                    <th class="text-end">
-                                        TVA neexigibila (4428)
-                                    </th>
+                                    <th>Product</th>
+                                    <th class="text-end">Commercial Markup (378)</th>
+                                    <th class="text-end">Deferred VAT (4428)</th>
                                     <th class="text-end">Total (371)</th>
                                 </tr>
                             </thead>
@@ -242,15 +234,15 @@
 
                         <div class="row mt-5">
                             <div class="col-4">
-                                <p>Intocmit,</p>
+                                <p>Prepared by,</p>
                                 <p class="mt-4">.............................</p>
                             </div>
                             <div class="col-4">
-                                <p>Gestionar,</p>
+                                <p>Stock keeper,</p>
                                 <p class="mt-4">.............................</p>
                             </div>
                             <div class="col-4">
-                                <p>Aprobat,</p>
+                                <p>Approved by,</p>
                                 <p class="mt-4">.............................</p>
                             </div>
                         </div>

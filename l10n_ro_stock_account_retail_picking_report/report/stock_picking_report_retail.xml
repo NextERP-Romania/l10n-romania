@@ -8,7 +8,7 @@
         <!-- Name the document for what it is when goods enter a shop. -->
         <xpath expr="//h2/span[1]" position="before">
             <t t-if="o.l10n_ro_retail_incoming">
-                <span>Nota de receptie si constatare de diferente</span>
+                <span>Goods Receipt and Discrepancy Note</span>
                 <br />
             </t>
         </xpath>
@@ -21,28 +21,28 @@
         >
             <t t-if="o.l10n_ro_retail_incoming">
                 <th class="text-end">
-                    <strong>Pret unitar achizitie</strong>
+                    <strong>Purchase Unit Price</strong>
                 </th>
                 <th class="text-end">
-                    <strong>Valoare achizitie</strong>
+                    <strong>Purchase Value</strong>
                 </th>
                 <th class="text-end">
-                    <strong>Procent adaos</strong>
+                    <strong>Markup %</strong>
                 </th>
                 <th class="text-end">
-                    <strong>Valoare adaos</strong>
+                    <strong>Markup Value</strong>
                 </th>
                 <th class="text-end">
-                    <strong>Pret vanzare fara TVA</strong>
+                    <strong>Retail Price excl. VAT</strong>
                 </th>
                 <th class="text-end">
-                    <strong>TVA neexigibila</strong>
+                    <strong>Deferred VAT</strong>
                 </th>
                 <th class="text-end">
-                    <strong>Pret vanzare</strong>
+                    <strong>Retail Price</strong>
                 </th>
                 <th class="text-end">
-                    <strong>Valoare vanzare</strong>
+                    <strong>Retail Value</strong>
                 </th>
             </t>
         </xpath>
