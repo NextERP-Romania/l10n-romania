@@ -167,3 +167,19 @@ class TestRetailPriceChange(TestRetailCommon):
         with self.assertRaises(UserError):
             doc.action_draft()
         self.assertEqual(doc.state, "done")
+
+    def test_proces_verbal_renders(self):
+        """The Proces Verbal has to print - it is the document the shop signs."""
+        doc, _line = self._do_price_change(
+            self.warehouse_mag1, self.product_retail, 10, 178.5
+        )
+        html = self.env["ir.actions.report"]._render_qweb_html(
+            "l10n_ro_stock_account_retail_price_change."
+            "action_report_retail_price_change",
+            doc.ids,
+        )[0]
+        html = html.decode() if isinstance(html, bytes) else html
+        self.assertIn("Proces-verbal privind modificarea pretului", html)
+        self.assertIn("Adaos comercial (378)", html)
+        self.assertIn("TVA neexigibila (4428)", html)
+        self.assertIn(doc.name, html)
