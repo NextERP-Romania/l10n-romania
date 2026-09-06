@@ -31,6 +31,12 @@
                         string="Reset to Draft"
                         invisible="state == 'draft'"
                     />
+                    <button
+                        name="%(action_report_retail_price_change)d"
+                        type="action"
+                        string="Print"
+                        invisible="state != 'done'"
+                    />
                     <field name="state" widget="statusbar" />
                 </header>
                 <sheet>
@@ -70,7 +76,7 @@
                             <field name="product_id" readonly="1" />
                             <field name="location_id" readonly="1" />
                             <field name="quantity" />
-                            <field name="cost_unit" />
+                            <field name="cost_unit" readonly="1" />
                             <field name="old_price_with_vat" />
                             <field name="old_markup_unit" optional="hide" />
                             <field name="old_vat_unit" optional="hide" />
@@ -84,6 +90,20 @@
                     <group>
                         <field name="notes" placeholder="Internal notes..." />
                     </group>
+                    <notebook invisible="not markup_line_ids">
+                        <page string="Markup Ledger" name="markup_ledger">
+                            <field name="markup_line_ids" readonly="1">
+                                <list>
+                                    <field name="date" />
+                                    <field name="product_id" />
+                                    <field name="location_id" />
+                                    <field name="markup" sum="Markup (378)" />
+                                    <field name="vat" sum="Deferred VAT (4428)" />
+                                    <field name="account_move_id" />
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
                 </sheet>
                 <chatter />
             </form>

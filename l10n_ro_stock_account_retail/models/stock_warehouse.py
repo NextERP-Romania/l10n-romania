@@ -17,8 +17,16 @@ class StockWarehouse(models.Model):
         "product.pricelist",
         string="Retail Pricelist",
         check_company=True,
-        help="Pricelist used to determine the retail price (PVA) for "
-        "products in this warehouse. The price is interpreted through the "
-        "product taxes to split it between markup (378) and deferred VAT "
-        "(4428). If empty, product.list_price is used.",
+        help="Pricelist holding the shelf price (PVA) of the products in this "
+        "warehouse. Prices on a retail pricelist are always VAT included: it "
+        "is the price on the shelf label, and the price account 371 carries. "
+        "If empty, the product sale price is used.",
+    )
+    l10n_ro_retail_allow_negative_markup = fields.Boolean(
+        string="Allow Selling Below Cost",
+        help="By default a shelf price lower than the cost is refused, because "
+        "it books a negative markup on 378 and almost always means the price "
+        "or the cost is wrong. Tick this for a shop that legitimately sells "
+        "below cost - clearance, perishables close to expiry, the cases in "
+        "OG 99/2000 - where the negative markup is intended.",
     )

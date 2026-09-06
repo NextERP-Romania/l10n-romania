@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="action_report_retail_price_change" model="ir.actions.report">
+        <field name="name">Proces Verbal Schimbare Pret</field>
+        <field name="model">l10n.ro.retail.price.change</field>
+        <field name="report_type">qweb-pdf</field>
+        <field
+            name="report_name"
+        >l10n_ro_stock_account_retail_price_change.report_retail_price_change</field>
+        <field
+            name="report_file"
+        >l10n_ro_stock_account_retail_price_change.report_retail_price_change</field>
+        <field name="print_report_name">object.name</field>
+        <field name="binding_model_id" ref="model_l10n_ro_retail_price_change" />
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="report_retail_price_change">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <h4 class="text-center">
+                            Proces-verbal privind modificarea pretului de vanzare
+                            cu amanuntul
+                        </h4>
+                        <div class="text-center mb-3">
+                            <span t-field="doc.name" />
+                            din
+                            <span t-field="doc.date" />
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <strong>Gestiunea:</strong>
+                                <span t-field="doc.warehouse_id" />
+                            </div>
+                            <div class="col-6">
+                                <strong>Lista de preturi:</strong>
+                                <span t-field="doc.pricelist_id" />
+                            </div>
+                        </div>
+
+                        <p>
+                            Avand in vedere evolutia cererii si a ofertei pe piata,
+                            se decide modificarea pretului de vanzare cu amanuntul
+                            pentru urmatoarele produse aflate in stoc, in limita
+                            adaosului comercial practicat. Preturile sunt exprimate
+                            cu TVA inclus.
+                        </p>
+
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                                <tr>
+                                    <th class="text-center">Nr.</th>
+                                    <th>Denumire produs</th>
+                                    <th class="text-center">UM</th>
+                                    <th class="text-end">Cantitate</th>
+                                    <th class="text-end">Pret vechi</th>
+                                    <th class="text-end">Pret nou</th>
+                                    <th class="text-end">Valoare veche</th>
+                                    <th class="text-end">Valoare noua</th>
+                                    <th class="text-end">Diferenta</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-set="seq" t-value="0" />
+                                <t t-set="total_old" t-value="0" />
+                                <t t-set="total_new" t-value="0" />
+                                <t t-foreach="doc.line_ids" t-as="line">
+                                    <t t-set="seq" t-value="seq + 1" />
+                                    <t
+                                        t-set="old_value"
+                                        t-value="line.old_price_with_vat * line.quantity"
+                                    />
+                                    <t
+                                        t-set="new_value"
+                                        t-value="line.new_price_with_vat * line.quantity"
+                                    />
+                                    <t
+                                        t-set="total_old"
+                                        t-value="total_old + old_value"
+                                    />
+                                    <t
+                                        t-set="total_new"
+                                        t-value="total_new + new_value"
+                                    />
+                                    <tr>
+                                        <td class="text-center">
+                                            <span t-esc="seq" />
+                                        </td>
+                                        <td>
+                                            <span t-field="line.product_id" />
+                                        </td>
+                                        <td class="text-center">
+                                            <span t-field="line.product_id.uom_id" />
+                                        </td>
+                                        <td class="text-end">
+                                            <span t-field="line.quantity" />
+                                        </td>
+                                        <td class="text-end">
+                                            <span
+                                                t-esc="line.old_price_with_vat"
+                                                t-options="{'widget': 'float', 'precision': 2}"
+                                            />
+                                        </td>
+                                        <td class="text-end">
+                                            <span
+                                                t-esc="line.new_price_with_vat"
+                                                t-options="{'widget': 'float', 'precision': 2}"
+                                            />
+                                        </td>
+                                        <td class="text-end">
+                                            <span
+                                                t-esc="old_value"
+                                                t-options="{'widget': 'float', 'precision': 2}"
+                                            />
+                                        </td>
+                                        <td class="text-end">
+                                            <span
+                                                t-esc="new_value"
+                                                t-options="{'widget': 'float', 'precision': 2}"
+                                            />
+                                        </td>
+                                        <td class="text-end">
+                                            <span
+                                                t-esc="new_value - old_value"
+                                                t-options="{'widget': 'float', 'precision': 2}"
+                                            />
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="6" class="text-end">
+                                        <strong>Total</strong>
+                                    </td>
+                                    <td class="text-end">
+                                        <strong
+                                            t-esc="total_old"
+                                            t-options="{'widget': 'float', 'precision': 2}"
+                                        />
+                                    </td>
+                                    <td class="text-end">
+                                        <strong
+                                            t-esc="total_new"
+                                            t-options="{'widget': 'float', 'precision': 2}"
+                                        />
+                                    </td>
+                                    <td class="text-end">
+                                        <strong
+                                            t-esc="total_new - total_old"
+                                            t-options="{'widget': 'float', 'precision': 2}"
+                                        />
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+
+                        <h6 class="mt-4">Repartizarea diferentei pe conturi</h6>
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Denumire produs</th>
+                                    <th class="text-end">
+                                        Adaos comercial (378)
+                                    </th>
+                                    <th class="text-end">
+                                        TVA neexigibila (4428)
+                                    </th>
+                                    <th class="text-end">Total (371)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-set="total_markup" t-value="0" />
+                                <t t-set="total_vat" t-value="0" />
+                                <t t-foreach="doc.line_ids" t-as="line">
+                                    <t
+                                        t-set="total_markup"
+                                        t-value="total_markup + line.markup_diff_total"
+                                    />
+                                    <t
+                                        t-set="total_vat"
+                                        t-value="total_vat + line.vat_diff_total"
+                                    />
+                                    <tr>
+                                        <td>
+                                            <span t-field="line.product_id" />
+                                        </td>
+                                        <td class="text-end">
+                                            <span
+                                                t-field="line.markup_diff_total"
+                                                t-options="{'widget': 'float', 'precision': 2}"
+                                            />
+                                        </td>
+                                        <td class="text-end">
+                                            <span
+                                                t-field="line.vat_diff_total"
+                                                t-options="{'widget': 'float', 'precision': 2}"
+                                            />
+                                        </td>
+                                        <td class="text-end">
+                                            <span
+                                                t-esc="line.markup_diff_total + line.vat_diff_total"
+                                                t-options="{'widget': 'float', 'precision': 2}"
+                                            />
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td class="text-end">
+                                        <strong>Total</strong>
+                                    </td>
+                                    <td class="text-end">
+                                        <strong
+                                            t-esc="total_markup"
+                                            t-options="{'widget': 'float', 'precision': 2}"
+                                        />
+                                    </td>
+                                    <td class="text-end">
+                                        <strong
+                                            t-esc="total_vat"
+                                            t-options="{'widget': 'float', 'precision': 2}"
+                                        />
+                                    </td>
+                                    <td class="text-end">
+                                        <strong
+                                            t-esc="total_markup + total_vat"
+                                            t-options="{'widget': 'float', 'precision': 2}"
+                                        />
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+
+                        <div t-if="doc.notes" class="mt-3">
+                            <span t-field="doc.notes" />
+                        </div>
+
+                        <div class="row mt-5">
+                            <div class="col-4">
+                                <p>Intocmit,</p>
+                                <p class="mt-4">.............................</p>
+                            </div>
+                            <div class="col-4">
+                                <p>Gestionar,</p>
+                                <p class="mt-4">.............................</p>
+                            </div>
+                            <div class="col-4">
+                                <p>Aprobat,</p>
+                                <p class="mt-4">.............................</p>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

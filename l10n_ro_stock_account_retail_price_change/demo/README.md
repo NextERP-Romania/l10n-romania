@@ -1,4 +1,6 @@
-# Demo script for `l10n_ro_stock_account_retail`
+# Demo script for the retail modules (`l10n_ro_stock_account_retail` +
+
+# `l10n_ro_stock_account_retail_price_change`)
 
 `setup_demo.py` builds a runnable, end-to-end demo:
 

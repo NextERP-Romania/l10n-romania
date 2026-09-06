@@ -70,6 +70,12 @@ class RetailPriceChange(models.Model):
         string="Lines",
         copy=True,
     )
+    markup_line_ids = fields.One2many(
+        "l10n.ro.retail.markup.line",
+        "price_change_id",
+        string="Markup Ledger",
+        readonly=True,
+    )
     auto_created = fields.Boolean(
         readonly=True,
         copy=False,
@@ -122,17 +128,15 @@ class RetailPriceChange(models.Model):
             qty = sum(qs.mapped("quantity"))
             if float_is_zero(qty, precision_rounding=product.uom_id.rounding):
                 continue
-            prices = product.product_tmpl_id._l10n_ro_get_retail_prices(
+            prices = product._l10n_ro_get_retail_prices(
                 warehouse=self.warehouse_id, company=self.company_id
             )
-            cost_unit = product.with_company(self.company_id).standard_price
             new_lines.append(
                 Command.create(
                     {
                         "product_id": product.id,
                         "location_id": location.id,
                         "quantity": qty,
-                        "cost_unit": cost_unit,
                         "old_price_with_vat": prices["price_with_vat"],
                         "new_price_with_vat": prices["price_with_vat"],
                     }
@@ -165,6 +169,7 @@ class RetailPriceChange(models.Model):
             raise UserError(self.env._("No journal defined."))
         self._update_pricelist()
         move = self._create_account_move()
+        self._create_markup_ledger(move)
         self.write(
             {
                 "state": "done",
@@ -173,7 +178,13 @@ class RetailPriceChange(models.Model):
         )
 
     def _update_pricelist(self):
-        """Write the new prices on the warehouse retail pricelist."""
+        """Write the new shelf prices on the warehouse retail pricelist.
+
+        A retail pricelist holds the price VAT included - the figure on the
+        shelf label. The old code converted the new PVA to a net price before
+        writing it, so the pricelist ended up holding a different number from
+        the one on the document, and reading it back produced a third one.
+        """
         self.ensure_one()
         if not self.pricelist_id:
             return
@@ -190,9 +201,8 @@ class RetailPriceChange(models.Model):
                 ],
                 limit=1,
             )
-            new_price_excl = line._compute_new_price_excl()
             vals = {
-                "fixed_price": new_price_excl,
+                "fixed_price": line.new_price_with_vat,
                 "compute_price": "fixed",
             }
             if item:
@@ -212,7 +222,9 @@ class RetailPriceChange(models.Model):
         currency = self.company_id.currency_id
         aml_vals = []
         for line in self.line_ids:
-            stock_account = line._get_stock_account()
+            stock_account = line.location_id._l10n_ro_get_stock_account(
+                product=line.product_id
+            )
             if not stock_account:
                 raise UserError(
                     self.env._(
@@ -262,6 +274,44 @@ class RetailPriceChange(models.Model):
         move._post()
         return move
 
+    def _create_markup_ledger(self, move):
+        """Record the revaluation in the markup ledger.
+
+        Without this the shop would release, on the next sale, the markup that
+        was loaded at reception - not the one this document just put on 378 -
+        and the difference would sit on the account for good.
+        """
+        self.ensure_one()
+        currency = self.company_id.currency_id
+        vals_list = []
+        for line in self.line_ids:
+            markup_delta = currency.round(line.markup_diff_total)
+            vat_delta = currency.round(line.vat_diff_total)
+            if float_is_zero(
+                markup_delta, precision_rounding=currency.rounding
+            ) and float_is_zero(vat_delta, precision_rounding=currency.rounding):
+                continue
+            vals_list.append(
+                {
+                    "company_id": self.company_id.id,
+                    "date": fields.Datetime.to_datetime(self.date),
+                    "product_id": line.product_id.id,
+                    "location_id": line.location_id.id,
+                    # A revaluation moves no goods: it changes what the stock
+                    # on hand carries, so the quantity that carries it is
+                    # unchanged and this row must not shift the rate.
+                    "quantity": 0.0,
+                    "markup": markup_delta,
+                    "vat": vat_delta,
+                    "origin_type": "price_change",
+                    "price_change_id": self.id,
+                    "account_move_id": move.id if move else False,
+                    "reference": self.name,
+                }
+            )
+        if vals_list:
+            self.env["l10n.ro.retail.markup.line"].sudo().create(vals_list)
+
     def action_cancel(self):
         for doc in self:
             if doc.state == "done" and doc.account_move_id:
@@ -274,15 +324,34 @@ class RetailPriceChange(models.Model):
             doc.state = "cancel"
 
     def action_draft(self):
+        """Send the document back to draft.
+
+        Refused while any trace of the posting survives. Checking only for a
+        *posted* entry let a document whose entry had been reversed - so left
+        in state 'cancel' - go back to draft and be posted a second time: a
+        second journal entry, a second set of ledger rows, and the link to the
+        first entry silently overwritten.
+        """
         for doc in self:
-            if doc.account_move_id and doc.account_move_id.state == "posted":
+            if doc.account_move_id and doc.account_move_id.state != "cancel":
                 raise UserError(
-                    self.env._(
-                        "Reverse the related journal entry %s first.",
-                        doc.account_move_id.display_name,
+                    doc.env._(
+                        "Reverse and cancel the related journal entry "
+                        "%(entry)s before resetting %(document)s to draft.",
+                        entry=doc.account_move_id.display_name,
+                        document=doc.name,
                     )
                 )
-            doc.state = "draft"
+            if doc.markup_line_ids:
+                raise UserError(
+                    doc.env._(
+                        "%s already moved the markup carried by the stock. "
+                        "Post a new price change document to correct it "
+                        "instead of resetting this one to draft.",
+                        doc.name,
+                    )
+                )
+            doc.write({"state": "draft", "account_move_id": False})
 
     def action_view_move(self):
         self.ensure_one()
@@ -307,11 +376,23 @@ class RetailPriceChangeLine(models.Model):
         index=True,
     )
     company_id = fields.Many2one(related="document_id.company_id", store=True)
+    document_date = fields.Date(
+        related="document_id.date", store=True, string="Date", index=True
+    )
+    warehouse_id = fields.Many2one(
+        related="document_id.warehouse_id", store=True, string="Warehouse"
+    )
     state = fields.Selection(related="document_id.state", store=False)
     product_id = fields.Many2one("product.product", required=True)
     location_id = fields.Many2one("stock.location", required=True)
     quantity = fields.Float(readonly=True)
-    cost_unit = fields.Float(string="Cost / Unit", readonly=True)
+    cost_unit = fields.Float(
+        string="Cost / Unit",
+        compute="_compute_cost_unit",
+        store=True,
+        help="Cost carried by the stock on hand, derived from what account 371 "
+        "holds less the markup and deferred VAT on it.",
+    )
     old_price_with_vat = fields.Float(
         string="Old PVA",
         readonly=True,
@@ -340,6 +421,42 @@ class RetailPriceChangeLine(models.Model):
         compute="_compute_splits", string="VAT Delta", store=True
     )
 
+    @api.depends("product_id", "location_id", "quantity", "document_id.warehouse_id")
+    def _compute_cost_unit(self):
+        """Cost per unit of the stock this line revalues.
+
+        Taken from the stock actually on the shelf rather than from
+        ``standard_price``: under FIFO the standard price is the cost of the
+        last receipt, not of the goods in the shop, and a markup delta measured
+        against it is not the one the entry needs.
+        """
+        Ledger = self.env["l10n.ro.retail.markup.line"]
+        for line in self:
+            company = line.document_id.company_id or line.env.company
+            warehouse = line.document_id.warehouse_id
+            product = line.product_id
+            if not product or not warehouse:
+                line.cost_unit = 0.0
+                continue
+            qty_on_hand = Ledger._l10n_ro_carried_qty(warehouse, product, company)
+            if float_is_zero(qty_on_hand, precision_rounding=product.uom_id.rounding):
+                line.cost_unit = product.with_company(company).standard_price
+                continue
+            cost_value = sum(
+                self.env["stock.quant"]
+                .sudo()
+                .search(
+                    [
+                        ("company_id", "=", company.id),
+                        ("product_id", "=", product.id),
+                        ("location_id.warehouse_id", "=", warehouse.id),
+                        ("location_id.l10n_ro_retail", "=", True),
+                    ]
+                )
+                .mapped("value")
+            )
+            line.cost_unit = cost_value / qty_on_hand
+
     @api.depends(
         "old_price_with_vat",
         "new_price_with_vat",
@@ -351,14 +468,11 @@ class RetailPriceChangeLine(models.Model):
     def _compute_splits(self):
         for line in self:
             company = line.document_id.company_id or line.env.company
-            taxes = line.product_id.taxes_id.filtered(
-                lambda t, company=company: t.company_id == company
-            )
             line.old_markup_unit, line.old_vat_unit = line._split(
-                line.old_price_with_vat, taxes, company
+                line.old_price_with_vat, company
             )
             line.new_markup_unit, line.new_vat_unit = line._split(
-                line.new_price_with_vat, taxes, company
+                line.new_price_with_vat, company
             )
             line.markup_diff_total = (
                 line.new_markup_unit - line.old_markup_unit
@@ -367,52 +481,15 @@ class RetailPriceChangeLine(models.Model):
                 line.new_vat_unit - line.old_vat_unit
             ) * line.quantity
 
-    def _split(self, price_with_vat, taxes, company):
-        """Return (markup_per_unit, vat_per_unit) given a PVA with VAT."""
-        if not price_with_vat:
+    def _split(self, price_with_vat, company):
+        """Return ``(markup_per_unit, vat_per_unit)`` for a VAT-inclusive PVA."""
+        self.ensure_one()
+        if not price_with_vat or not self.product_id:
             return 0.0, 0.0
-        if not taxes:
-            return price_with_vat - self.cost_unit, 0.0
-        tax_res = taxes.with_context(force_price_include=True).compute_all(
-            price_with_vat,
-            currency=company.currency_id,
-            quantity=1.0,
-            product=self.product_id,
+        prices = self.product_id._l10n_ro_split_retail_price(
+            price_with_vat, company=company
         )
-        price_without_vat = tax_res["total_excluded"]
-        return (
-            price_without_vat - self.cost_unit,
-            price_with_vat - price_without_vat,
-        )
-
-    def _compute_new_price_excl(self):
-        """Return the new price without VAT, to be written on the pricelist
-        item ``fixed_price`` field."""
-        self.ensure_one()
-        company = self.document_id.company_id or self.env.company
-        taxes = self.product_id.taxes_id.filtered(lambda t: t.company_id == company)
-        if not taxes:
-            return self.new_price_with_vat
-        tax_res = taxes.with_context(force_price_include=True).compute_all(
-            self.new_price_with_vat,
-            currency=company.currency_id,
-            quantity=1.0,
-            product=self.product_id,
-        )
-        return tax_res["total_excluded"]
-
-    def _get_stock_account(self):
-        self.ensure_one()
-        company = self.document_id.company_id or self.env.company
-        loc_account = self.location_id.l10n_ro_property_stock_valuation_account_id
-        if loc_account:
-            return loc_account
-        return (
-            self.product_id.with_company(
-                company
-            ).l10n_ro_property_stock_valuation_account_id
-            or self.product_id.categ_id.property_stock_valuation_account_id
-        )
+        return prices["price_without_vat"] - self.cost_unit, prices["vat"]
 
     def _aml_pair(self, stock_account, other_account, signed_amount, ref):
         """Debit/credit AML pair, swapping sides on negatives."""

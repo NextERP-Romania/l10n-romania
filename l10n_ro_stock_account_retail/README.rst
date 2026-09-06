@@ -47,6 +47,15 @@ standard monograph for retail commerce:
 - **707 Venituri din vânzarea mărfurilor** — retail revenue (booked from
   the POS / sales invoice, not by this module)
 
+This is the kernel of the family: it defines what a retail location is,
+where the shelf price comes from, and how the markup is booked. The
+price change document, the reporting and the point of sale treatment
+live in modules of their own:
+
+- ``l10n_ro_stock_account_retail_price_change`` — Proces Verbal de
+  Schimbare Pret, its report and the price history
+- ``l10n_ro_stock_account_retail_report`` — retail stock reporting
+
 Configuration
 -------------
 
@@ -58,7 +67,8 @@ The **markup (378)** and **deferred VAT (4428)** accounts are resolved
 in this order:
 
 1. ``stock.location.l10n_ro_account_markup_id`` /
-   ``l10n_ro_account_deferred_vat_id`` (per company)
+   ``l10n_ro_account_deferred_vat_id``, walking up the parent locations,
+   so a shop is configured once and its shelves and bins inherit it
 2. ``product.template.l10n_ro_account_markup_id`` /
    ``l10n_ro_account_deferred_vat_id`` (per company)
 3. ``product.category.l10n_ro_account_markup_id`` /
@@ -66,48 +76,59 @@ in this order:
 4. ``res.company.l10n_ro_account_markup_id`` /
    ``l10n_ro_account_deferred_vat_id`` (defaults)
 
+The retail price is held VAT included
+-------------------------------------
+
+A price on a retail pricelist is the PVA: the figure on the shelf label,
+what the customer pays, and what account 371 carries. The product taxes
+are used to split it into the base the markup is measured against and
+the deferred VAT inside it — never to add VAT on top.
+
 Accounting flow
 ---------------
 
-The retail price (PVA) for a product in a warehouse comes from the
-warehouse pricelist, interpreted through the product taxes. Standard
-``l10n_ro_stock_account`` keeps booking the cost. This module adds the
-markup leg automatically when a ``stock.move`` crosses the retail
-boundary:
+Standard ``l10n_ro_stock_account`` keeps booking the cost. This module
+adds the markup leg when a ``stock.move`` crosses the retail boundary:
 
 - **Into a retail location**: ``Dr 371 / Cr 378`` (markup) and
   ``Dr 371 / Cr 4428`` (VAT)
 - **Out of a retail location**: ``Dr 378 / Cr 371`` and
   ``Dr 4428 / Cr 371``
-- **Between two retail warehouses with different pricelists**: both legs
-  are booked (reverse at source, create at destination)
-- Internal moves staying inside the same retail warehouse generate no
-  extra entries.
+- **Between two retail warehouses**: both legs are booked, the source
+  releasing its own markup and the destination loading its own. A
+  multi-step transfer reaches the same result on its own, the transit
+  location not being a retail one.
+- Moves that stay inside one retail warehouse book nothing.
 
-Retail price changes — Proces Verbal de Schimbare Pret
-------------------------------------------------------
+A shelf price below cost is refused, since it books a negative markup; a
+shop that legitimately sells below cost ticks *Allow Selling Below Cost*
+on the warehouse.
 
-``l10n.ro.retail.price.change`` is a persistent document (*Proces Verbal
-de Schimbare Pret*) numbered by sequence ``PVSP/YYYY/00000``. It
-captures: warehouse, date, on-hand products, old vs. new PVA per line,
-with markup / VAT splits.
+The markup ledger
+-----------------
 
-There are two flows:
+Odoo 19 has no ``stock.valuation.layer``: a move carries its cost on
+``stock.move.value`` and nothing else. The markup and deferred VAT that
+sit between cost and shelf price therefore have nowhere to live, and
+recomputing them from the current pricelist when the goods leave is
+wrong as soon as the price has moved in between — the release does not
+match what was loaded, and the difference stays on 378 and 4428 for
+good.
 
-1. **Manual** — create a draft Proces Verbal, load on-hand products,
-   edit new prices, then post. On post the warehouse pricelist is
-   updated and the delta entries are booked.
-2. **Automatic** — when a ``product.pricelist.item`` on a retail
-   pricelist is created or its ``fixed_price`` is modified, a draft
-   Proces Verbal is generated for each affected retail warehouse with
-   on-hand stock. The user reviews and posts it to book the revaluation.
+``l10n.ro.retail.markup.line`` is the subsidiary ledger that holds them.
+Every event that changes what 371 carries writes a row: a move crossing
+the boundary, a posted price change, later a landed cost or a purchase
+price difference. A release is always taken from the balance carried,
+prorated over the quantity that carries it — the *coeficient de
+repartizare a adaosului comercial* applied per movement — so the last
+unit out closes both accounts to zero.
 
-Retail stock report
--------------------
+Returns are settled against the move they return, not against today's
+price, so a sale return puts back exactly what the sale released.
 
-``l10n.ro.stock.retail.report`` lists per (warehouse, location,
-product): on-hand qty, cost, current PVA (from pricelist + tax), markup,
-deferred VAT and retail value (matching 371).
+The ledger is visible under *Inventory → Reporting → Retail Markup
+Ledger*, and ``stock.quant`` publishes the share carried by each quant
+next to its cost.
 
 **Table of contents**
 

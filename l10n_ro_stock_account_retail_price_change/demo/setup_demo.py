@@ -337,8 +337,10 @@ pricelist_item_obj = env["product.pricelist.item"].with_context(
 )
 for name in PRODUCT_NAMES:
     cost = round(_random.uniform(2, 30), 2)
-    pva_buc = round(cost * 1.5, 2)
-    pva_cluj = round(cost * 1.4, 2)
+    # Shelf prices are held VAT included: a 50% (resp. 40%) markup on the cost,
+    # plus the VAT that sits inside the price the customer pays.
+    pva_buc = round(cost * 1.5 * 1.19, 2)
+    pva_cluj = round(cost * 1.4 * 1.19, 2)
     p = Product.search([("name", "=", name)], limit=1)
     if not p:
         p = Product.create(

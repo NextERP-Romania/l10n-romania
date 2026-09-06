@@ -2,181 +2,13 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 from odoo.exceptions import UserError
-from odoo.tests import Form, tagged
+from odoo.tests import tagged
 
-from odoo.addons.l10n_ro_stock_account.tests.common import TestROStockCommon
+from .common import TestRetailCommon
 
 
 @tagged("post_install", "-at_install")
-class TestRetailStockAccount(TestROStockCommon):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        company = cls.env.company
-        Account = cls.env["account.account"]
-        cls.account_371 = company.account_stock_valuation_id
-        cls.account_378 = Account.create(
-            {
-                "code": "378ret",
-                "name": "Diferente de pret la marfuri (test)",
-                "account_type": "asset_current",
-                "company_ids": [(4, company.id)],
-            }
-        )
-        cls.account_4428 = Account.create(
-            {
-                "code": "4428ret",
-                "name": "TVA neexigibila (test)",
-                "account_type": "liability_current",
-                "company_ids": [(4, company.id)],
-            }
-        )
-        company.l10n_ro_account_markup_id = cls.account_378
-        company.l10n_ro_account_deferred_vat_id = cls.account_4428
-        cls.tax_19 = cls.env["account.tax"].create(
-            {
-                "name": "TVA 19% retail",
-                "amount_type": "percent",
-                "amount": 19.0,
-                "type_tax_use": "sale",
-                "company_id": company.id,
-            }
-        )
-        cls.retail_pricelist = cls.env["product.pricelist"].create(
-            {
-                "name": "Retail pricelist",
-                "currency_id": company.currency_id.id,
-                "company_id": company.id,
-            }
-        )
-        cls.retail_warehouse = cls.env["stock.warehouse"].create(
-            {
-                "name": "Magazin",
-                "code": "MAG",
-                "l10n_ro_retail": True,
-                "l10n_ro_retail_pricelist_id": cls.retail_pricelist.id,
-            }
-        )
-        cls.retail_stock_loc = cls.retail_warehouse.lot_stock_id
-        cls.product_retail = cls.env["product.product"].create(
-            {
-                "name": "Produs Magazin",
-                "is_storable": True,
-                "categ_id": cls.category_marfa_avg.id,
-                "list_price": 100.0,
-                "standard_price": 50.0,
-                "taxes_id": [(6, 0, cls.tax_19.ids)],
-            }
-        )
-
-        # --- Two fully-configured retail stores (mirrors a real multi-shop
-        # setup: each store has its own 371/607 valuation accounts and its
-        # own 378/4428 markup accounts), used to test transfers between
-        # a non-retail depot and retail stores, and between two stores. ---
-        cls.account_482 = Account.create(
-            {
-                "code": "482test",
-                "name": "Decontari intre gestiuni (test)",
-                "account_type": "asset_current",
-                "company_ids": [(4, company.id)],
-            }
-        )
-        company.l10n_ro_property_stock_transfer_account_id = cls.account_482
-
-        cls.pricelist_mag1 = cls.env["product.pricelist"].create(
-            {
-                "name": "Retail pricelist MAG1",
-                "currency_id": company.currency_id.id,
-                "company_id": company.id,
-            }
-        )
-        cls.warehouse_mag1 = cls.env["stock.warehouse"].create(
-            {
-                "name": "Magazin 1",
-                "code": "MAG1",
-                "l10n_ro_retail": True,
-                "l10n_ro_retail_pricelist_id": cls.pricelist_mag1.id,
-            }
-        )
-        cls.loc_mag1 = cls.warehouse_mag1.lot_stock_id
-        cls.account_371_mag1 = cls.account_371.copy({"code": "371mag1"})
-        cls.account_607_mag1 = cls.account_expense.copy({"code": "607mag1"})
-        cls.account_378_mag1 = Account.create(
-            {
-                "code": "378mag1",
-                "name": "Adaos comercial MAG1 (test)",
-                "account_type": "asset_current",
-                "company_ids": [(4, company.id)],
-            }
-        )
-        cls.account_4428_mag1 = Account.create(
-            {
-                "code": "4428mag1",
-                "name": "TVA neexigibila MAG1 (test)",
-                "account_type": "liability_current",
-                "company_ids": [(4, company.id)],
-            }
-        )
-        cls.loc_mag1.write(
-            {
-                "l10n_ro_property_stock_valuation_account_id": (
-                    cls.account_371_mag1.id
-                ),
-                "l10n_ro_property_account_expense_location_id": (
-                    cls.account_607_mag1.id
-                ),
-                "l10n_ro_account_markup_id": cls.account_378_mag1.id,
-                "l10n_ro_account_deferred_vat_id": cls.account_4428_mag1.id,
-            }
-        )
-
-        cls.pricelist_mag2 = cls.env["product.pricelist"].create(
-            {
-                "name": "Retail pricelist MAG2",
-                "currency_id": company.currency_id.id,
-                "company_id": company.id,
-            }
-        )
-        cls.warehouse_mag2 = cls.env["stock.warehouse"].create(
-            {
-                "name": "Magazin 2",
-                "code": "MAG2",
-                "l10n_ro_retail": True,
-                "l10n_ro_retail_pricelist_id": cls.pricelist_mag2.id,
-            }
-        )
-        cls.loc_mag2 = cls.warehouse_mag2.lot_stock_id
-        cls.account_371_mag2 = cls.account_371.copy({"code": "371mag2"})
-        cls.account_607_mag2 = cls.account_expense.copy({"code": "607mag2"})
-        cls.account_378_mag2 = Account.create(
-            {
-                "code": "378mag2",
-                "name": "Adaos comercial MAG2 (test)",
-                "account_type": "asset_current",
-                "company_ids": [(4, company.id)],
-            }
-        )
-        cls.account_4428_mag2 = Account.create(
-            {
-                "code": "4428mag2",
-                "name": "TVA neexigibila MAG2 (test)",
-                "account_type": "liability_current",
-                "company_ids": [(4, company.id)],
-            }
-        )
-        cls.loc_mag2.write(
-            {
-                "l10n_ro_property_stock_valuation_account_id": (
-                    cls.account_371_mag2.id
-                ),
-                "l10n_ro_property_account_expense_location_id": (
-                    cls.account_607_mag2.id
-                ),
-                "l10n_ro_account_markup_id": cls.account_378_mag2.id,
-                "l10n_ro_account_deferred_vat_id": cls.account_4428_mag2.id,
-            }
-        )
-
+class TestRetailStockAccount(TestRetailCommon):
     def test_location_inherits_retail_flag(self):
         self.assertTrue(self.retail_stock_loc.l10n_ro_retail)
         self.retail_warehouse.l10n_ro_retail = False
@@ -184,7 +16,7 @@ class TestRetailStockAccount(TestROStockCommon):
         self.assertFalse(self.retail_stock_loc.l10n_ro_retail)
 
     def test_retail_price_split(self):
-        prices = self.product_retail.product_tmpl_id._l10n_ro_get_retail_prices(
+        prices = self.product_retail._l10n_ro_get_retail_prices(
             warehouse=self.retail_warehouse, company=self.env.company
         )
         self.assertAlmostEqual(prices["price_without_vat"], 100.0, places=2)
@@ -251,43 +83,6 @@ class TestRetailStockAccount(TestROStockCommon):
     # -------------------------------------------------------------------
     # Transfer helpers
     # -------------------------------------------------------------------
-    def _set_initial_stock(self, location, product, qty):
-        self.env["stock.quant"].with_context(inventory_mode=True).create(
-            {
-                "product_id": product.id,
-                "location_id": location.id,
-                "inventory_quantity": qty,
-            }
-        ).action_apply_inventory()
-
-    def _do_transfer(self, src_location, dest_location, product, qty):
-        picking_type = src_location.warehouse_id.int_type_id
-        move = self.env["stock.move"].create(
-            {
-                "company_id": self.env.company.id,
-                "product_id": product.id,
-                "product_uom": product.uom_id.id,
-                "product_uom_qty": qty,
-                "location_id": src_location.id,
-                "location_dest_id": dest_location.id,
-                "picking_type_id": picking_type.id,
-            }
-        )
-        move._action_confirm()
-        move._action_assign()
-        move._set_quantity_done(qty)
-        move.picked = True
-        move._action_done()
-        return move
-
-    def _lines_as_tuples(self, move):
-        """(account_id, debit, credit) tuples for a posted account.move,
-        rounded and sorted so the comparison is order-independent."""
-        return sorted(
-            (line.account_id.id, round(line.debit, 2), round(line.credit, 2))
-            for line in move.line_ids
-        )
-
     # -------------------------------------------------------------------
     # Internal transfers between a non-retail depot and retail stores
     # -------------------------------------------------------------------
@@ -431,57 +226,6 @@ class TestRetailStockAccount(TestROStockCommon):
     # -------------------------------------------------------------------
     # "External" movements: purchase receipts and sale deliveries
     # -------------------------------------------------------------------
-    def _do_purchase_receipt(self, warehouse, product, qty, price_unit):
-        po = self.env["purchase.order"].create(
-            {
-                "partner_id": self.supplier_1.id,
-                "picking_type_id": warehouse.in_type_id.id,
-                "order_line": [
-                    (
-                        0,
-                        0,
-                        {
-                            "product_id": product.id,
-                            "product_qty": qty,
-                            "price_unit": price_unit,
-                        },
-                    )
-                ],
-            }
-        )
-        po.button_confirm()
-        picking = po.picking_ids
-        picking.move_ids._set_quantity_done(qty)
-        picking.move_ids.picked = True
-        picking.button_validate()
-        return po, picking.move_ids
-
-    def _do_sale_delivery(self, warehouse, product, qty, price_unit, discount=0.0):
-        so = self.env["sale.order"].create(
-            {
-                "partner_id": self.customer_1.id,
-                "warehouse_id": warehouse.id,
-                "order_line": [
-                    (
-                        0,
-                        0,
-                        {
-                            "product_id": product.id,
-                            "product_uom_qty": qty,
-                            "price_unit": price_unit,
-                            "discount": discount,
-                        },
-                    )
-                ],
-            }
-        )
-        so.action_confirm()
-        picking = so.picking_ids
-        picking.move_ids._set_quantity_done(qty)
-        picking.move_ids.picked = True
-        picking.button_validate()
-        return picking.move_ids
-
     def test_purchase_receipt_into_store_creates_retail_markup(self):
         """Receiving goods straight from a supplier into MAG1 (no internal
         transfer involved). A plain reception (no 'aviz'/notice) doesn't
@@ -568,25 +312,6 @@ class TestRetailStockAccount(TestROStockCommon):
     # -------------------------------------------------------------------
     # Returns
     # -------------------------------------------------------------------
-    def _do_return(self, picking, qty):
-        return_form = Form(
-            self.env["stock.return.picking"].with_context(
-                active_ids=[picking.id],
-                active_id=picking.id,
-                active_model="stock.picking",
-            )
-        )
-        return_wiz = return_form.save()
-        return_wiz.product_return_moves.write({"quantity": qty, "to_refund": True})
-        res = return_wiz.action_create_returns()
-        return_picking = self.env["stock.picking"].browse(res["res_id"])
-        return_picking.action_confirm()
-        return_picking.action_assign()
-        return_picking.move_ids._set_quantity_done(qty)
-        return_picking.move_ids.picked = True
-        return_picking._action_done()
-        return return_picking.move_ids
-
     def test_transfer_return_between_stores_journal_entries(self):
         """MAG1 -> MAG2, then return the goods MAG2 -> MAG1. A return of an
         internal transfer is classified as a plain 'internal_transfer'
@@ -697,72 +422,6 @@ class TestRetailStockAccount(TestROStockCommon):
                     (self.account_371_mag1.id, 0.0, markup),
                     (self.account_4428_mag1.id, vat, 0.0),
                     (self.account_371_mag1.id, 0.0, vat),
-                ]
-            ),
-        )
-
-    # -------------------------------------------------------------------
-    # Retail price change (Proces Verbal de Schimbare Pret)
-    # -------------------------------------------------------------------
-    def _do_price_change(self, warehouse, product, qty, new_price_with_vat):
-        self._set_initial_stock(warehouse.lot_stock_id, product, qty)
-        doc = self.env["l10n.ro.retail.price.change"].create(
-            {"warehouse_id": warehouse.id}
-        )
-        doc.action_load_products()
-        line = doc.line_ids.filtered(lambda ln: ln.product_id == product)
-        self.assertTrue(line, "Price change line was not loaded")
-        line.new_price_with_vat = new_price_with_vat
-        doc.action_post()
-        return doc, line
-
-    def test_price_change_increase_journal_entries(self):
-        """Raising a product's retail price at MAG1: the delta is
-        positive, so the store's own 371 is debited and its own 378/4428
-        credited (more value now sits in stock at the higher price)."""
-        doc, line = self._do_price_change(
-            self.warehouse_mag1, self.product_retail, 10, 178.5
-        )
-        self.assertEqual(doc.state, "done")
-        move = doc.account_move_id
-        self.assertTrue(move, "No account move created for the price change")
-        markup_delta = round(line.markup_diff_total, 2)
-        vat_delta = round(line.vat_diff_total, 2)
-        self.assertGreater(markup_delta, 0)
-        self.assertGreater(vat_delta, 0)
-        self.assertEqual(
-            self._lines_as_tuples(move),
-            sorted(
-                [
-                    (self.account_371_mag1.id, markup_delta, 0.0),
-                    (self.account_378_mag1.id, 0.0, markup_delta),
-                    (self.account_371_mag1.id, vat_delta, 0.0),
-                    (self.account_4428_mag1.id, 0.0, vat_delta),
-                ]
-            ),
-        )
-
-    def test_price_change_decrease_journal_entries(self):
-        """Lowering a product's retail price at MAG1: the delta is
-        negative, so the sides flip - 378/4428 debited, 371 credited."""
-        doc, line = self._do_price_change(
-            self.warehouse_mag1, self.product_retail, 10, 59.5
-        )
-        self.assertEqual(doc.state, "done")
-        move = doc.account_move_id
-        self.assertTrue(move, "No account move created for the price change")
-        self.assertLess(line.markup_diff_total, 0)
-        self.assertLess(line.vat_diff_total, 0)
-        markup_delta = round(abs(line.markup_diff_total), 2)
-        vat_delta = round(abs(line.vat_diff_total), 2)
-        self.assertEqual(
-            self._lines_as_tuples(move),
-            sorted(
-                [
-                    (self.account_378_mag1.id, markup_delta, 0.0),
-                    (self.account_371_mag1.id, 0.0, markup_delta),
-                    (self.account_4428_mag1.id, vat_delta, 0.0),
-                    (self.account_371_mag1.id, 0.0, vat_delta),
                 ]
             ),
         )
@@ -905,7 +564,7 @@ class TestRetailStockAccount(TestROStockCommon):
                 "applied_on": "0_product_variant",
                 "product_id": self.product_retail.id,
                 "compute_price": "fixed",
-                "fixed_price": 80.0,
+                "fixed_price": 95.2,
             }
         )
         self._set_initial_stock(self.loc_mag1, self.product_retail, 10)
@@ -931,41 +590,203 @@ class TestRetailStockAccount(TestROStockCommon):
             ),
         )
 
-    def test_pricelist_item_change_creates_draft_price_change_document(self):
-        """Changing MAG1's retail pricelist price for a product that
-        already has stock on hand auto-generates a DRAFT Proces Verbal de
-        Schimbare Pret - it is NOT auto-posted, someone still has to
-        review and post it before any accounting entry is created."""
-        item = (
-            self.env["product.pricelist.item"]
-            .with_context(skip_retail_price_change=True)
-            .create(
+    # -------------------------------------------------------------------
+    # The release must match what was loaded
+    # -------------------------------------------------------------------
+    def _carried(self, warehouse, product):
+        return self.env["l10n.ro.retail.markup.line"]._l10n_ro_carried(
+            warehouse, product, self.env.company
+        )
+
+    def test_release_uses_loaded_markup_not_current_price(self):
+        """Selling after the shelf price moved must release what was loaded.
+
+        Goods enter at a PVA of 119 (cost 50, markup 50, VAT 19 a unit). The
+        shelf price is then raised to 178.50 without a Proces Verbal, so
+        nothing revalued the stock: 378 and 4428 still hold the old markup.
+        Releasing at the new price would take out 100 and 28.50 a unit and
+        leave the difference stranded on both accounts for good.
+        """
+        self._set_initial_stock(self.loc_mag1, self.product_retail, 10)
+        markup_in, vat_in = self._carried(self.warehouse_mag1, self.product_retail)
+        self.assertAlmostEqual(markup_in, 500.0, places=2)  # 10 * 50
+        self.assertAlmostEqual(vat_in, 190.0, places=2)  # 10 * 19
+
+        self.env["product.pricelist.item"].with_context(
+            skip_retail_price_change=True
+        ).create(
+            {
+                "pricelist_id": self.pricelist_mag1.id,
+                "applied_on": "0_product_variant",
+                "product_id": self.product_retail.id,
+                "compute_price": "fixed",
+                "fixed_price": 178.5,
+            }
+        )
+
+        move = self._do_sale_delivery(
+            self.warehouse_mag1, self.product_retail, 4, 178.5
+        )
+        extra_move = self.env["account.move"].search(
+            [("l10n_ro_extra_stock_move_id", "=", move.id)]
+        )
+        self.assertTrue(extra_move, "No retail markup move created")
+        self.assertEqual(
+            self._lines_as_tuples(extra_move),
+            sorted(
+                [
+                    (self.account_378_mag1.id, 200.0, 0.0),  # 4/10 of 500
+                    (self.account_371_mag1.id, 0.0, 200.0),
+                    (self.account_4428_mag1.id, 76.0, 0.0),  # 4/10 of 190
+                    (self.account_371_mag1.id, 0.0, 76.0),
+                ]
+            ),
+        )
+
+    def test_last_unit_out_closes_markup_accounts(self):
+        """Once the shop is empty of a product, 378 and 4428 must hold
+        nothing for it - no rounding residue left behind."""
+        self._set_initial_stock(self.loc_mag1, self.product_retail, 3)
+        self._do_sale_delivery(self.warehouse_mag1, self.product_retail, 1, 119.0)
+        self._do_sale_delivery(self.warehouse_mag1, self.product_retail, 2, 119.0)
+        markup, vat = self._carried(self.warehouse_mag1, self.product_retail)
+        self.assertAlmostEqual(markup, 0.0, places=2)
+        self.assertAlmostEqual(vat, 0.0, places=2)
+
+    # -------------------------------------------------------------------
+    # Selling below cost
+    # -------------------------------------------------------------------
+    def test_shelf_price_below_cost_is_refused(self):
+        """A shelf price under the cost books a negative markup on 378 and
+        almost always means the price or the cost is wrong."""
+        self.env["product.pricelist.item"].with_context(
+            skip_retail_price_change=True
+        ).create(
+            {
+                "pricelist_id": self.pricelist_mag1.id,
+                "applied_on": "0_product_variant",
+                "product_id": self.product_retail.id,
+                "compute_price": "fixed",
+                "fixed_price": 35.7,  # 30 net, against a cost of 50
+            }
+        )
+        with self.assertRaises(UserError):
+            self._set_initial_stock(self.loc_mag1, self.product_retail, 5)
+
+    def test_shelf_price_below_cost_allowed_when_warehouse_permits(self):
+        """A shop that legitimately sells below cost ticks the flag and the
+        negative markup is booked as intended."""
+        self.warehouse_mag1.l10n_ro_retail_allow_negative_markup = True
+        self.env["product.pricelist.item"].with_context(
+            skip_retail_price_change=True
+        ).create(
+            {
+                "pricelist_id": self.pricelist_mag1.id,
+                "applied_on": "0_product_variant",
+                "product_id": self.product_retail.id,
+                "compute_price": "fixed",
+                "fixed_price": 35.7,
+            }
+        )
+        self._set_initial_stock(self.loc_mag1, self.product_retail, 5)
+        markup, _vat = self._carried(self.warehouse_mag1, self.product_retail)
+        self.assertAlmostEqual(markup, 5 * (30.0 - 50.0), places=2)
+
+    # -------------------------------------------------------------------
+    # Variants, sublocations, products that carry no stock value
+    # -------------------------------------------------------------------
+    def test_variants_are_priced_independently(self):
+        """Two variants of one template priced differently must each get
+        their own shelf price, not the price of the first variant."""
+        attribute = self.env["product.attribute"].create(
+            {
+                "name": "Marime",
+                "value_ids": [
+                    (0, 0, {"name": "S"}),
+                    (0, 0, {"name": "M"}),
+                ],
+            }
+        )
+        template = self.env["product.template"].create(
+            {
+                "name": "Tricou",
+                "is_storable": True,
+                "categ_id": self.category_marfa_avg.id,
+                "list_price": 119.0,
+                "taxes_id": [(6, 0, self.tax_19.ids)],
+                "attribute_line_ids": [
+                    (
+                        0,
+                        0,
+                        {
+                            "attribute_id": attribute.id,
+                            "value_ids": [(6, 0, attribute.value_ids.ids)],
+                        },
+                    )
+                ],
+            }
+        )
+        variant_s, variant_m = template.product_variant_ids
+        Item = self.env["product.pricelist.item"].with_context(
+            skip_retail_price_change=True
+        )
+        for variant, price in ((variant_s, 119.0), (variant_m, 238.0)):
+            Item.create(
                 {
                     "pricelist_id": self.pricelist_mag1.id,
                     "applied_on": "0_product_variant",
-                    "product_id": self.product_retail.id,
+                    "product_id": variant.id,
                     "compute_price": "fixed",
-                    "fixed_price": 100.0,
+                    "fixed_price": price,
                 }
             )
+        self.assertAlmostEqual(
+            variant_s._l10n_ro_get_retail_price(warehouse=self.warehouse_mag1),
+            119.0,
+            places=2,
         )
-        self._set_initial_stock(self.loc_mag1, self.product_retail, 10)
-        docs_before = self.env["l10n.ro.retail.price.change"].search([])
+        self.assertAlmostEqual(
+            variant_m._l10n_ro_get_retail_price(warehouse=self.warehouse_mag1),
+            238.0,
+            places=2,
+        )
 
-        # `item` still carries `skip_retail_price_change=True` from its own
-        # creation (context sticks to a recordset) - browse a fresh one so
-        # this write isn't silently skipped too.
-        self.env["product.pricelist.item"].browse(item.id).write({"fixed_price": 130.0})
+    def test_sublocation_inherits_location_accounts(self):
+        """A bin created under the shop stock location uses the shop's 378
+        and 4428, not the company defaults."""
+        shelf = self.env["stock.location"].create(
+            {
+                "name": "Raft 1",
+                "usage": "internal",
+                "location_id": self.loc_mag1.id,
+            }
+        )
+        self.assertTrue(shelf.l10n_ro_retail)
+        self.assertEqual(
+            shelf._l10n_ro_get_markup_account(product=self.product_retail),
+            self.account_378_mag1,
+        )
+        self.assertEqual(
+            shelf._l10n_ro_get_deferred_vat_account(product=self.product_retail),
+            self.account_4428_mag1,
+        )
 
-        doc = self.env["l10n.ro.retail.price.change"].search([]) - docs_before
-        self.assertTrue(doc, "No auto price-change document was created")
-        self.assertTrue(doc.auto_created)
-        self.assertEqual(doc.state, "draft")
-        self.assertFalse(doc.account_move_id)
-        self.assertEqual(doc.warehouse_id, self.warehouse_mag1)
-        self.assertEqual(len(doc.line_ids), 1)
-        line = doc.line_ids
-        self.assertEqual(line.product_id, self.product_retail)
-        self.assertAlmostEqual(line.quantity, 10.0, places=2)
-        self.assertAlmostEqual(line.old_price_with_vat, 119.0, places=2)  # 100*1.19
-        self.assertAlmostEqual(line.new_price_with_vat, 154.7, places=2)  # 130*1.19
+    def test_consumable_books_no_retail_entry(self):
+        """A product that carries no stock value has no markup to book."""
+        consumable = self.env["product.product"].create(
+            {
+                "name": "Punga",
+                "is_storable": False,
+                "categ_id": self.category_marfa_avg.id,
+                "list_price": 119.0,
+                "standard_price": 50.0,
+                "taxes_id": [(6, 0, self.tax_19.ids)],
+            }
+        )
+        move = self._do_transfer(self.location, self.loc_mag1, consumable, 4)
+        self.assertFalse(
+            self.env["account.move"].search(
+                [("l10n_ro_extra_stock_move_id", "=", move.id)]
+            )
+        )
+        self.assertFalse(move.l10n_ro_retail_markup_line_ids)

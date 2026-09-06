@@ -4,21 +4,25 @@
         <field name="name">l10n.ro.stock.retail.report.list</field>
         <field name="model">l10n.ro.stock.retail.report</field>
         <field name="arch" type="xml">
-            <list string="Retail Stock Report (Marfa in Magazin)">
+            <list
+                string="Retail Stock (Marfa in Magazin)"
+                create="false"
+                edit="false"
+                decoration-warning="price_gap_total != 0"
+            >
                 <field name="warehouse_id" />
-                <field name="location_id" />
                 <field name="product_id" />
                 <field name="categ_id" optional="hide" />
                 <field name="quantity" />
-                <field name="cost_unit" />
-                <field name="value_total" sum="Stock Value (cost)" />
-                <field name="price_no_vat_unit" optional="hide" />
-                <field name="price_with_vat_unit" />
-                <field name="markup_unit" optional="hide" />
-                <field name="markup_total" sum="Markup Total (378)" />
-                <field name="vat_unit" optional="hide" />
-                <field name="vat_total" sum="Deferred VAT Total (4428)" />
+                <field name="cost_unit" optional="hide" />
+                <field name="cost_total" sum="Stock Value (cost)" />
+                <field name="markup_total" sum="Markup Carried (378)" />
+                <field name="vat_total" sum="Deferred VAT Carried (4428)" />
                 <field name="retail_value" sum="Retail Value (371)" />
+                <field name="retail_price_unit" />
+                <field name="current_price_unit" />
+                <field name="price_gap_total" sum="To Revalue" />
+                <field name="currency_id" column_invisible="1" />
                 <field name="company_id" groups="base.group_multi_company" />
             </list>
         </field>
@@ -30,7 +34,6 @@
         <field name="arch" type="xml">
             <search string="Retail Stock">
                 <field name="warehouse_id" />
-                <field name="location_id" />
                 <field name="product_id" />
                 <field name="categ_id" />
                 <group>
@@ -39,12 +42,6 @@
                         string="Warehouse"
                         domain="[]"
                         context="{'group_by': 'warehouse_id'}"
-                    />
-                    <filter
-                        name="group_location"
-                        string="Location"
-                        domain="[]"
-                        context="{'group_by': 'location_id'}"
                     />
                     <filter
                         name="group_category"

@@ -22,8 +22,9 @@ class StockLocation(models.Model):
         company_dependent=True,
         domain=ACCOUNT_DOMAIN,
         help="Account used for the commercial markup (adaos comercial) "
-        "between cost and retail price without VAT. Overrides the product / "
-        "category / company defaults.",
+        "between cost and retail price without VAT. Applies to this location "
+        "and, unless they override it, to its sublocations. Overrides the "
+        "product / category / company defaults.",
     )
     l10n_ro_account_deferred_vat_id = fields.Many2one(
         "account.account",
@@ -31,8 +32,9 @@ class StockLocation(models.Model):
         company_dependent=True,
         domain=ACCOUNT_DOMAIN,
         help="Account used for the VAT included in the retail price but "
-        "not yet collected (TVA neexigibila). Overrides the product / "
-        "category / company defaults.",
+        "not yet collected (TVA neexigibila). Applies to this location and, "
+        "unless they override it, to its sublocations. Overrides the "
+        "product / category / company defaults.",
     )
 
     @api.depends("usage", "warehouse_id", "warehouse_id.l10n_ro_retail")
@@ -45,22 +47,32 @@ class StockLocation(models.Model):
             )
 
     def _l10n_ro_resolve_account(self, field_name, product=None):
-        """Resolve the retail account in order: location -> product -> category
-        -> company.
+        """Resolve a retail account: location (walking up its parents) ->
+        product -> category -> company.
+
+        The walk up the parent chain is what makes the setting usable: a shop
+        is configured once on the warehouse stock location, and the shelf, bin
+        and counter sublocations created under it inherit both accounts. Read
+        strictly on the location itself, a putaway rule that moves goods one
+        level down silently fell through to the company default.
         """
         self.ensure_one()
-        account = self[field_name]
-        if account:
-            return account
+        company = self.company_id or self.env.company
+        location = self.with_company(company)
+        while location:
+            account = location[field_name]
+            if account:
+                return account
+            location = location.location_id
         if product:
-            product = product.with_company(self.company_id)
+            product = product.with_company(company)
             tmpl_account = product.product_tmpl_id[field_name]
             if tmpl_account:
                 return tmpl_account
             cat_account = product.categ_id[field_name]
             if cat_account:
                 return cat_account
-        return self.company_id[field_name]
+        return company[field_name]
 
     def _l10n_ro_get_markup_account(self, product=None):
         return self._l10n_ro_resolve_account(
@@ -71,3 +83,26 @@ class StockLocation(models.Model):
         return self._l10n_ro_resolve_account(
             "l10n_ro_account_deferred_vat_id", product=product
         )
+
+    def _l10n_ro_get_stock_account(self, product=None):
+        """Resolve the stock valuation account (371) the retail entries hit.
+
+        Same order as the core Romanian stock accounting: location override
+        first - walked up the parents, like the markup accounts - then the
+        product, then its category.
+        """
+        self.ensure_one()
+        company = self.company_id or self.env.company
+        location = self.with_company(company)
+        while location:
+            account = location.l10n_ro_property_stock_valuation_account_id
+            if account:
+                return account
+            location = location.location_id
+        if product:
+            product = product.with_company(company)
+            return (
+                product.l10n_ro_property_stock_valuation_account_id
+                or product.categ_id.property_stock_valuation_account_id
+            )
+        return self.env["account.account"]

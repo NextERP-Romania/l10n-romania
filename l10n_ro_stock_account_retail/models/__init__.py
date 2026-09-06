@@ -2,9 +2,9 @@ from . import res_company
 from . import res_config_settings
 from . import product_category
 from . import product_template
-from . import product_pricelist_item
+from . import product_product
+from . import retail_markup_line
 from . import stock_warehouse
 from . import stock_location
 from . import stock_quant
 from . import stock_move
-from . import retail_price_change
