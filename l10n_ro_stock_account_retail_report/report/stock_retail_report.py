@@ -44,6 +44,7 @@ class StockRetailReport(models.Model):
             "vat",
             "origin_type",
         ],
+        "stock.quant": ["company_id", "location_id", "product_id", "quantity"],
     }
 
     warehouse_id = fields.Many2one("stock.warehouse", string="Warehouse", readonly=True)
@@ -114,7 +115,21 @@ class StockRetailReport(models.Model):
     )
 
     # --- closing balance ----------------------------------------------------
-    quantity = fields.Float(string="Quantity On Hand", readonly=True)
+    quantity = fields.Float(string="Recorded Quantity", readonly=True)
+    quantity_on_hand = fields.Float(
+        readonly=True,
+        help="What the shop actually holds, from the quants. Only filled "
+        "when the report answers for today: the quants keep no history, so a "
+        "report asked for a past position leaves this empty.",
+    )
+    quantity_unrecorded = fields.Float(
+        readonly=True,
+        help="Stock on the shelf that the markup ledger has no record of, "
+        "normally goods that were already there when this module was "
+        "installed. Their shelf value is not on 371 yet: run the retail "
+        "markup opening balance to settle them. Only filled when the report "
+        "answers for today.",
+    )
     cost_total = fields.Monetary(
         string="Stock Value (cost)", readonly=True, currency_field="currency_id"
     )
@@ -192,15 +207,26 @@ class StockRetailReport(models.Model):
         upto = sql.SQL("ml.date <= {}").format(date_to) if date_to else sql.SQL("TRUE")
         in_period = sql.SQL("({} AND NOT ({}))").format(upto, before)
 
-        # With no period asked for, only stock actually on hand is worth a
-        # line. With one, a product that came in and left again inside the
-        # period is exactly what the reader is checking, so it keeps its row.
+        # With no period asked for, a line is worth printing when the shop
+        # holds the goods - whether or not the ledger knows about them. With a
+        # period, a product that came in and left again inside it is exactly
+        # what the reader is checking, so it keeps its row too.
+        # The quants have no history: they say what is on the shelf now and
+        # nothing about what was there in March. They belong in the report only
+        # when it is answering for today - asked for a past position it must
+        # speak from the ledger alone, or a product bought last week would show
+        # up in a report about last month.
+        quants_apply = (
+            sql.SQL("TRUE") if not (date_from or date_to) else sql.SQL("FALSE")
+        )
         having = (
-            sql.SQL("SUM(CASE WHEN {upto} THEN ml.quantity ELSE 0 END) > 0").format(
-                upto=upto
+            sql.SQL(
+                "COALESCE(l.quantity, 0) > 0 OR COALESCE(h.quantity_on_hand, 0) > 0"
             )
             if not (date_from or date_to)
-            else sql.SQL("COUNT(*) FILTER (WHERE {upto}) > 0").format(upto=upto)
+            else sql.SQL(
+                "COALESCE(l.rows_upto, 0) > 0 OR COALESCE(h.quantity_on_hand, 0) > 0"
+            )
         )
 
         def bucket(column, condition):
@@ -218,39 +244,97 @@ class StockRetailReport(models.Model):
 
         query = sql.SQL(
             """
+            WITH ledger AS (
+                SELECT
+                    ml.company_id,
+                    ml.warehouse_id,
+                    ml.product_id,
+                    MIN(ml.id) AS first_id,
+                    {qty_initial}::numeric AS quantity_initial,
+                    {cost_initial}::numeric AS cost_initial,
+                    {markup_initial}::numeric AS markup_initial,
+                    {vat_initial}::numeric AS vat_initial,
+                    {qty_in}::numeric AS quantity_in,
+                    {cost_in}::numeric AS cost_in,
+                    {markup_in}::numeric AS markup_in,
+                    {vat_in}::numeric AS vat_in,
+                    {qty_out}::numeric AS quantity_out,
+                    {cost_out}::numeric AS cost_out,
+                    {markup_out}::numeric AS markup_out,
+                    {vat_out}::numeric AS vat_out,
+                    {cost_adj}::numeric AS cost_adjustment,
+                    {markup_adj}::numeric AS markup_adjustment,
+                    {vat_adj}::numeric AS vat_adjustment,
+                    {qty_final}::numeric AS quantity,
+                    {cost_final}::numeric AS cost_total,
+                    {markup_final}::numeric AS markup_total,
+                    {vat_final}::numeric AS vat_total,
+                    COUNT(*) FILTER (WHERE {upto}) AS rows_upto
+                FROM l10n_ro_retail_markup_line ml
+                WHERE ml.warehouse_id IS NOT NULL
+                GROUP BY ml.company_id, ml.warehouse_id, ml.product_id
+            ),
+            -- What the shop really holds. A shop that was trading before this
+            -- module arrived has stock here and nothing in the ledger; leaving
+            -- the quants out of the report is what made that population
+            -- invisible in the one place someone would look for it.
+            on_hand AS (
+                SELECT
+                    sq.company_id,
+                    sl.warehouse_id,
+                    sq.product_id,
+                    SUM(sq.quantity)::numeric AS quantity_on_hand
+                FROM stock_quant sq
+                JOIN stock_location sl ON sl.id = sq.location_id
+                WHERE sl.l10n_ro_retail AND sl.warehouse_id IS NOT NULL
+                  AND {quants_apply}
+                GROUP BY sq.company_id, sl.warehouse_id, sq.product_id
+            )
             SELECT
-                MIN(ml.id) AS id,
-                ml.company_id AS company_id,
-                ml.warehouse_id AS warehouse_id,
-                ml.product_id AS product_id,
+                -- Arithmetic on the two ids overflows a 4 byte integer as
+                -- soon as a warehouse id passes 21, so the row number is the
+                -- key. It is computed over the whole view, before any domain
+                -- is applied, so it stays put between reads.
+                (ROW_NUMBER() OVER (
+                    ORDER BY COALESCE(l.warehouse_id, h.warehouse_id),
+                             COALESCE(l.product_id, h.product_id)
+                ))::integer AS id,
+                COALESCE(l.company_id, h.company_id) AS company_id,
+                COALESCE(l.warehouse_id, h.warehouse_id) AS warehouse_id,
+                COALESCE(l.product_id, h.product_id) AS product_id,
                 pp.product_tmpl_id AS product_tmpl_id,
                 pt.categ_id AS categ_id,
-                {qty_initial}::numeric AS quantity_initial,
-                {cost_initial}::numeric AS cost_initial,
-                {markup_initial}::numeric AS markup_initial,
-                {vat_initial}::numeric AS vat_initial,
-                {qty_in}::numeric AS quantity_in,
-                {cost_in}::numeric AS cost_in,
-                {markup_in}::numeric AS markup_in,
-                {vat_in}::numeric AS vat_in,
-                {qty_out}::numeric AS quantity_out,
-                {cost_out}::numeric AS cost_out,
-                {markup_out}::numeric AS markup_out,
-                {vat_out}::numeric AS vat_out,
-                {cost_adj}::numeric AS cost_adjustment,
-                {markup_adj}::numeric AS markup_adjustment,
-                {vat_adj}::numeric AS vat_adjustment,
-                {qty_final}::numeric AS quantity,
-                {cost_final}::numeric AS cost_total,
-                {markup_final}::numeric AS markup_total,
-                {vat_final}::numeric AS vat_total
-            FROM l10n_ro_retail_markup_line ml
-            JOIN product_product pp ON pp.id = ml.product_id
+                COALESCE(l.quantity_initial, 0) AS quantity_initial,
+                COALESCE(l.cost_initial, 0) AS cost_initial,
+                COALESCE(l.markup_initial, 0) AS markup_initial,
+                COALESCE(l.vat_initial, 0) AS vat_initial,
+                COALESCE(l.quantity_in, 0) AS quantity_in,
+                COALESCE(l.cost_in, 0) AS cost_in,
+                COALESCE(l.markup_in, 0) AS markup_in,
+                COALESCE(l.vat_in, 0) AS vat_in,
+                COALESCE(l.quantity_out, 0) AS quantity_out,
+                COALESCE(l.cost_out, 0) AS cost_out,
+                COALESCE(l.markup_out, 0) AS markup_out,
+                COALESCE(l.vat_out, 0) AS vat_out,
+                COALESCE(l.cost_adjustment, 0) AS cost_adjustment,
+                COALESCE(l.markup_adjustment, 0) AS markup_adjustment,
+                COALESCE(l.vat_adjustment, 0) AS vat_adjustment,
+                COALESCE(l.quantity, 0) AS quantity,
+                COALESCE(l.cost_total, 0) AS cost_total,
+                COALESCE(l.markup_total, 0) AS markup_total,
+                COALESCE(l.vat_total, 0) AS vat_total,
+                COALESCE(h.quantity_on_hand, 0) AS quantity_on_hand,
+                (COALESCE(h.quantity_on_hand, 0)
+                    - COALESCE(l.quantity, 0)) AS quantity_unrecorded
+            FROM ledger l
+            FULL OUTER JOIN on_hand h
+                ON h.company_id = l.company_id
+               AND h.warehouse_id = l.warehouse_id
+               AND h.product_id = l.product_id
+            JOIN product_product pp
+                ON pp.id = COALESCE(l.product_id, h.product_id)
             JOIN product_template pt ON pt.id = pp.product_tmpl_id
-            WHERE ml.warehouse_id IS NOT NULL
-            GROUP BY ml.company_id, ml.warehouse_id, ml.product_id,
-                     pp.product_tmpl_id, pt.categ_id
-            HAVING {having}
+            WHERE {having}
             """
         ).format(
             qty_initial=bucket("quantity", before),
@@ -272,6 +356,8 @@ class StockRetailReport(models.Model):
             cost_final=bucket("cost", upto),
             markup_final=bucket("markup", upto),
             vat_final=bucket("vat", upto),
+            upto=upto,
+            quants_apply=quants_apply,
             having=having,
         )
         return query.as_string(self.env.cr._cnx)

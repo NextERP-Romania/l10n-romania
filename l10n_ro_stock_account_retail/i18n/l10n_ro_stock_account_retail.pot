@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-06 13:01+0000\n"
-"PO-Revision-Date: 2026-09-06 13:01+0000\n"
+"POT-Creation-Date: 2026-09-06 16:56+0000\n"
+"PO-Revision-Date: 2026-09-06 16:56+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -23,6 +23,17 @@ msgstr ""
 #. module: l10n_ro_stock_account_retail
 #: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail.res_config_settings_view_form_retail
 msgid "4428 - default deferred VAT for retail warehouses"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail.view_retail_opening_balance_form
+msgid ""
+"A shop that was trading before this module was installed\n"
+"                    carries its stock at cost: 371 holds what the goods cost,\n"
+"                    and 378 and 4428 hold nothing for them. This brings 371 up\n"
+"                    to the price on the shelf label, and records the position\n"
+"                    in the markup ledger so later sales release the right\n"
+"                    amount. Run it once per company."
 msgstr ""
 
 #. module: l10n_ro_stock_account_retail
@@ -62,12 +73,19 @@ msgid ""
 msgstr ""
 
 #. module: l10n_ro_stock_account_retail
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail.view_retail_opening_balance_form
+msgid "Cancel"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail
 #: model:ir.model,name:l10n_ro_stock_account_retail.model_res_company
 msgid "Companies"
 msgstr ""
 
 #. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__company_id
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance__company_id
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__company_id
 msgid "Company"
 msgstr ""
 
@@ -77,8 +95,18 @@ msgid "Config Settings"
 msgstr ""
 
 #. module: l10n_ro_stock_account_retail
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__cost
+msgid "Cost"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__cost
 msgid "Cost (371)"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail.view_retail_opening_balance_form
+msgid "Cost already on 371"
 msgstr ""
 
 #. module: l10n_ro_stock_account_retail
@@ -97,22 +125,33 @@ msgstr ""
 
 #. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__create_uid
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance__create_uid
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__create_uid
 msgid "Created by"
 msgstr ""
 
 #. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__create_date
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance__create_date
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__create_date
 msgid "Created on"
 msgstr ""
 
 #. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__company_currency_id
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__currency_id
 msgid "Currency"
 msgstr ""
 
 #. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__date
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance__date
 msgid "Date"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail
+#: model:ir.model.fields,help:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance__date
+msgid "Date of the entry, and of the ledger rows it produces."
 msgstr ""
 
 #. module: l10n_ro_stock_account_retail
@@ -155,6 +194,7 @@ msgstr ""
 
 #. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__vat
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__vat
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_stock_quant__l10n_ro_retail_vat_value
 #: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail.view_retail_markup_line_list
 msgid "Deferred VAT (4428)"
@@ -184,7 +224,14 @@ msgid ""
 msgstr ""
 
 #. module: l10n_ro_stock_account_retail
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail.view_retail_opening_balance_form
+msgid "Deferred VAT to post (4428)"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__display_name
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance__display_name
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__display_name
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_product_category__display_name
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_product_product__display_name
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_product_template__display_name
@@ -198,7 +245,14 @@ msgid "Display Name"
 msgstr ""
 
 #. module: l10n_ro_stock_account_retail
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance__has_shortfall
+msgid "Has Shortfall"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__id
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance__id
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__id
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_product_category__id
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_product_product__id
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_product_template__id
@@ -229,18 +283,37 @@ msgid "Inventory Locations"
 msgstr ""
 
 #. module: l10n_ro_stock_account_retail
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance__journal_id
+msgid "Journal"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields.selection,name:l10n_ro_stock_account_retail.selection__l10n_ro_retail_markup_line__origin_type__landed_cost
 msgid "Landed Cost"
 msgstr ""
 
 #. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__write_uid
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance__write_uid
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__write_uid
 msgid "Last Updated by"
 msgstr ""
 
 #. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__write_date
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance__write_date
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__write_date
 msgid "Last Updated on"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail
+#: model:ir.model.fields,help:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance__warehouse_ids
+msgid "Leave empty for every retail warehouse of the company."
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance__line_ids
+msgid "Lines"
 msgstr ""
 
 #. module: l10n_ro_stock_account_retail
@@ -263,6 +336,7 @@ msgstr ""
 
 #. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__markup
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__markup
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_stock_quant__l10n_ro_retail_markup_value
 #: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail.view_retail_markup_line_list
 msgid "Markup (378)"
@@ -292,11 +366,37 @@ msgid ""
 msgstr ""
 
 #. module: l10n_ro_stock_account_retail
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail.view_retail_opening_balance_form
+msgid "Markup to post (378)"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail.view_retail_opening_balance_form
+msgid "Measure the gap"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail
 #. odoo-python
 #: code:addons/l10n_ro_stock_account_retail/models/stock_move.py:0
 msgid ""
 "Missing markup (378) or deferred VAT (4428) account for product %(p)s at "
 "location %(l)s."
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail
+#. odoo-python
+#: code:addons/l10n_ro_stock_account_retail/wizard/retail_opening_balance.py:0
+msgid ""
+"Missing stock valuation (371), markup (378) or deferred VAT (4428) account "
+"for %(product)s in %(warehouse)s."
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail
+#. odoo-python
+#: code:addons/l10n_ro_stock_account_retail/wizard/retail_opening_balance.py:0
+msgid ""
+"No journal to post the opening balance on. Set the stock journal on the "
+"company, or pick one here."
 msgstr ""
 
 #. module: l10n_ro_stock_account_retail
@@ -315,6 +415,17 @@ msgid ""
 msgstr ""
 
 #. module: l10n_ro_stock_account_retail
+#. odoo-python
+#: code:addons/l10n_ro_stock_account_retail/wizard/retail_opening_balance.py:0
+msgid "Nothing to post: every shop already carries its stock at shelf price."
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail
+#: model:ir.model.fields.selection,name:l10n_ro_stock_account_retail.selection__l10n_ro_retail_markup_line__origin_type__opening
+msgid "Opening Balance"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail
 #: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail.view_retail_markup_line_search
 msgid "Origin"
 msgstr ""
@@ -330,6 +441,11 @@ msgid "Out of the Shop"
 msgstr ""
 
 #. module: l10n_ro_stock_account_retail
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail.view_retail_opening_balance_form
+msgid "Post"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields.selection,name:l10n_ro_stock_account_retail.selection__l10n_ro_retail_markup_line__origin_type__price_change
 msgid "Price Change"
 msgstr ""
@@ -337,6 +453,11 @@ msgstr ""
 #. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields.selection,name:l10n_ro_stock_account_retail.selection__l10n_ro_retail_markup_line__origin_type__price_difference
 msgid "Price Difference"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__below_cost
+msgid "Priced Below Cost"
 msgstr ""
 
 #. module: l10n_ro_stock_account_retail
@@ -351,6 +472,7 @@ msgstr ""
 #. module: l10n_ro_stock_account_retail
 #: model:ir.model,name:l10n_ro_stock_account_retail.model_product_template
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__product_id
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__product_id
 #: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail.view_retail_markup_line_search
 msgid "Product"
 msgstr ""
@@ -367,8 +489,14 @@ msgstr ""
 
 #. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__quantity
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__quantity
 #: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail.view_retail_markup_line_list
 msgid "Quantity"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail
+#: model:ir.model.fields,help:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__quantity
+msgid "Quantity on hand that the ledger has no record of."
 msgstr ""
 
 #. module: l10n_ro_stock_account_retail
@@ -401,6 +529,19 @@ msgid "Retail Markup Ledger Line"
 msgstr ""
 
 #. module: l10n_ro_stock_account_retail
+#: model:ir.actions.act_window,name:l10n_ro_stock_account_retail.action_retail_opening_balance
+#: model:ir.model,name:l10n_ro_stock_account_retail.model_l10n_ro_retail_opening_balance
+#: model:ir.ui.menu,name:l10n_ro_stock_account_retail.menu_retail_opening_balance
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail.view_retail_opening_balance_form
+msgid "Retail Markup Opening Balance"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail
+#: model:ir.model,name:l10n_ro_stock_account_retail.model_l10n_ro_retail_opening_balance_line
+msgid "Retail Markup Opening Balance Line"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_stock_warehouse__l10n_ro_retail_pricelist_id
 msgid "Retail Pricelist"
 msgstr ""
@@ -420,6 +561,34 @@ msgstr ""
 #. odoo-python
 #: code:addons/l10n_ro_stock_account_retail/models/stock_move.py:0
 msgid "Retail markup %(ref)s"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail
+#. odoo-python
+#: code:addons/l10n_ro_stock_account_retail/wizard/retail_opening_balance.py:0
+msgid "Retail markup opening balance"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail
+#. odoo-python
+#: code:addons/l10n_ro_stock_account_retail/wizard/retail_opening_balance.py:0
+msgid "Retail opening balance"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail
+#. odoo-python
+#: code:addons/l10n_ro_stock_account_retail/wizard/retail_opening_balance.py:0
+msgid "Retail opening balance %(product)s"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__price_unit
+msgid "Shelf Price / Unit"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance__warehouse_ids
+msgid "Shops"
 msgstr ""
 
 #. module: l10n_ro_stock_account_retail
@@ -447,6 +616,14 @@ msgid ""
 msgstr ""
 
 #. module: l10n_ro_stock_account_retail
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail.view_retail_opening_balance_form
+msgid ""
+"Some products are priced below what they cost. Raise their\n"
+"                    shelf price, or allow selling below cost on the warehouse,\n"
+"                    before posting."
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail
 #: model:ir.model,name:l10n_ro_stock_account_retail.model_stock_move
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__move_id
 #: model:ir.model.fields.selection,name:l10n_ro_stock_account_retail.selection__l10n_ro_retail_markup_line__origin_type__move
@@ -466,8 +643,38 @@ msgid ""
 msgstr ""
 
 #. module: l10n_ro_stock_account_retail
+#: model:ir.model.fields,help:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__below_cost
+msgid ""
+"The shelf price does not cover the cost, so the opening balance would book a"
+" negative markup."
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail
+#. odoo-python
+#: code:addons/l10n_ro_stock_account_retail/wizard/retail_opening_balance.py:0
+msgid ""
+"These products are priced below what they cost, so the opening balance would book a negative markup:\n"
+"%(products)s\n"
+"\n"
+"Raise their shelf price, or tick 'Allow Selling Below Cost' on the warehouse if the shop means to sell them that way."
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail
 #: model:ir.model,name:l10n_ro_stock_account_retail.model_stock_warehouse
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__warehouse_id
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__warehouse_id
 #: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail.view_retail_markup_line_search
 msgid "Warehouse"
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail
+#: model:ir.model.fields,help:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__cost
+msgid ""
+"What that quantity cost, as the quants value it. It is already on 371, so it"
+" is recorded rather than posted."
+msgstr ""
+
+#. module: l10n_ro_stock_account_retail
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__wizard_id
+msgid "Wizard"
 msgstr ""

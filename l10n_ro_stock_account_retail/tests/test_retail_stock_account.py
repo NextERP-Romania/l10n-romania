@@ -895,3 +895,74 @@ class TestRetailStockAccount(TestRetailCommon):
         )
         self.assertAlmostEqual(markup_after, 0.0, places=2)
         self.assertAlmostEqual(vat_after, 0.0, places=2)
+
+    def test_opening_balance_settles_stock_the_ledger_never_saw(self):
+        """The opening balance brings 371 up to shelf price for goods that
+        were already on the shelf, and records them so later sales release
+        the right amount."""
+        self._set_initial_stock(self.loc_mag1, self.product_retail, 40)
+        self.env["l10n.ro.retail.markup.line"].sudo().search(
+            [("product_id", "=", self.product_retail.id)]
+        ).unlink()
+
+        wizard = self.env["l10n.ro.retail.opening.balance"].create(
+            {"warehouse_ids": [(6, 0, self.warehouse_mag1.ids)]}
+        )
+        wizard.action_refresh()
+        line = wizard.line_ids.filtered(lambda ln: ln.product_id == self.product_retail)
+        self.assertTrue(line, "The opening balance did not see the stock")
+        self.assertAlmostEqual(line.quantity, 40.0, places=2)
+        self.assertAlmostEqual(line.cost, 2000.0, places=2)  # 40 * 50
+        self.assertAlmostEqual(line.markup, 2000.0, places=2)  # 40 * (100 - 50)
+        self.assertAlmostEqual(line.vat, 760.0, places=2)  # 40 * 19
+        self.assertFalse(line.below_cost)
+
+        wizard.action_post()
+        markup, vat = self._carried(self.warehouse_mag1, self.product_retail)
+        self.assertAlmostEqual(markup, 2000.0, places=2)
+        self.assertAlmostEqual(vat, 760.0, places=2)
+
+        # And the shop now releases the right amount on a sale.
+        self._do_sale_delivery(self.warehouse_mag1, self.product_retail, 4, 119.0)
+        markup_after, vat_after = self._carried(
+            self.warehouse_mag1, self.product_retail
+        )
+        self.assertAlmostEqual(markup_after, 1800.0, places=2)  # 2000 - 4*50
+        self.assertAlmostEqual(vat_after, 684.0, places=2)  # 760 - 4*19
+
+    def test_opening_balance_finds_nothing_on_a_complete_ledger(self):
+        self._set_initial_stock(self.loc_mag1, self.product_retail, 10)
+        wizard = self.env["l10n.ro.retail.opening.balance"].create(
+            {"warehouse_ids": [(6, 0, self.warehouse_mag1.ids)]}
+        )
+        wizard.action_refresh()
+        self.assertFalse(
+            wizard.line_ids.filtered(lambda ln: ln.product_id == self.product_retail)
+        )
+
+    def test_opening_balance_refuses_goods_priced_below_cost(self):
+        self.env["product.pricelist.item"].with_context(
+            skip_retail_price_change=True
+        ).create(
+            {
+                "pricelist_id": self.pricelist_mag1.id,
+                "applied_on": "0_product_variant",
+                "product_id": self.product_retail.id,
+                "compute_price": "fixed",
+                "fixed_price": 35.7,  # 30 net against a cost of 50
+            }
+        )
+        self.warehouse_mag1.l10n_ro_retail_allow_negative_markup = True
+        self._set_initial_stock(self.loc_mag1, self.product_retail, 10)
+        self.env["l10n.ro.retail.markup.line"].sudo().search(
+            [("product_id", "=", self.product_retail.id)]
+        ).unlink()
+        self.warehouse_mag1.l10n_ro_retail_allow_negative_markup = False
+
+        wizard = self.env["l10n.ro.retail.opening.balance"].create(
+            {"warehouse_ids": [(6, 0, self.warehouse_mag1.ids)]}
+        )
+        wizard.action_refresh()
+        self.assertTrue(wizard.has_shortfall)
+        with self.assertRaises(UserError):
+            wizard.action_post()

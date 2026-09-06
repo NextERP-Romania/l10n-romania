@@ -214,3 +214,31 @@ class TestRetailStockReport(TestRetailCommon):
             action["context"]["l10n_ro_retail_date_to"], "2026-12-31 23:59:59"
         )
         self.assertIn(("warehouse_id", "in", self.warehouse_mag1.ids), action["domain"])
+
+    # -------------------------------------------------------------------
+    # Stock the ledger has never seen
+    # -------------------------------------------------------------------
+    def test_stock_the_ledger_never_saw_still_shows_up(self):
+        """The report must not hide the population that needs attention.
+
+        Built on the ledger alone it showed nothing for a shop that was
+        trading before the module arrived - which is precisely where someone
+        would look to find out why 378 holds nothing.
+        """
+        self._set_initial_stock(self.loc_mag1, self.product_retail, 40)
+        self.env["l10n.ro.retail.markup.line"].sudo().search(
+            [("product_id", "=", self.product_retail.id)]
+        ).unlink()
+
+        row = self._report_line(self.warehouse_mag1, self.product_retail)
+        self.assertEqual(len(row), 1, "Unrecorded stock vanished from the report")
+        self.assertAlmostEqual(row.quantity_on_hand, 40.0, places=2)
+        self.assertAlmostEqual(row.quantity, 0.0, places=2)
+        self.assertAlmostEqual(row.quantity_unrecorded, 40.0, places=2)
+        self.assertAlmostEqual(row.markup_total, 0.0, places=2)
+
+    def test_nothing_unrecorded_once_the_ledger_is_complete(self):
+        self._set_initial_stock(self.loc_mag1, self.product_retail, 10)
+        row = self._report_line(self.warehouse_mag1, self.product_retail)
+        self.assertAlmostEqual(row.quantity_on_hand, 10.0, places=2)
+        self.assertAlmostEqual(row.quantity_unrecorded, 0.0, places=2)

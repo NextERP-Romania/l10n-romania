@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-06 13:01+0000\n"
-"PO-Revision-Date: 2026-09-06 13:01+0000\n"
+"POT-Creation-Date: 2026-09-06 16:56+0000\n"
+"PO-Revision-Date: 2026-09-06 16:56+0000\n"
 "Last-Translator: NextERP Romania\n"
 "Language-Team: Romanian\n"
 "MIME-Version: 1.0\n"
@@ -25,6 +25,23 @@ msgstr "378 - implicit pentru gestiunile de tip magazin"
 #: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail.res_config_settings_view_form_retail
 msgid "4428 - default deferred VAT for retail warehouses"
 msgstr "4428 - TVA neexigibilă implicită pentru gestiunile de tip magazin"
+
+#. module: l10n_ro_stock_account_retail
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail.view_retail_opening_balance_form
+msgid ""
+"A shop that was trading before this module was installed\n"
+"                    carries its stock at cost: 371 holds what the goods cost,\n"
+"                    and 378 and 4428 hold nothing for them. This brings 371 up\n"
+"                    to the price on the shelf label, and records the position\n"
+"                    in the markup ledger so later sales release the right\n"
+"                    amount. Run it once per company."
+msgstr ""
+"Un magazin care funcționa înainte de instalarea acestui modul își\n"
+"                    poartă stocul la cost: 371 ține cât a costat marfa,\n"
+"                    iar 378 și 4428 nu țin nimic pentru ea. Aceasta aduce\n"
+"                    371 la prețul de pe eticheta de raft și înregistrează\n"
+"                    poziția în registrul adaosului, ca vânzările ulterioare\n"
+"                    să degreveze corect. Se rulează o dată pe companie."
 
 #. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__account_move_id
@@ -63,12 +80,19 @@ msgid ""
 msgstr "Implicit, un preț de raft mai mic decât costul este refuzat, fiindcă înregistrează adaos negativ în 378 și aproape întotdeauna înseamnă că prețul sau costul este greșit. Bifați pentru un magazin care vinde în mod legitim sub cost - lichidare de stoc, produse aproape de expirare, cazurile din OG 99/2000 - unde adaosul negativ este intenționat."
 
 #. module: l10n_ro_stock_account_retail
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail.view_retail_opening_balance_form
+msgid "Cancel"
+msgstr "Anulează"
+
+#. module: l10n_ro_stock_account_retail
 #: model:ir.model,name:l10n_ro_stock_account_retail.model_res_company
 msgid "Companies"
 msgstr "Companii"
 
 #. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__company_id
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance__company_id
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__company_id
 msgid "Company"
 msgstr "Companie"
 
@@ -78,9 +102,19 @@ msgid "Config Settings"
 msgstr "Setări de configurare"
 
 #. module: l10n_ro_stock_account_retail
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__cost
+msgid "Cost"
+msgstr "Cost"
+
+#. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__cost
 msgid "Cost (371)"
 msgstr "Cost (371)"
+
+#. module: l10n_ro_stock_account_retail
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail.view_retail_opening_balance_form
+msgid "Cost already on 371"
+msgstr "Cost deja în 371"
 
 #. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,help:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__retail_value
@@ -98,23 +132,34 @@ msgstr "Costul plus adaosul și TVA neexigibilă încărcate efectiv pe acest st
 
 #. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__create_uid
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance__create_uid
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__create_uid
 msgid "Created by"
 msgstr "Creat de"
 
 #. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__create_date
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance__create_date
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__create_date
 msgid "Created on"
 msgstr "Creat pe"
 
 #. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__company_currency_id
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__currency_id
 msgid "Currency"
 msgstr "Monedă"
 
 #. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__date
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance__date
 msgid "Date"
 msgstr "Dată"
+
+#. module: l10n_ro_stock_account_retail
+#: model:ir.model.fields,help:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance__date
+msgid "Date of the entry, and of the ledger rows it produces."
+msgstr "Data notei contabile și a rândurilor de registru pe care le produce."
 
 #. module: l10n_ro_stock_account_retail
 #: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail.res_config_settings_view_form_retail
@@ -156,6 +201,7 @@ msgstr "Contul de adaos comercial folosit când nu este setat nimic pe locație,
 
 #. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__vat
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__vat
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_stock_quant__l10n_ro_retail_vat_value
 #: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail.view_retail_markup_line_list
 msgid "Deferred VAT (4428)"
@@ -185,7 +231,14 @@ msgid ""
 msgstr "Contul de TVA neexigibilă folosit în contabilitatea de retail. Dacă e gol, se folosește cel implicit al companiei."
 
 #. module: l10n_ro_stock_account_retail
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail.view_retail_opening_balance_form
+msgid "Deferred VAT to post (4428)"
+msgstr "TVA neexigibilă de înregistrat (4428)"
+
+#. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__display_name
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance__display_name
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__display_name
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_product_category__display_name
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_product_product__display_name
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_product_template__display_name
@@ -199,7 +252,14 @@ msgid "Display Name"
 msgstr "Nume afișat"
 
 #. module: l10n_ro_stock_account_retail
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance__has_shortfall
+msgid "Has Shortfall"
+msgstr "Are produse sub cost"
+
+#. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__id
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance__id
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__id
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_product_category__id
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_product_product__id
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_product_template__id
@@ -230,19 +290,38 @@ msgid "Inventory Locations"
 msgstr "Locații de stoc"
 
 #. module: l10n_ro_stock_account_retail
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance__journal_id
+msgid "Journal"
+msgstr "Jurnal"
+
+#. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields.selection,name:l10n_ro_stock_account_retail.selection__l10n_ro_retail_markup_line__origin_type__landed_cost
 msgid "Landed Cost"
 msgstr "Costuri Adiționale Stoc"
 
 #. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__write_uid
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance__write_uid
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__write_uid
 msgid "Last Updated by"
 msgstr "Ultima actualizare făcută de"
 
 #. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__write_date
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance__write_date
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__write_date
 msgid "Last Updated on"
 msgstr "Ultima actualizare pe"
+
+#. module: l10n_ro_stock_account_retail
+#: model:ir.model.fields,help:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance__warehouse_ids
+msgid "Leave empty for every retail warehouse of the company."
+msgstr "Lăsați gol pentru toate gestiunile de tip magazin ale companiei."
+
+#. module: l10n_ro_stock_account_retail
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance__line_ids
+msgid "Lines"
+msgstr "Linii"
 
 #. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__location_id
@@ -264,6 +343,7 @@ msgstr "Marchează gestiunea ca fiind de tip magazin. Marfa din locațiile ei in
 
 #. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__markup
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__markup
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_stock_quant__l10n_ro_retail_markup_value
 #: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail.view_retail_markup_line_list
 msgid "Markup (378)"
@@ -293,12 +373,38 @@ msgid ""
 msgstr "Contul de adaos comercial folosit în contabilitatea de retail. Dacă e gol, se folosește cel implicit al companiei."
 
 #. module: l10n_ro_stock_account_retail
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail.view_retail_opening_balance_form
+msgid "Markup to post (378)"
+msgstr "Adaos de înregistrat (378)"
+
+#. module: l10n_ro_stock_account_retail
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail.view_retail_opening_balance_form
+msgid "Measure the gap"
+msgstr "Măsoară diferența"
+
+#. module: l10n_ro_stock_account_retail
 #. odoo-python
 #: code:addons/l10n_ro_stock_account_retail/models/stock_move.py:0
 msgid ""
 "Missing markup (378) or deferred VAT (4428) account for product %(p)s at "
 "location %(l)s."
 msgstr "Lipsește contul de adaos (378) sau de TVA neexigibilă (4428) pentru produsul %(p)s în locația %(l)s."
+
+#. module: l10n_ro_stock_account_retail
+#. odoo-python
+#: code:addons/l10n_ro_stock_account_retail/wizard/retail_opening_balance.py:0
+msgid ""
+"Missing stock valuation (371), markup (378) or deferred VAT (4428) account "
+"for %(product)s in %(warehouse)s."
+msgstr "Lipsește contul de stoc (371), de adaos (378) sau de TVA neexigibilă (4428) pentru %(product)s în %(warehouse)s."
+
+#. module: l10n_ro_stock_account_retail
+#. odoo-python
+#: code:addons/l10n_ro_stock_account_retail/wizard/retail_opening_balance.py:0
+msgid ""
+"No journal to post the opening balance on. Set the stock journal on the "
+"company, or pick one here."
+msgstr "Nu există jurnal în care să se înregistreze soldul inițial. Setați jurnalul de stoc pe companie sau alegeți unul aici."
 
 #. module: l10n_ro_stock_account_retail
 #. odoo-python
@@ -316,6 +422,17 @@ msgid ""
 msgstr "Nu există cont de stoc (371) pentru produsul %(product)s în locația %(location)s. Setați-l pe locație, pe produs sau pe categoria lui înainte de a mișca marfă în sau din gestiunea de tip magazin."
 
 #. module: l10n_ro_stock_account_retail
+#. odoo-python
+#: code:addons/l10n_ro_stock_account_retail/wizard/retail_opening_balance.py:0
+msgid "Nothing to post: every shop already carries its stock at shelf price."
+msgstr "Nu este nimic de înregistrat: toate magazinele își poartă deja stocul la preț de raft."
+
+#. module: l10n_ro_stock_account_retail
+#: model:ir.model.fields.selection,name:l10n_ro_stock_account_retail.selection__l10n_ro_retail_markup_line__origin_type__opening
+msgid "Opening Balance"
+msgstr "Sold inițial"
+
+#. module: l10n_ro_stock_account_retail
 #: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail.view_retail_markup_line_search
 msgid "Origin"
 msgstr "Origine"
@@ -331,6 +448,11 @@ msgid "Out of the Shop"
 msgstr "Ieșiri din magazin"
 
 #. module: l10n_ro_stock_account_retail
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail.view_retail_opening_balance_form
+msgid "Post"
+msgstr "Contabilizează"
+
+#. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields.selection,name:l10n_ro_stock_account_retail.selection__l10n_ro_retail_markup_line__origin_type__price_change
 msgid "Price Change"
 msgstr "Schimbare de preț"
@@ -339,6 +461,11 @@ msgstr "Schimbare de preț"
 #: model:ir.model.fields.selection,name:l10n_ro_stock_account_retail.selection__l10n_ro_retail_markup_line__origin_type__price_difference
 msgid "Price Difference"
 msgstr "Diferență de preț"
+
+#. module: l10n_ro_stock_account_retail
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__below_cost
+msgid "Priced Below Cost"
+msgstr "Preț sub cost"
 
 #. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,help:l10n_ro_stock_account_retail.field_stock_warehouse__l10n_ro_retail_pricelist_id
@@ -352,6 +479,7 @@ msgstr "Lista de prețuri care ține prețul de raft (PVA) al produselor din ace
 #. module: l10n_ro_stock_account_retail
 #: model:ir.model,name:l10n_ro_stock_account_retail.model_product_template
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__product_id
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__product_id
 #: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail.view_retail_markup_line_search
 msgid "Product"
 msgstr "Produs"
@@ -368,9 +496,15 @@ msgstr "Variantă produs"
 
 #. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__quantity
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__quantity
 #: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail.view_retail_markup_line_list
 msgid "Quantity"
 msgstr "Cantitate"
+
+#. module: l10n_ro_stock_account_retail
+#: model:ir.model.fields,help:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__quantity
+msgid "Quantity on hand that the ledger has no record of."
+msgstr "Cantitatea din stoc de care registrul nu are cunoștință."
 
 #. module: l10n_ro_stock_account_retail
 #: model:ir.model,name:l10n_ro_stock_account_retail.model_stock_quant
@@ -402,6 +536,19 @@ msgid "Retail Markup Ledger Line"
 msgstr "Linie din registrul adaosului comercial"
 
 #. module: l10n_ro_stock_account_retail
+#: model:ir.actions.act_window,name:l10n_ro_stock_account_retail.action_retail_opening_balance
+#: model:ir.model,name:l10n_ro_stock_account_retail.model_l10n_ro_retail_opening_balance
+#: model:ir.ui.menu,name:l10n_ro_stock_account_retail.menu_retail_opening_balance
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail.view_retail_opening_balance_form
+msgid "Retail Markup Opening Balance"
+msgstr "Sold inițial al adaosului comercial"
+
+#. module: l10n_ro_stock_account_retail
+#: model:ir.model,name:l10n_ro_stock_account_retail.model_l10n_ro_retail_opening_balance_line
+msgid "Retail Markup Opening Balance Line"
+msgstr "Linie din soldul inițial al adaosului comercial"
+
+#. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_stock_warehouse__l10n_ro_retail_pricelist_id
 msgid "Retail Pricelist"
 msgstr "Listă de prețuri cu amănuntul"
@@ -422,6 +569,34 @@ msgstr "Gestiune de tip magazin"
 #: code:addons/l10n_ro_stock_account_retail/models/stock_move.py:0
 msgid "Retail markup %(ref)s"
 msgstr "Adaos comercial %(ref)s"
+
+#. module: l10n_ro_stock_account_retail
+#. odoo-python
+#: code:addons/l10n_ro_stock_account_retail/wizard/retail_opening_balance.py:0
+msgid "Retail markup opening balance"
+msgstr "Sold inițial al adaosului comercial"
+
+#. module: l10n_ro_stock_account_retail
+#. odoo-python
+#: code:addons/l10n_ro_stock_account_retail/wizard/retail_opening_balance.py:0
+msgid "Retail opening balance"
+msgstr "Sold inițial retail"
+
+#. module: l10n_ro_stock_account_retail
+#. odoo-python
+#: code:addons/l10n_ro_stock_account_retail/wizard/retail_opening_balance.py:0
+msgid "Retail opening balance %(product)s"
+msgstr "Sold inițial retail %(product)s"
+
+#. module: l10n_ro_stock_account_retail
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__price_unit
+msgid "Shelf Price / Unit"
+msgstr "Preț de raft pe bucată"
+
+#. module: l10n_ro_stock_account_retail
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance__warehouse_ids
+msgid "Shops"
+msgstr "Magazine"
 
 #. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,help:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__vat
@@ -446,6 +621,17 @@ msgid ""
 "Signed quantity: positive when goods enter the shop, negative when they "
 "leave. Price changes and cost corrections carry zero."
 msgstr "Cantitate cu semn: pozitivă la intrarea mărfii în magazin, negativă la ieșire. Schimbările de preț și corecțiile de cost au zero."
+
+#. module: l10n_ro_stock_account_retail
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail.view_retail_opening_balance_form
+msgid ""
+"Some products are priced below what they cost. Raise their\n"
+"                    shelf price, or allow selling below cost on the warehouse,\n"
+"                    before posting."
+msgstr ""
+"Unele produse au prețul sub cost. Măriți-le prețul de\n"
+"                    raft sau permiteți vânzarea sub cost pe gestiune,\n"
+"                    înainte de a înregistra."
 
 #. module: l10n_ro_stock_account_retail
 #: model:ir.model,name:l10n_ro_stock_account_retail.model_stock_move
@@ -473,8 +659,42 @@ msgstr ""
 "Corectați prețul din lista de prețuri de retail sau bifați „Permite vânzarea sub costul de achiziție” pe gestiune, dacă magazinul chiar vinde acest produs sub cost."
 
 #. module: l10n_ro_stock_account_retail
+#: model:ir.model.fields,help:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__below_cost
+msgid ""
+"The shelf price does not cover the cost, so the opening balance would book a"
+" negative markup."
+msgstr "Prețul de raft nu acoperă costul, deci soldul inițial ar înregistra adaos negativ."
+
+#. module: l10n_ro_stock_account_retail
+#. odoo-python
+#: code:addons/l10n_ro_stock_account_retail/wizard/retail_opening_balance.py:0
+msgid ""
+"These products are priced below what they cost, so the opening balance would book a negative markup:\n"
+"%(products)s\n"
+"\n"
+"Raise their shelf price, or tick 'Allow Selling Below Cost' on the warehouse if the shop means to sell them that way."
+msgstr ""
+"Aceste produse au prețul sub cost, deci soldul inițial ar înregistra adaos negativ:\n"
+"%(products)s\n"
+"\n"
+"Măriți prețul lor de raft sau bifați „Permite vânzarea sub costul de achiziție” pe gestiune, dacă magazinul chiar vrea să le vândă așa."
+
+#. module: l10n_ro_stock_account_retail
 #: model:ir.model,name:l10n_ro_stock_account_retail.model_stock_warehouse
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__warehouse_id
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__warehouse_id
 #: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail.view_retail_markup_line_search
 msgid "Warehouse"
 msgstr "Depozit"
+
+#. module: l10n_ro_stock_account_retail
+#: model:ir.model.fields,help:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__cost
+msgid ""
+"What that quantity cost, as the quants value it. It is already on 371, so it"
+" is recorded rather than posted."
+msgstr "Cât a costat acea cantitate, așa cum o evaluează stocul. Este deja în 371, deci se înregistrează, nu se contabilizează."
+
+#. module: l10n_ro_stock_account_retail
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_opening_balance_line__wizard_id
+msgid "Wizard"
+msgstr "Asistent"

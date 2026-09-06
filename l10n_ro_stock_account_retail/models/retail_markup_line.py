@@ -82,6 +82,7 @@ class RetailMarkupLine(models.Model):
             ("price_change", "Price Change"),
             ("landed_cost", "Landed Cost"),
             ("price_difference", "Price Difference"),
+            ("opening", "Opening Balance"),
             ("manual", "Manual"),
         ],
         required=True,

@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-06 13:01+0000\n"
-"PO-Revision-Date: 2026-09-06 13:01+0000\n"
+"POT-Creation-Date: 2026-09-06 16:56+0000\n"
+"PO-Revision-Date: 2026-09-06 16:56+0000\n"
 "Last-Translator: NextERP Romania\n"
 "Language-Team: Romanian\n"
 "MIME-Version: 1.0\n"
@@ -220,6 +220,11 @@ msgid "Movements before this date are folded into the opening balance."
 msgstr "Mișcările dinaintea acestei date sunt cumulate în soldul inițial."
 
 #. module: l10n_ro_stock_account_retail_report
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail_report.view_stock_retail_report_search
+msgid "Not in the ledger"
+msgstr "Lipsă din registru"
+
+#. module: l10n_ro_stock_account_retail_report
 #: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail_report.view_stock_retail_report_wizard_form
 msgid "Open"
 msgstr "Deschide"
@@ -281,7 +286,7 @@ msgid "Quantity In"
 msgstr "Cantitate intrată"
 
 #. module: l10n_ro_stock_account_retail_report
-#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__quantity
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__quantity_on_hand
 msgid "Quantity On Hand"
 msgstr "Cantitate în stoc"
 
@@ -289,6 +294,16 @@ msgstr "Cantitate în stoc"
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__quantity_out
 msgid "Quantity Out"
 msgstr "Cantitate ieșită"
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__quantity_unrecorded
+msgid "Quantity Unrecorded"
+msgstr "Cantitate neînregistrată"
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__quantity
+msgid "Recorded Quantity"
+msgstr "Cantitate înregistrată"
 
 #. module: l10n_ro_stock_account_retail_report
 #: model:ir.actions.act_window,name:l10n_ro_stock_account_retail_report.action_stock_retail_report
@@ -351,6 +366,22 @@ msgid "Stock Value (cost)"
 msgstr "Valoare stoc (la cost)"
 
 #. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,help:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__quantity_unrecorded
+msgid ""
+"Stock on the shelf that the markup ledger has no record of, normally goods "
+"that were already there when this module was installed. Their shelf value is"
+" not on 371 yet: run the retail markup opening balance to settle them. Only "
+"filled when the report answers for today."
+msgstr "Marfă din magazin de care registrul adaosului nu are cunoștință, de obicei marfa care era deja acolo la instalarea modulului. Valoarea ei de raft nu este încă în 371: rulați soldul inițial al adaosului comercial pentru a o regla. Se completează doar când raportul răspunde pentru azi."
+
+#. module: l10n_ro_stock_account_retail_report
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail_report.view_stock_retail_report_search
+msgid ""
+"Stock on the shelf the markup ledger has no record                         "
+"of - run the opening balance to settle it"
+msgstr "Marfă din magazin de care registrul adaosului nu are                         cunoștință - rulați soldul inițial pentru a o regla"
+
+#. module: l10n_ro_stock_account_retail_report
 #: model:ir.model.fields,help:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report_wizard__date_to
 msgid ""
 "The closing balance is the position at the end of this day - the figure to "
@@ -376,6 +407,11 @@ msgstr "De reevaluat"
 
 #. module: l10n_ro_stock_account_retail_report
 #: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail_report.view_stock_retail_report_list
+msgid "Unrecorded"
+msgstr "Neînregistrat"
+
+#. module: l10n_ro_stock_account_retail_report
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail_report.view_stock_retail_report_list
 msgid "VAT Corrections"
 msgstr "Corecții de TVA"
 
@@ -394,3 +430,11 @@ msgstr "TVA ieșită"
 #: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail_report.view_stock_retail_report_search
 msgid "Warehouse"
 msgstr "Depozit"
+
+#. module: l10n_ro_stock_account_retail_report
+#: model:ir.model.fields,help:l10n_ro_stock_account_retail_report.field_l10n_ro_stock_retail_report__quantity_on_hand
+msgid ""
+"What the shop actually holds, from the quants. Only filled when the report "
+"answers for today: the quants keep no history, so a report asked for a past "
+"position leaves this empty."
+msgstr "Ce ține efectiv magazinul, din stoc. Se completează doar când raportul răspunde pentru azi: stocul nu păstrează istoric, deci un raport cerut pentru o poziție trecută lasă coloana goală."
