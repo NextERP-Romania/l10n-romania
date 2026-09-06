@@ -138,7 +138,11 @@ class RetailPriceChange(models.Model):
                         "product_id": product.id,
                         "location_id": location.id,
                         "quantity": qty,
-                        "old_price_with_vat": prices["price_with_vat"],
+                        # The old side is read from the ledger. Loading with
+                        # today's shelf price on both sides made the document
+                        # unable to say anything: a shop whose 371 had drifted
+                        # away from its own price list posted nothing and had
+                        # no way to put itself right.
                         "new_price_with_vat": prices["price_with_vat"],
                     }
                 )
@@ -302,6 +306,10 @@ class RetailPriceChange(models.Model):
                     # on hand carries, so the quantity that carries it is
                     # unchanged and this row must not shift the rate.
                     "quantity": 0.0,
+                    # A revaluation moves no cost. Written explicitly so the
+                    # column holds zero rather than NULL, which would drop the
+                    # row out of any arithmetic done across the three.
+                    "cost": 0.0,
                     "markup": markup_delta,
                     "vat": vat_delta,
                     "origin_type": "price_change",
@@ -389,25 +397,33 @@ class RetailPriceChangeLine(models.Model):
     quantity = fields.Float(readonly=True)
     cost_unit = fields.Float(
         string="Cost / Unit",
-        compute="_compute_cost_unit",
+        compute="_compute_carried",
         store=True,
-        help="Cost carried by the stock on hand, derived from what account 371 "
-        "holds less the markup and deferred VAT on it.",
+        help="Cost the stock on hand carries, from the markup ledger.",
     )
     old_price_with_vat = fields.Float(
         string="Old PVA",
-        readonly=True,
-        help="Retail price including VAT at document creation.",
+        compute="_compute_old_price",
+        store=True,
+        help="What the stock on the shelf carries per unit, VAT included - the "
+        "cost plus the markup and deferred VAT recorded against it. This is "
+        "what 371 holds, which is not always what the pricelist says.",
     )
     new_price_with_vat = fields.Float(
         string="New PVA",
         help="New retail price including VAT.",
     )
     old_markup_unit = fields.Float(
-        compute="_compute_splits", string="Old Markup / Unit", store=True
+        compute="_compute_carried",
+        string="Old Markup / Unit",
+        store=True,
+        help="Markup the stock carries on 378 per unit, as recorded.",
     )
     old_vat_unit = fields.Float(
-        compute="_compute_splits", string="Old VAT / Unit", store=True
+        compute="_compute_carried",
+        string="Old VAT / Unit",
+        store=True,
+        help="Deferred VAT the stock carries on 4428 per unit, as recorded.",
     )
     new_markup_unit = fields.Float(
         compute="_compute_splits", string="New Markup / Unit", store=True
@@ -423,55 +439,59 @@ class RetailPriceChangeLine(models.Model):
     )
 
     @api.depends("product_id", "location_id", "quantity", "document_id.warehouse_id")
-    def _compute_cost_unit(self):
-        """Cost per unit of the stock this line revalues.
+    def _compute_carried(self):
+        """What the stock on the shelf carries per unit, from the ledger.
 
-        Taken from the stock actually on the shelf rather than from
-        ``standard_price``: under FIFO the standard price is the cost of the
-        last receipt, not of the goods in the shop, and a markup delta measured
-        against it is not the one the entry needs.
+        The old side of the document is a statement of fact - what 371, 378 and
+        4428 hold for these goods right now - so it is read from the ledger
+        rather than recomputed from the pricelist. Deriving it from the price
+        assumed the two agree, which is exactly the assumption that fails: a
+        shop whose ledger has drifted then loads a document where old equals
+        new, posts nothing, and has no way to put itself right.
         """
         Ledger = self.env["l10n.ro.retail.markup.line"]
         for line in self:
             company = line.document_id.company_id or line.env.company
             warehouse = line.document_id.warehouse_id
             product = line.product_id
+            line.cost_unit = 0.0
+            line.old_markup_unit = 0.0
+            line.old_vat_unit = 0.0
             if not product or not warehouse:
-                line.cost_unit = 0.0
                 continue
-            qty_on_hand = Ledger._l10n_ro_carried_qty(warehouse, product, company)
-            if float_is_zero(qty_on_hand, precision_rounding=product.uom_id.rounding):
+            qty, cost, markup, vat = Ledger._l10n_ro_balance(
+                warehouse, product, company
+            )
+            if float_is_zero(qty, precision_rounding=product.uom_id.rounding):
+                # Nothing carried yet: fall back to the product cost, and let
+                # the whole shelf price be markup and VAT.
                 line.cost_unit = product.with_company(company).standard_price
                 continue
-            cost_value = sum(
-                self.env["stock.quant"]
-                .sudo()
-                .search(
-                    [
-                        ("company_id", "=", company.id),
-                        ("product_id", "=", product.id),
-                        ("location_id.warehouse_id", "=", warehouse.id),
-                        ("location_id.l10n_ro_retail", "=", True),
-                    ]
-                )
-                .mapped("value")
+            line.cost_unit = cost / qty
+            line.old_markup_unit = markup / qty
+            line.old_vat_unit = vat / qty
+
+    @api.depends("cost_unit", "old_markup_unit", "old_vat_unit")
+    def _compute_old_price(self):
+        for line in self:
+            line.old_price_with_vat = (
+                line.cost_unit + line.old_markup_unit + line.old_vat_unit
             )
-            line.cost_unit = cost_value / qty_on_hand
 
     @api.depends(
-        "old_price_with_vat",
         "new_price_with_vat",
         "cost_unit",
+        "old_markup_unit",
+        "old_vat_unit",
         "quantity",
         "product_id",
         "document_id.company_id",
     )
     def _compute_splits(self):
+        """The new side is what the shelf price implies; the delta closes the
+        gap between what is carried and what it should be."""
         for line in self:
             company = line.document_id.company_id or line.env.company
-            line.old_markup_unit, line.old_vat_unit = line._split(
-                line.old_price_with_vat, company
-            )
             line.new_markup_unit, line.new_vat_unit = line._split(
                 line.new_price_with_vat, company
             )

@@ -184,3 +184,54 @@ class TestRetailPriceChange(TestRetailCommon):
         self.assertIn("Commercial Markup (378)", html)
         self.assertIn("Deferred VAT (4428)", html)
         self.assertIn(doc.name, html)
+
+    def test_document_settles_a_ledger_that_drifted_from_the_shelf_price(self):
+        """The document has to be able to put a drifted ledger right.
+
+        Loading it used to put today's shelf price on both sides, so a shop
+        whose 371 no longer matched its own price list produced a document
+        that posted nothing. The old side now states what the stock carries,
+        so loading and posting brings 371, 378 and 4428 to the shelf price.
+        """
+        self._set_initial_stock(
+            self.warehouse_mag1.lot_stock_id, self.product_retail, 10
+        )
+        # Force a drift of the kind a bad starting position leaves behind:
+        # the ledger carries more than the shelf price says it should.
+        self.env["l10n.ro.retail.markup.line"].sudo().create(
+            {
+                "company_id": self.env.company.id,
+                "product_id": self.product_retail.id,
+                "location_id": self.warehouse_mag1.lot_stock_id.id,
+                "quantity": 0.0,
+                "cost": 0.0,
+                "markup": 100.0,
+                "vat": 50.0,
+                "origin_type": "manual",
+            }
+        )
+        Ledger = self.env["l10n.ro.retail.markup.line"]
+        _qty, cost, markup, vat = Ledger._l10n_ro_balance(
+            self.warehouse_mag1, self.product_retail, self.env.company
+        )
+        self.assertAlmostEqual(cost + markup + vat, 1340.0, places=2)  # 1190 + 150
+
+        doc = self.env["l10n.ro.retail.price.change"].create(
+            {"warehouse_id": self.warehouse_mag1.id}
+        )
+        doc.action_load_products()
+        line = doc.line_ids.filtered(lambda ln: ln.product_id == self.product_retail)
+        # The old side reports what is carried, the new side the shelf price.
+        self.assertAlmostEqual(line.old_price_with_vat, 134.0, places=2)
+        self.assertAlmostEqual(line.new_price_with_vat, 119.0, places=2)
+        self.assertAlmostEqual(line.markup_diff_total, -100.0, places=2)
+        self.assertAlmostEqual(line.vat_diff_total, -50.0, places=2)
+
+        doc.action_post()
+        _qty, cost, markup, vat = Ledger._l10n_ro_balance(
+            self.warehouse_mag1, self.product_retail, self.env.company
+        )
+        # Back to 10 units at the shelf price of 119.
+        self.assertAlmostEqual(cost + markup + vat, 1190.0, places=2)
+        self.assertAlmostEqual(markup, 500.0, places=2)
+        self.assertAlmostEqual(vat, 190.0, places=2)

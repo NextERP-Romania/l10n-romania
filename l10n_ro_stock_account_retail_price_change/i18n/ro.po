@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-06 16:56+0000\n"
-"PO-Revision-Date: 2026-09-06 16:56+0000\n"
+"POT-Creation-Date: 2026-09-06 17:10+0000\n"
+"PO-Revision-Date: 2026-09-06 17:10+0000\n"
 "Last-Translator: NextERP Romania\n"
 "Language-Team: Romanian\n"
 "MIME-Version: 1.0\n"
@@ -135,10 +135,8 @@ msgstr "Cost unitar"
 
 #. module: l10n_ro_stock_account_retail_price_change
 #: model:ir.model.fields,help:l10n_ro_stock_account_retail_price_change.field_l10n_ro_retail_price_change_line__cost_unit
-msgid ""
-"Cost carried by the stock on hand, derived from what account 371 holds less "
-"the markup and deferred VAT on it."
-msgstr "Costul purtat de stocul existent, dedus din ce ține contul 371 mai puțin adaosul și TVA neexigibilă de pe el."
+msgid "Cost the stock on hand carries, from the markup ledger."
+msgstr "Costul purtat de stocul existent, din registrul adaosului."
 
 #. module: l10n_ro_stock_account_retail_price_change
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_price_change.field_l10n_ro_retail_price_change__create_uid
@@ -163,6 +161,11 @@ msgstr "Dată"
 #: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail_price_change.view_retail_price_change_form
 msgid "Deferred VAT (4428)"
 msgstr "TVA neexigibilă (4428)"
+
+#. module: l10n_ro_stock_account_retail_price_change
+#: model:ir.model.fields,help:l10n_ro_stock_account_retail_price_change.field_l10n_ro_retail_price_change_line__old_vat_unit
+msgid "Deferred VAT the stock carries on 4428 per unit, as recorded."
+msgstr "TVA neexigibilă purtată de stoc în 4428 pe bucată, așa cum e înregistrată."
 
 #. module: l10n_ro_stock_account_retail_price_change
 #: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail_price_change.report_retail_price_change
@@ -324,6 +327,11 @@ msgstr "Variație adaos"
 #: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail_price_change.view_retail_price_change_form
 msgid "Markup Ledger"
 msgstr "Registrul adaosului"
+
+#. module: l10n_ro_stock_account_retail_price_change
+#: model:ir.model.fields,help:l10n_ro_stock_account_retail_price_change.field_l10n_ro_retail_price_change_line__old_markup_unit
+msgid "Markup the stock carries on 378 per unit, as recorded."
+msgstr "Adaosul purtat de stoc în 378 pe bucată, așa cum e înregistrat."
 
 #. module: l10n_ro_stock_account_retail_price_change
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail_price_change.field_l10n_ro_retail_price_change__message_has_error
@@ -590,11 +598,6 @@ msgid "Retail price change %s"
 msgstr "Proces verbal de schimbare a prețului %s"
 
 #. module: l10n_ro_stock_account_retail_price_change
-#: model:ir.model.fields,help:l10n_ro_stock_account_retail_price_change.field_l10n_ro_retail_price_change_line__old_price_with_vat
-msgid "Retail price including VAT at document creation."
-msgstr "Prețul de vânzare cu TVA inclus la crearea documentului."
-
-#. module: l10n_ro_stock_account_retail_price_change
 #. odoo-python
 #: code:addons/l10n_ro_stock_account_retail_price_change/models/retail_price_change.py:0
 msgid ""
@@ -682,6 +685,14 @@ msgstr "Mesaje site web"
 #: model:ir.model.fields,help:l10n_ro_stock_account_retail_price_change.field_l10n_ro_retail_price_change__website_message_ids
 msgid "Website communication history"
 msgstr "Istoricul comunicării pe site"
+
+#. module: l10n_ro_stock_account_retail_price_change
+#: model:ir.model.fields,help:l10n_ro_stock_account_retail_price_change.field_l10n_ro_retail_price_change_line__old_price_with_vat
+msgid ""
+"What the stock on the shelf carries per unit, VAT included - the cost plus "
+"the markup and deferred VAT recorded against it. This is what 371 holds, "
+"which is not always what the pricelist says."
+msgstr "Ce poartă stocul din magazin pe bucată, cu TVA inclus - costul plus adaosul și TVA neexigibilă înregistrate pentru el. Este ce ține contul 371, care nu coincide întotdeauna cu lista de prețuri."
 
 #. module: l10n_ro_stock_account_retail_price_change
 #: model:ir.actions.report,print_report_name:l10n_ro_stock_account_retail_price_change.action_report_retail_price_change

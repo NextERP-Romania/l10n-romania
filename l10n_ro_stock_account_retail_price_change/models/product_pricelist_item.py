@@ -166,14 +166,16 @@ class ProductPricelistItem(models.Model):
             )
 
         per_warehouse = {}
-        for warehouse, product, old, new in moved:
+        for warehouse, product, _old, new in moved:
             for location, qty in on_hand.get((warehouse.id, product.id), []):
                 per_warehouse.setdefault(warehouse, []).append(
                     {
                         "product_id": product.id,
                         "location_id": location.id,
                         "quantity": qty,
-                        "old_price_with_vat": old["price_with_vat"],
+                        # The old side comes from what the stock carries, not
+                        # from the price it used to be quoted at: if the two
+                        # had drifted apart, this settles both at once.
                         "new_price_with_vat": new["price_with_vat"],
                     }
                 )
