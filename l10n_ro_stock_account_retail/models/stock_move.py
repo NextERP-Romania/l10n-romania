@@ -1,4 +1,5 @@
 # Copyright (C) 2026 NextERP Romania
+# Copyright (C) 2026 Dakai Soft SRL
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 from odoo import Command, fields, models
@@ -239,10 +240,19 @@ class StockMove(models.Model):
             ledger_vals.append(
                 {
                     "company_id": self.company_id.id,
-                    "date": self.date or fields.Datetime.now(),
+                    # The same date the entry is posted on, so the ledger
+                    # and the general ledger can be read side by side. A
+                    # backdated posting has to produce a backdated row, or
+                    # the report as of a past date answers for the wrong
+                    # moment.
+                    "date": self._l10n_ro_retail_ledger_date(),
                     "product_id": self.product_id.id,
                     "location_id": location.id,
                     "quantity": sign * qty,
+                    # The cost rides along so a row states everything the
+                    # event did to 371: cost + markup + VAT is the shelf
+                    # value that went on or came off.
+                    "cost": sign * currency.round(abs(self.value)),
                     "markup": sign * markup_total,
                     "vat": sign * vat_total,
                     "origin_type": "move",
@@ -259,6 +269,14 @@ class StockMove(models.Model):
                     direction, stock_account, deferred_vat_account, vat_total
                 )
         return aml_vals
+
+    def _l10n_ro_retail_ledger_date(self):
+        """Accounting date of the retail entry for this move."""
+        self.ensure_one()
+        forced = self.env.context.get("force_period_date")
+        if forced:
+            return fields.Datetime.to_datetime(forced)
+        return self.date or fields.Datetime.now()
 
     def _l10n_ro_retail_amls(self, direction, stock_account, other_account, amount):
         """Build the two-line AML pair for a retail entry.

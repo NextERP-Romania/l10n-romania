@@ -1,4 +1,5 @@
 # Copyright (C) 2026 NextERP Romania
+# Copyright (C) 2026 Dakai Soft SRL
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 from odoo import api, fields, models
@@ -58,6 +59,13 @@ class RetailMarkupLine(models.Model):
         help="Signed quantity: positive when goods enter the shop, negative "
         "when they leave. Price changes and cost corrections carry zero.",
     )
+    cost = fields.Monetary(
+        string="Cost (371)",
+        currency_field="company_currency_id",
+        help="Signed cost this event moved. Together with the markup and the "
+        "deferred VAT it makes up what the event put on, or took off, "
+        "account 371.",
+    )
     markup = fields.Monetary(
         string="Markup (378)",
         currency_field="company_currency_id",
@@ -87,6 +95,19 @@ class RetailMarkupLine(models.Model):
         "account.move", index="btree_not_null", ondelete="set null"
     )
     reference = fields.Char()
+    retail_value = fields.Monetary(
+        string="Retail Value (371)",
+        compute="_compute_retail_value",
+        store=True,
+        currency_field="company_currency_id",
+        help="Cost plus markup plus deferred VAT: what this event put on, or "
+        "took off, account 371.",
+    )
+
+    @api.depends("cost", "markup", "vat")
+    def _compute_retail_value(self):
+        for line in self:
+            line.retail_value = line.cost + line.markup + line.vat
 
     # ------------------------------------------------------------------
     # Balances
@@ -114,6 +135,31 @@ class RetailMarkupLine(models.Model):
         groups = self.sudo()._read_group(domain, aggregates=["markup:sum", "vat:sum"])
         markup, vat = groups[0] if groups else (0.0, 0.0)
         return markup or 0.0, vat or 0.0
+
+    @api.model
+    def _l10n_ro_balance(self, warehouse, product, company, at_date=None):
+        """Return ``(quantity, cost, markup, vat)`` carried at ``at_date``.
+
+        With no date this is today's balance. With one it is the balance as
+        the accounts stood at that moment, which is what a reconciliation
+        against the trial balance needs: the three figures add up to what 371
+        held for that stock, and the markup and deferred VAT are the balances
+        of 378 and 4428 for it.
+        """
+        domain = [
+            ("company_id", "=", company.id),
+            ("product_id", "=", product.id),
+            ("warehouse_id", "=", warehouse.id),
+        ]
+        if at_date:
+            domain.append(("date", "<=", at_date))
+        groups = self.sudo()._read_group(
+            domain,
+            aggregates=["quantity:sum", "cost:sum", "markup:sum", "vat:sum"],
+        )
+        if not groups:
+            return 0.0, 0.0, 0.0, 0.0
+        return tuple(value or 0.0 for value in groups[0])
 
     @api.model
     def _l10n_ro_carried_qty(self, warehouse, product, company):

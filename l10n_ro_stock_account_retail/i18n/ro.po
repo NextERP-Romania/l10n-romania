@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-06 11:42+0000\n"
-"PO-Revision-Date: 2026-09-06 11:42+0000\n"
+"POT-Creation-Date: 2026-09-06 13:01+0000\n"
+"PO-Revision-Date: 2026-09-06 13:01+0000\n"
 "Last-Translator: NextERP Romania\n"
 "Language-Team: Romanian\n"
 "MIME-Version: 1.0\n"
@@ -76,6 +76,18 @@ msgstr "Companie"
 #: model:ir.model,name:l10n_ro_stock_account_retail.model_res_config_settings
 msgid "Config Settings"
 msgstr "Setări de configurare"
+
+#. module: l10n_ro_stock_account_retail
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__cost
+msgid "Cost (371)"
+msgstr "Cost (371)"
+
+#. module: l10n_ro_stock_account_retail
+#: model:ir.model.fields,help:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__retail_value
+msgid ""
+"Cost plus markup plus deferred VAT: what this event put on, or took off, "
+"account 371."
+msgstr "Cost plus adaos plus TVA neexigibilă: ce a pus, sau a scos, acest eveniment din contul 371."
 
 #. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,help:l10n_ro_stock_account_retail.field_stock_quant__l10n_ro_retail_value
@@ -395,6 +407,7 @@ msgid "Retail Pricelist"
 msgstr "Listă de prețuri cu amănuntul"
 
 #. module: l10n_ro_stock_account_retail
+#: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__retail_value
 #: model:ir.model.fields,field_description:l10n_ro_stock_account_retail.field_stock_quant__l10n_ro_retail_value
 msgid "Retail Value (371)"
 msgstr "Valoare la preț de vânzare (371)"
@@ -419,6 +432,13 @@ msgstr "Suma cu semn înregistrată în contul de TVA neexigibilă de acest even
 #: model:ir.model.fields,help:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__markup
 msgid "Signed amount posted to the markup account by this event."
 msgstr "Suma cu semn înregistrată în contul de adaos de acest eveniment."
+
+#. module: l10n_ro_stock_account_retail
+#: model:ir.model.fields,help:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__cost
+msgid ""
+"Signed cost this event moved. Together with the markup and the deferred VAT "
+"it makes up what the event put on, or took off, account 371."
+msgstr "Costul cu semn mișcat de acest eveniment. Împreună cu adaosul și TVA neexigibilă formează ce a pus, sau a scos, evenimentul din contul 371."
 
 #. module: l10n_ro_stock_account_retail
 #: model:ir.model.fields,help:l10n_ro_stock_account_retail.field_l10n_ro_retail_markup_line__quantity

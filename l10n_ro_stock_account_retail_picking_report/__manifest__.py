@@ -1,4 +1,5 @@
 # Copyright (C) 2026 NextERP Romania
+# Copyright (C) 2026 Dakai Soft SRL
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 {
     "name": "Romania - Retail Picking Report (NIR Marfa in Magazin)",
@@ -7,7 +8,7 @@
     "countries": ["ro"],
     "summary": "Romania - Cost, markup and deferred VAT columns on the "
     "reception note of goods entering a shop",
-    "author": "NextERP Romania,Odoo Community Association (OCA)",
+    "author": "NextERP Romania,Dakai Soft SRL,Odoo Community Association (OCA)",
     "website": "https://github.com/OCA/l10n-romania",
     "depends": [
         "l10n_ro_stock_account_retail",
@@ -19,6 +20,6 @@
     ],
     "installable": True,
     "auto_install": True,
-    "development_status": "Beta",
-    "maintainers": ["feketemihai"],
+    "development_status": "Mature",
+    "maintainers": ["feketemihai", "adrian-dks"],
 }

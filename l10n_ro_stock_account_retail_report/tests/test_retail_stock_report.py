@@ -1,6 +1,10 @@
 # Copyright (C) 2026 NextERP Romania
+# Copyright (C) 2026 Dakai Soft SRL
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
+from datetime import timedelta
+
+from odoo import fields
 from odoo.tests import tagged
 
 from odoo.addons.l10n_ro_stock_account_retail.tests.common import TestRetailCommon
@@ -86,3 +90,127 @@ class TestRetailStockReport(TestRetailCommon):
         row2 = self._report_line(self.warehouse_mag2, self.product_retail)
         self.assertAlmostEqual(row1.markup_total, 500.0, places=2)
         self.assertAlmostEqual(row2.markup_total, 1500.0, places=2)
+
+    # -------------------------------------------------------------------
+    # As of a date, and over a period
+    # -------------------------------------------------------------------
+    def _at(self, days):
+        """A datetime string `days` away from the moment the stock moved."""
+        return fields.Datetime.to_string(fields.Datetime.now() + timedelta(days=days))
+
+    def test_the_three_columns_add_up_to_371(self):
+        """Cost, markup and deferred VAT are the balances of 371, 378 and
+        4428 for this stock - that is what makes the report checkable."""
+        self._set_initial_stock(self.loc_mag1, self.product_retail, 10)
+        row = self._report_line(self.warehouse_mag1, self.product_retail)
+        self.assertAlmostEqual(
+            row.cost_total + row.markup_total + row.vat_total,
+            row.retail_value,
+            places=2,
+        )
+        self.assertAlmostEqual(row.retail_value, 1190.0, places=2)
+
+    def test_report_as_of_a_date_before_the_stock_arrived(self):
+        """Nothing had happened yet, so the shop shows nothing."""
+        self._set_initial_stock(self.loc_mag1, self.product_retail, 10)
+        report = self.env["l10n.ro.stock.retail.report"].with_context(
+            l10n_ro_retail_date_to=self._at(-1)
+        )
+        self.assertFalse(
+            report.search(
+                [
+                    ("warehouse_id", "=", self.warehouse_mag1.id),
+                    ("product_id", "=", self.product_retail.id),
+                ]
+            )
+        )
+
+    def test_report_over_a_period_splits_opening_movements_and_closing(self):
+        """A product received and partly sold inside the period shows the
+        movement, not just the leftover."""
+        self._set_initial_stock(self.loc_mag1, self.product_retail, 10)
+        self._do_sale_delivery(self.warehouse_mag1, self.product_retail, 4, 119.0)
+        report = self.env["l10n.ro.stock.retail.report"].with_context(
+            l10n_ro_retail_date_from=self._at(-1),
+            l10n_ro_retail_date_to=self._at(1),
+        )
+        row = report.search(
+            [
+                ("warehouse_id", "=", self.warehouse_mag1.id),
+                ("product_id", "=", self.product_retail.id),
+            ]
+        )
+        self.assertEqual(len(row), 1)
+        # Nothing before the period started.
+        self.assertAlmostEqual(row.quantity_initial, 0.0, places=2)
+        self.assertAlmostEqual(row.retail_initial, 0.0, places=2)
+        # Ten in, four out, six left.
+        self.assertAlmostEqual(row.quantity_in, 10.0, places=2)
+        self.assertAlmostEqual(row.markup_in, 500.0, places=2)
+        self.assertAlmostEqual(row.quantity_out, -4.0, places=2)
+        self.assertAlmostEqual(row.markup_out, -200.0, places=2)
+        self.assertAlmostEqual(row.quantity, 6.0, places=2)
+        self.assertAlmostEqual(row.markup_total, 300.0, places=2)
+        self.assertAlmostEqual(row.vat_total, 114.0, places=2)
+        self.assertAlmostEqual(row.retail_value, 714.0, places=2)  # 6 * 119
+
+    def test_a_product_that_came_and_went_keeps_its_line_over_a_period(self):
+        """Sold out by the end, but the period is exactly where you look to
+        see that it moved at all."""
+        self._set_initial_stock(self.loc_mag1, self.product_retail, 4)
+        self._do_sale_delivery(self.warehouse_mag1, self.product_retail, 4, 119.0)
+        report = self.env["l10n.ro.stock.retail.report"].with_context(
+            l10n_ro_retail_date_from=self._at(-1),
+            l10n_ro_retail_date_to=self._at(1),
+        )
+        row = report.search(
+            [
+                ("warehouse_id", "=", self.warehouse_mag1.id),
+                ("product_id", "=", self.product_retail.id),
+            ]
+        )
+        self.assertEqual(len(row), 1)
+        self.assertAlmostEqual(row.quantity_in, 4.0, places=2)
+        self.assertAlmostEqual(row.quantity_out, -4.0, places=2)
+        self.assertAlmostEqual(row.quantity, 0.0, places=2)
+        self.assertAlmostEqual(row.retail_value, 0.0, places=2)
+
+    def test_a_price_change_shows_as_a_correction_not_a_movement(self):
+        """A revaluation moves no goods: it belongs in the corrections
+        column, and it must not disturb the quantities."""
+        self._set_initial_stock(self.loc_mag1, self.product_retail, 10)
+        doc = self.env["l10n.ro.retail.price.change"].create(
+            {"warehouse_id": self.warehouse_mag1.id}
+        )
+        doc.action_load_products()
+        doc.line_ids.new_price_with_vat = 178.5
+        doc.action_post()
+        report = self.env["l10n.ro.stock.retail.report"].with_context(
+            l10n_ro_retail_date_from=self._at(-1),
+            l10n_ro_retail_date_to=self._at(1),
+        )
+        row = report.search(
+            [
+                ("warehouse_id", "=", self.warehouse_mag1.id),
+                ("product_id", "=", self.product_retail.id),
+            ]
+        )
+        self.assertAlmostEqual(row.quantity, 10.0, places=2)
+        self.assertAlmostEqual(row.markup_adjustment, 500.0, places=2)
+        self.assertAlmostEqual(row.vat_adjustment, 95.0, places=2)
+        self.assertAlmostEqual(row.cost_adjustment, 0.0, places=2)
+        self.assertAlmostEqual(row.retail_value, 1785.0, places=2)  # 10 * 178.50
+
+    def test_wizard_opens_the_report_over_its_period(self):
+        wizard = self.env["l10n.ro.stock.retail.report.wizard"].create(
+            {
+                "date_from": "2026-01-01",
+                "date_to": "2026-12-31",
+                "warehouse_ids": [(6, 0, self.warehouse_mag1.ids)],
+            }
+        )
+        action = wizard.action_open_report()
+        self.assertEqual(
+            action["context"]["l10n_ro_retail_date_to"], "2026-12-31 23:59:59"
+        )
+        self.assertIn(("warehouse_id", "in", self.warehouse_mag1.ids), action["domain"])

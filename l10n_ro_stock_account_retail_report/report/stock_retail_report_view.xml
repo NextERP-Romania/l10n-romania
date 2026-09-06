@@ -13,14 +13,41 @@
                 <field name="warehouse_id" />
                 <field name="product_id" />
                 <field name="categ_id" optional="hide" />
+
+                <field name="quantity_initial" optional="hide" />
+                <field name="cost_initial" optional="hide" sum="Opening Cost" />
+                <field name="markup_initial" optional="hide" sum="Opening Markup" />
+                <field name="vat_initial" optional="hide" sum="Opening VAT" />
+                <field
+                    name="retail_initial"
+                    optional="hide"
+                    sum="Opening Retail Value"
+                />
+
+                <field name="quantity_in" optional="hide" />
+                <field name="cost_in" optional="hide" sum="Cost In" />
+                <field name="markup_in" optional="hide" sum="Markup In" />
+                <field name="vat_in" optional="hide" sum="VAT In" />
+                <field name="quantity_out" optional="hide" />
+                <field name="cost_out" optional="hide" sum="Cost Out" />
+                <field name="markup_out" optional="hide" sum="Markup Out" />
+                <field name="vat_out" optional="hide" sum="VAT Out" />
+                <field name="cost_adjustment" optional="hide" sum="Cost Corrections" />
+                <field
+                    name="markup_adjustment"
+                    optional="hide"
+                    sum="Markup Corrections"
+                />
+                <field name="vat_adjustment" optional="hide" sum="VAT Corrections" />
+
                 <field name="quantity" />
                 <field name="cost_unit" optional="hide" />
                 <field name="cost_total" sum="Stock Value (cost)" />
                 <field name="markup_total" sum="Markup Carried (378)" />
                 <field name="vat_total" sum="Deferred VAT Carried (4428)" />
                 <field name="retail_value" sum="Retail Value (371)" />
-                <field name="retail_price_unit" />
-                <field name="current_price_unit" />
+                <field name="retail_price_unit" optional="hide" />
+                <field name="current_price_unit" optional="hide" />
                 <field name="price_gap_total" sum="To Revalue" />
                 <field name="currency_id" column_invisible="1" />
                 <field name="company_id" groups="base.group_multi_company" />

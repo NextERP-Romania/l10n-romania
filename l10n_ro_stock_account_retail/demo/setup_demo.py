@@ -1,3 +1,6 @@
+# Copyright (C) 2026 NextERP Romania
+# Copyright (C) 2026 Dakai Soft SRL
+# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 """Comprehensive demo for l10n_ro_stock_account_retail.
 
 Builds:
@@ -1005,7 +1008,7 @@ def print_report(label, ctx=None):
     print("=" * 78)
     print(
         f"  {'WH':4s} {'Product':28s} {'qty':>6s} "
-        f"{'value':>10s} {'markup':>10s} {'vat':>10s} {'retail':>10s}"
+        f"{'cost':>10s} {'markup':>10s} {'vat':>10s} {'371':>10s}"
     )
     env["l10n.ro.stock.retail.report"].invalidate_model()
     rows = env["l10n.ro.stock.retail.report"].with_context(**(ctx or {})).search([])
@@ -1031,10 +1034,45 @@ def print_report(label, ctx=None):
 
 print_report("RETAIL STOCK — NOW")
 
-# The report is built on the markup ledger and on the quantities on hand, so
-# it answers for today. Historical snapshots, which the previous view served
-# through an `l10n_ro_retail_at_date` context, are not available: the ledger
-# carries its own dates but the cost side comes from the quants, which do not.
+# The ledger is dated and carries the cost as well as the markup, so the same
+# report answers for any past moment. These are the figures to put next to the
+# trial balance for 371, 378 and 4428 at that date.
+for at_date in ("2026-04-10", "2026-04-25", "2026-05-15"):
+    print_report(
+        f"RETAIL STOCK — AS OF {at_date}",
+        ctx={"l10n_ro_retail_date_to": f"{at_date} 23:59:59"},
+    )
+
+# And over a stretch of time, which is where the movements show up rather
+# than only what is left at the end.
+print()
+print("=" * 78)
+print("RETAIL STOCK — MOVEMENTS IN MAY 2026")
+print("=" * 78)
+print(
+    f"  {'WH':4s} {'Product':24s} {'open':>9s} {'in':>9s} "
+    f"{'out':>9s} {'corr':>9s} {'close':>9s}"
+)
+period = env["l10n.ro.stock.retail.report"].with_context(
+    l10n_ro_retail_date_from="2026-05-01 00:00:00",
+    l10n_ro_retail_date_to="2026-05-31 23:59:59",
+)
+period.invalidate_model()
+period_rows = period.search([])
+for r in period_rows:
+    opening = r.cost_initial + r.markup_initial + r.vat_initial
+    moved_in = r.cost_in + r.markup_in + r.vat_in
+    moved_out = r.cost_out + r.markup_out + r.vat_out
+    corrections = r.cost_adjustment + r.markup_adjustment + r.vat_adjustment
+    print(
+        f"  {r.warehouse_id.code:4s} {r.product_id.name:24s} "
+        f"{opening:9.2f} {moved_in:9.2f} {moved_out:9.2f} "
+        f"{corrections:9.2f} {r.retail_value:9.2f}"
+    )
+print(
+    f"  ----- {len(period_rows)} rows; opening + in + out + corrections = close -----"
+)
+
 print()
 print("=" * 78)
 print("PRODUCTS WHOSE SHELF PRICE NO LONGER MATCHES WHAT THE STOCK CARRIES")

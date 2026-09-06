@@ -1,4 +1,5 @@
 # Copyright (C) 2026 NextERP Romania
+# Copyright (C) 2026 Dakai Soft SRL
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 from odoo import Command, fields, models
@@ -186,8 +187,10 @@ class StockLandedCost(models.Model):
             "date": fields.Datetime.to_datetime(self.date),
             "product_id": move.product_id.id,
             "location_id": move.location_dest_id.id,
-            # No goods move: only the split between cost and markup changes.
+            # No goods move: only the split between cost and markup changes,
+            # which is why the two cancel out and 371 stays where it was.
             "quantity": 0.0,
+            "cost": self.currency_id.round(amount),
             "markup": -self.currency_id.round(amount),
             "vat": 0.0,
             "origin_type": self._l10n_ro_retail_origin_type(),

@@ -14,9 +14,9 @@ Romania - Retail Price Difference (Marfa in Magazin)
    !! source digest: sha256:8c4a68b76d1ef12dbb27b35587c8677f341d1511889263a09bd9227906e720ec
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-.. |badge1| image:: https://img.shields.io/badge/maturity-Beta-yellow.png
+.. |badge1| image:: https://img.shields.io/badge/maturity-Mature-brightgreen.png
     :target: https://odoo-community.org/page/development-status
-    :alt: Beta
+    :alt: Mature
 .. |badge2| image:: https://img.shields.io/badge/license-AGPL--3-blue.png
     :target: http://www.gnu.org/licenses/agpl-3.0-standalone.html
     :alt: License: AGPL-3
@@ -73,11 +73,21 @@ Authors
 -------
 
 * NextERP Romania
+* Dakai Soft SRL
 
 Contributors
 ------------
 
-- Fekete Mihai contact@nexterp.ro
+- `NextERP Romania <https://www.nexterp.ro>`__:
+
+  - Fekete Mihai <contact@nexterp.ro>
+
+- `Dakai Soft SRL <https://www.dakai.ro>`__:
+
+  - Adrian Vacaru <adrian.vacaru@dakai.ro>
+
+Do not contact contributors directly about support or help with
+technical issues.
 
 Maintainers
 -----------
@@ -95,10 +105,13 @@ promote its widespread use.
 .. |maintainer-feketemihai| image:: https://github.com/feketemihai.png?size=40px
     :target: https://github.com/feketemihai
     :alt: feketemihai
+.. |maintainer-adrian-dks| image:: https://github.com/adrian-dks.png?size=40px
+    :target: https://github.com/adrian-dks
+    :alt: adrian-dks
 
-Current `maintainer <https://odoo-community.org/page/maintainer-role>`__:
+Current `maintainers <https://odoo-community.org/page/maintainer-role>`__:
 
-|maintainer-feketemihai| 
+|maintainer-feketemihai| |maintainer-adrian-dks| 
 
 This module is part of the `OCA/l10n-romania <https://github.com/OCA/l10n-romania/tree/19.0/l10n_ro_stock_account_retail_price_difference>`_ project on GitHub.
 
