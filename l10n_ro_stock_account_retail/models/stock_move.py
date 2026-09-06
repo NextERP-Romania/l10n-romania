@@ -59,18 +59,24 @@ class StockMove(models.Model):
         """Whether this move can carry a retail markup at all.
 
         A service or a consumable has no stock accounts to post to, and a
-        category valued manually books nothing in real time. Posting for either
-        used to raise deep inside the entry builder, on a missing account,
-        instead of simply not applying.
+        company or category on periodic valuation books nothing in real time.
+        Posting for either used to raise deep inside the entry builder, on a
+        missing account, instead of simply not applying.
+
+        The answer is read from ``product.valuation``, not from the category
+        setting. ``property_valuation`` is company dependent and routinely
+        empty, in which case Odoo falls back to ``company.inventory_valuation``
+        - reading the category alone therefore saw nothing on any database that
+        configures valuation at company level, and silently skipped the whole
+        retail treatment.
         """
         self.ensure_one()
-        if not self.is_l10n_ro_record:
-            return False
-        product = self.product_id
-        if not product.is_storable:
-            return False
-        valuation = product.with_company(self.company_id).categ_id.property_valuation
-        return valuation == "real_time"
+        product = self.product_id.with_company(self.company_id)
+        return bool(
+            self.is_l10n_ro_record
+            and product.is_storable
+            and product.valuation == "real_time"
+        )
 
     # ------------------------------------------------------------------
     # How much markup and VAT each leg moves

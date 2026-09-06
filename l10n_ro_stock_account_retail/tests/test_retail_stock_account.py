@@ -791,3 +791,72 @@ class TestRetailStockAccount(TestRetailCommon):
             )
         )
         self.assertFalse(move.l10n_ro_retail_markup_line_ids)
+
+    def test_valuation_taken_from_the_company_when_the_category_is_silent(self):
+        """A category that sets no valuation follows the company.
+
+        `property_valuation` is company dependent and routinely left empty, so
+        the effective answer comes from `company.inventory_valuation`. Read on
+        the category alone it looked like nothing was valued in real time, and
+        the whole retail treatment was skipped without a word.
+        """
+        category = self.env["product.category"].create(
+            {
+                "name": "Marfa fara setare de evaluare",
+                "property_cost_method": "fifo",
+                "property_stock_valuation_account_id": self.account_371.id,
+                "property_account_expense_categ_id": self.account_expense.id,
+            }
+        )
+        category.property_valuation = False
+        self.env.company.inventory_valuation = "real_time"
+        product = self.env["product.product"].create(
+            {
+                "name": "Tigari Premium",
+                "is_storable": True,
+                "categ_id": category.id,
+                "list_price": 119.0,
+                "standard_price": 50.0,
+                "taxes_id": [(6, 0, self.tax_19.ids)],
+            }
+        )
+        self.assertFalse(category.property_valuation)
+        self.assertEqual(product.valuation, "real_time")
+
+        self._set_initial_stock(self.location, product, 10)
+        move = self._do_transfer(self.location, self.loc_mag1, product, 4)
+        self.assertTrue(
+            move.l10n_ro_retail_markup_line_ids,
+            "No markup was loaded for a product whose valuation comes from the company",
+        )
+        markup, vat = self._carried(self.warehouse_mag1, product)
+        self.assertAlmostEqual(markup, 200.0, places=2)  # 4 * (100 - 50)
+        self.assertAlmostEqual(vat, 76.0, places=2)  # 4 * 19
+
+    def test_periodic_valuation_books_no_retail_entry(self):
+        """A company on periodic valuation books nothing in real time, so
+        there is no markup to load either."""
+        self.env.company.inventory_valuation = "periodic"
+        category = self.env["product.category"].create(
+            {
+                "name": "Marfa evaluata periodic",
+                "property_cost_method": "fifo",
+                "property_stock_valuation_account_id": self.account_371.id,
+                "property_account_expense_categ_id": self.account_expense.id,
+            }
+        )
+        category.property_valuation = False
+        product = self.env["product.product"].create(
+            {
+                "name": "Tigari Standard",
+                "is_storable": True,
+                "categ_id": category.id,
+                "list_price": 119.0,
+                "standard_price": 50.0,
+                "taxes_id": [(6, 0, self.tax_19.ids)],
+            }
+        )
+        self.assertEqual(product.valuation, "periodic")
+        self._set_initial_stock(self.location, product, 10)
+        move = self._do_transfer(self.location, self.loc_mag1, product, 4)
+        self.assertFalse(move.l10n_ro_retail_markup_line_ids)

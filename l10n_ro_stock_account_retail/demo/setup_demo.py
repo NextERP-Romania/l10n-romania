@@ -101,7 +101,11 @@ a_378_b = acc("378001", "Adaos comercial - MAG1 Bucuresti", "asset_current")
 a_4428_b = acc("442801", "TVA neexigibila - MAG1 Bucuresti", "liability_current")
 a_378_c = acc("378002", "Adaos comercial - MAG2 Cluj", "asset_current")
 a_4428_c = acc("442802", "TVA neexigibila - MAG2 Cluj", "liability_current")
+a_371_b = acc("371001", "Marfuri - MAG1 Bucuresti", "asset_current")
+a_371_c = acc("371002", "Marfuri - MAG2 Cluj", "asset_current")
 a_607 = acc("607000", "Cheltuieli marfuri", "expense")
+a_607_b = acc("607001", "Cheltuieli marfuri - MAG1 Bucuresti", "expense")
+a_607_c = acc("607002", "Cheltuieli marfuri - MAG2 Cluj", "expense")
 a_707 = acc("707000", "Venituri marfuri", "income")
 a_4426 = acc("442600", "TVA deductibila", "asset_current")
 a_4427 = acc("442700", "TVA colectata", "liability_current")
@@ -214,6 +218,11 @@ if not category:
         {
             "name": "Marfuri Retail Demo",
             "property_valuation": "real_time",
+            # Without this the base module never looks at the location
+            # accounts, and a depot to shop transfer books the goods to 607 as
+            # if they had been consumed instead of moving them to the shop's
+            # own 371.
+            "l10n_ro_stock_account_change": True,
             "property_cost_method": "fifo",
             "property_stock_valuation_account_id": a_371.id,
             "property_account_income_categ_id": a_707.id,
@@ -253,13 +262,20 @@ pl_buc = make_pricelist("PVA MAG1 Bucuresti")
 pl_cluj = make_pricelist("PVA MAG2 Cluj")
 
 
-def make_retail_wh(name, code, pricelist, loc_markup, loc_def_vat):
+def make_retail_wh(
+    name, code, pricelist, loc_markup, loc_def_vat, loc_stock, loc_expense
+):
     wh = Warehouse.search([("code", "=", code)], limit=1)
     if not wh:
         wh = Warehouse.create({"name": name, "code": code})
     wh.write({"l10n_ro_retail": True, "l10n_ro_retail_pricelist_id": pricelist.id})
     wh.lot_stock_id.write(
         {
+            # Its own 371 and 607, so a transfer into the shop debits the
+            # shop's stock account rather than the company default, and each
+            # shop can be reconciled on its own.
+            "l10n_ro_property_stock_valuation_account_id": loc_stock.id,
+            "l10n_ro_property_account_expense_location_id": loc_expense.id,
             "l10n_ro_account_markup_id": loc_markup.id,
             "l10n_ro_account_deferred_vat_id": loc_def_vat.id,
         }
@@ -267,8 +283,10 @@ def make_retail_wh(name, code, pricelist, loc_markup, loc_def_vat):
     return wh
 
 
-mag1 = make_retail_wh("MAG1 Bucuresti", "MG1", pl_buc, a_378_b, a_4428_b)
-mag2 = make_retail_wh("MAG2 Cluj", "MG2", pl_cluj, a_378_c, a_4428_c)
+mag1 = make_retail_wh(
+    "MAG1 Bucuresti", "MG1", pl_buc, a_378_b, a_4428_b, a_371_b, a_607_b
+)
+mag2 = make_retail_wh("MAG2 Cluj", "MG2", pl_cluj, a_378_c, a_4428_c, a_371_c, a_607_c)
 log(
     f"Retail warehouses: {mag1.code} (378={a_378_b.code}/4428={a_4428_b.code}), "
     f"{mag2.code} (378={a_378_c.code}/4428={a_4428_c.code})"
@@ -745,7 +763,7 @@ log(
 # Case: a clearance shop that is allowed to sell below cost
 # -----------------------------------------------------------------------------
 pl_outlet = make_pricelist("PVA MAG3 Outlet")
-outlet = make_retail_wh("MAG3 Outlet", "MG3", pl_outlet, a_378, a_4428)
+outlet = make_retail_wh("MAG3 Outlet", "MG3", pl_outlet, a_378, a_4428, a_371, a_607)
 outlet.l10n_ro_retail_allow_negative_markup = True
 clearance = products[20]
 outlet_item = (
