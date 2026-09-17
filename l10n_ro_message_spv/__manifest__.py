@@ -8,7 +8,7 @@
     "summary": "Romania - Mesaje SPV",
     "depends": ["l10n_ro_edi", "account_edi", "l10n_ro_config"],
     "data": [
-        "security/ir.model.access.csv",
+        "security/ir.access.csv",
         "security/security.xml",
         "data/ir_cron_data.xml",
         "views/account_invoice.xml",

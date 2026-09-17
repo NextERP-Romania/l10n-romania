@@ -13,7 +13,7 @@
         "l10n_ro_stock_account",
     ],
     "license": "AGPL-3",
-    "data": ["security/ir.model.access.csv", "views/stock_move_views.xml"],
+    "data": ["security/ir.access.csv", "views/stock_move_views.xml"],
     "installable": True,
     "development_status": "Mature",
     "maintainers": ["dhongu", "feketemihai"],

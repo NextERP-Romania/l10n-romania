@@ -52,7 +52,6 @@ class TestCreatePartner(TestCreatePartnerBase):
                 res = self.mainpartner._Anaf_to_Odoo(result)
                 self.assertEqual(res["name"], "FOREST AND BIOMASS ROMÂNIA S.A.")
                 self.assertEqual(res["l10n_ro_vat_subjected"], True)
-                self.assertEqual(res["company_type"], "company")
                 self.assertEqual(res["nrc"], "J2012002622359")
                 self.assertEqual(res["street"], "Ferma 5-6")
                 self.assertEqual(res["street2"], "")

@@ -14,7 +14,7 @@
                     </div>
                     <div class="col-auto text-right">
                         <span>
-                            <t t-esc="dashboard.account_transfer_balance" />
+                            <t t-out="dashboard.account_transfer_balance" />
                         </span>
                     </div>
                 </div>

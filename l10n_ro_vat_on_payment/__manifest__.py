@@ -6,7 +6,7 @@
     "summary": "Romania - VAT on Payment",
     "data": [
         "views/res_partner_view.xml",
-        "security/ir.model.access.csv",
+        "security/ir.access.csv",
         "data/res_partner_anaf_cron.xml",
     ],
     "depends": ["l10n_ro_config"],

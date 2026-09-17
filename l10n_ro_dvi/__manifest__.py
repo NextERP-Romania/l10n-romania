@@ -11,7 +11,7 @@
         "l10n_ro_stock_account_landed_cost",
     ],
     "data": [
-        "security/ir.model.access.csv",
+        "security/ir.access.csv",
         "views/account_invoice_view.xml",
         "views/stock_landed_cost_view.xml",
         "views/account_dvi_view.xml",

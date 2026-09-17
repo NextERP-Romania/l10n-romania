@@ -14,7 +14,7 @@
     "depends": ["account", "l10n_ro_config"],
     "license": "AGPL-3",
     "data": [
-        "security/ir.model.access.csv",
+        "security/ir.access.csv",
         "views/account_payment_view.xml",
         "views/account_journal_view.xml",
         "views/account_journal_dashboard_view.xml",

@@ -16,7 +16,7 @@
     "development_status": "Mature",
     "data": [
         "views/partner_view.xml",
-        "security/ir.model.access.csv",
+        "security/ir.access.csv",
     ],
     "maintainers": ["feketemihai"],
 }

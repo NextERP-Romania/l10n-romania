@@ -15,7 +15,7 @@
     "license": "AGPL-3",
     "data": [
         "wizard/price_difference_confirmation.xml",
-        "security/ir.model.access.csv",
+        "security/ir.access.csv",
     ],
     "installable": True,
     "auto_install": False,

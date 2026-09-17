@@ -63,8 +63,10 @@ class StockMove(models.Model):
                     line.update(
                         {
                             "tax_ids": [(6, 0, [self.l10n_ro_nondeductible_tax_id.id])],
-                            "deductible_amount": 100
-                            - int(self.l10n_ro_nondeductible_percent),
+                            "deductible_percentage": (
+                                100 - int(self.l10n_ro_nondeductible_percent)
+                            )
+                            / 100,
                         }
                     )
         return res

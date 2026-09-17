@@ -39,7 +39,7 @@ class AccountMove(models.Model):
             ):
                 base = abs(line.balance)
                 total_base[tax.id] += base
-                nd_base[tax.id] += base * (1 - line.deductible_amount / 100.0)
+                nd_base[tax.id] += base * (1 - line.deductible_percentage)
         return {
             tax_id: nd_base[tax_id] / total_base[tax_id]
             for tax_id in total_base
@@ -163,7 +163,7 @@ class AccountMove(models.Model):
                 move.line_ids.filtered(
                     lambda line: line.display_type == "product"
                     and line.company_id.l10n_ro_accounting
-                    and line.deductible_amount < 100
+                    and line.deductible_percentage < 1
                 )
             )
 
@@ -200,7 +200,7 @@ class AccountMove(models.Model):
                 continue
             has_on_payment = move.line_ids.filtered(
                 lambda line, move=move: line.display_type == "product"
-                and line.deductible_amount < 100
+                and line.deductible_percentage < 1
                 and move._l10n_ro_line_is_on_payment(line)
             )
             if not has_on_payment:
@@ -283,14 +283,14 @@ class AccountMove(models.Model):
                 lambda line: line.display_type == "product"
             ):
                 if (
-                    float_compare(line.deductible_amount, 100, precision_rounding=2)
+                    float_compare(line.deductible_percentage, 1, precision_digits=4)
                     == 0
                 ):
                     continue
                 if move._l10n_ro_line_is_on_payment(line):
                     continue
 
-                percentage = 1 - line.deductible_amount / 100
+                percentage = 1 - line.deductible_percentage
                 non_deductible_subtotal = line.currency_id.round(
                     line.balance * percentage
                 )
@@ -387,7 +387,7 @@ class AccountMove(models.Model):
                 lambda line: line.display_type == "product"
             ):
                 if (
-                    float_compare(line.deductible_amount, 100, precision_rounding=2)
+                    float_compare(line.deductible_percentage, 1, precision_digits=4)
                     == 0
                 ):
                     continue
@@ -428,8 +428,7 @@ class AccountMove(models.Model):
                         tax_line_amount = (
                             tax_amount
                             * tax_repartition_line.factor
-                            * (100 - line.deductible_amount)
-                            / 100
+                            * (1 - line.deductible_percentage)
                         )
                         to_create.append(
                             {
