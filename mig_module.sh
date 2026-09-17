@@ -7,18 +7,18 @@ if [ -z "$module" ]; then
     exit 1
 fi
 
-git checkout -b 19.0-mig-$module
+git checkout -b 20.0-mig-$module
 
 # Verifică dacă există patch-uri de aplicat
-patches=$(git format-patch --keep-subject --stdout origin/19.0..origin/18.0 -- $module)
+patches=$(git format-patch --keep-subject --stdout origin/20.0..origin/19.0 -- $module)
 if [ -z "$patches" ]; then
-    echo "Atenție: Nu există patch-uri pentru modulul $module între origin/19.0 și origin/18.0"
+    echo "Atenție: Nu există patch-uri pentru modulul $module între origin/20.0 și origin/19.0"
     exit 0
 fi
 
 # Aplicăm patch-urile cu verificarea erorilor
 echo "Aplicăm patch-urile pentru modulul $module..."
-if ! git format-patch --keep-subject --stdout origin/19.0..origin/18.0 -- $module | git am -3 --keep; then
+if ! git format-patch --keep-subject --stdout origin/20.0..origin/19.0 -- $module | git am -3 --keep; then
     echo "Eroare: A eșuat aplicarea patch-urilor!"
     echo "Pentru a anula modificările, rulează: git am --abort"
     exit 1
