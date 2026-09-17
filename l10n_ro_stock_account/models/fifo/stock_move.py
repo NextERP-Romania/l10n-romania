@@ -157,7 +157,16 @@ class StockMove(models.Model):
             )._action_done(cancel_backorder=cancel_backorder)
         return res
 
-    def _set_value(self, correction_quantity=None):
+    def _set_value(self, recompute_date=None, skip_check=False):
+        """Value the Romanian per-location FIFO out moves from their own layers.
+
+        Odoo 20 replaced the ``correction_quantity`` argument -- the quantity
+        delta of an edit made after validation -- with ``recompute_date``, the
+        point from which core replays the whole valuation timeline. There is no
+        delta to scale by any more, so a corrected move is simply valued again
+        over the layers it consumes, which lands on the same figure: the layers
+        are read at the move's own date either way.
+        """
         ro_fifo_out_moves = self.filtered(
             lambda move: move.company_id.fifo_per_location
             and move._is_out()
@@ -165,18 +174,10 @@ class StockMove(models.Model):
             and not move.product_id.lot_valuated
         )
         res = super(StockMove, self - ro_fifo_out_moves)._set_value(
-            correction_quantity=correction_quantity
+            recompute_date=recompute_date, skip_check=skip_check
         )
         if ro_fifo_out_moves:
             for move in ro_fifo_out_moves:
-                if correction_quantity:
-                    # Quantity edited after validation: value the correction at
-                    # the move's current unit value (the FIFO layers were
-                    # already consumed at validation), like base Odoo does.
-                    previous_qty = move.quantity - correction_quantity
-                    if previous_qty:
-                        move.value += move.value / previous_qty * correction_quantity
-                    continue
                 if move.value_manual:
                     move.value = move.value_manual
                     continue

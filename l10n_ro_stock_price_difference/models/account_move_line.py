@@ -73,9 +73,9 @@ class AccountMoveLine(models.Model):
                 stock_value -= stock_move.value
                 stock_qty -= stock_move.quantity
         res["stock_move_id"] = stock_moves.sorted("id", reverse=True)[:1].id
-        precision = line.product_uom_id.rounding or line.product_id.uom_id.rounding
+        uom = line.product_uom_id or line.product_id.uom_id
 
-        if float_is_zero(stock_qty, precision_rounding=precision):
+        if uom.compare(stock_qty, 0) == 0:
             return res
 
         inv_lines = self.search(

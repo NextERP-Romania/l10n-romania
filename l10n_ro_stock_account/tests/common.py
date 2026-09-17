@@ -31,7 +31,7 @@ class TestROStockCommon(AccountTestInvoicingCommon):
         cls.stock_journal = cls.env["account.journal"].create(
             {
                 "name": "Stock Journal",
-                "code": "StockJurnal",
+                "code": "STOCKJ",
                 "type": "general",
                 "company_id": cls.env.company.id,
             }
@@ -505,20 +505,15 @@ class TestROStockCommon(AccountTestInvoicingCommon):
                 total_qty = sum(quants.mapped("quantity"))
                 total_value = sum(quants.mapped("value"))
                 self.assertEqual(
-                    float_compare(
-                        total_qty,
-                        float(vals.get("qty", 0)),
-                        precision_rounding=product.uom_id.rounding,
-                    ),
+                    product.uom_id.compare(total_qty, float(vals.get("qty", 0))),
                     0,
                     f"Stock quant quantity for {product.name} expected {vals.get('qty', 0)}, got {total_qty}",  # noqa
                 )
                 if product != self.product_avg:
                     self.assertEqual(
-                        float_compare(
+                        product.uom_id.compare(
                             sum(stock_moves.mapped("remaining_qty")),
                             float(vals.get("qty", 0)),
-                            precision_rounding=product.uom_id.rounding,
                         ),
                         0,
                         f"Stock Move Remaining quantity for {product.name} expected {vals.get('qty', 0)}, got {sum(stock_moves.mapped('remaining_qty'))}",  # noqa
@@ -1159,7 +1154,7 @@ class TestROStockCommon(AccountTestInvoicingCommon):
             "location_id": transfer_values.get("location").id,
             "location_dest_id": self.transit_loc.id,
             "product_id": transfer_values.get("product_id").id,
-            "product_uom": transfer_values.get("product_id").uom_id.id,
+            "uom_id": transfer_values.get("product_id").uom_id.id,
             "product_uom_qty": transfer_values.get("qty", 1),
             "route_ids": [(4, self.transit_route.id)],
         }
@@ -1259,7 +1254,7 @@ class TestROStockCommon(AccountTestInvoicingCommon):
             "location_id": transfer_values.get("location").id,
             "location_dest_id": transfer_values.get("location1").id,
             "product_id": transfer_values.get("product_id").id,
-            "product_uom": transfer_values.get("product_id").uom_id.id,
+            "uom_id": transfer_values.get("product_id").uom_id.id,
             "product_uom_qty": stock_qty,
         }
         if stock_lot:
@@ -1385,7 +1380,7 @@ class TestROStockCommon(AccountTestInvoicingCommon):
             "location_dest_id": location_dest,
             "picking_id": picking.id,
             "product_id": product.id,
-            "product_uom": product.uom_id.id,
+            "uom_id": product.uom_id.id,
             "product_uom_qty": picking_values.get("qty", 1),
         }
         if stock_lot:

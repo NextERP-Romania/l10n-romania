@@ -227,7 +227,9 @@ class ProductProduct(models.Model):
             if cache_key in cache:
                 return cache[cache_key]
 
-        external_location = location and location.is_valued_external
+        # Odoo 20 dropped is_valued_external, which was the strict complement
+        # of is_valued_internal -- now simply is_valued.
+        external_location = location and not location.is_valued
         fifo_stack = []
         fifo_stack_size = 0
         if location:

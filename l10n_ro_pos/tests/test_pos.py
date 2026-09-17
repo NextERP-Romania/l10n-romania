@@ -132,7 +132,7 @@ class TestReportPoSOrder(CommonPosTest):
         receipt = self.env["stock.move"].create(
             {
                 "product_id": self.product_a.id,
-                "product_uom": self.product_a.uom_id.id,
+                "uom_id": self.product_a.uom_id.id,
                 "product_uom_qty": 10.0,
                 "location_id": supplier_location.id,
                 "location_dest_id": stock_location.id,
