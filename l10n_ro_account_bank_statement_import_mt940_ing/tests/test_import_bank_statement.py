@@ -238,21 +238,21 @@ class TestImport(TestMT940BankStatementImport):
         """Test handle_tag_28 and handle_tag_62F for statement name."""
         parser = self.env["l10n.ro.account.bank.statement.import.mt940.parser"]
         parser = parser.with_context(type="mt940_ro_ing")
-        acc_number = "RO19INGB0000999904621843"
+        account_number = "RO19INGB0000999904621843"
         result = {
             "statement": {"name": None, "transactions": [], "date": None},
-            "account_number": acc_number,
+            "account_number": account_number,
         }
         # Test handle_tag_28
         parser.handle_tag_28("00015/00001", result)
         self.assertEqual(result["statement"]["name"], "00015/00001")
 
         # Set name to account number to trigger the specific logic in 62F
-        result["statement"]["name"] = acc_number
+        result["statement"]["name"] = account_number
         # Test handle_tag_62F
         # C200211RON2000,00 -> date 200211 (2020-02-11), balance 2000.00
         parser.handle_tag_62F("C200211RON2000,00", result)
-        self.assertEqual(result["statement"]["name"], acc_number + " - 2020-02-11")
+        self.assertEqual(result["statement"]["name"], account_number + " - 2020-02-11")
         self.assertEqual(result["statement"]["balance_end_real"], 2000.0)
 
     def test_get_counterpart_variants(self):

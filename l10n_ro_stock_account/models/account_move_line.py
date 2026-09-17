@@ -10,6 +10,23 @@ class AccountMoveLine(models.Model):
     _name = "account.move.line"
     _inherit = ["account.move.line", "l10n.ro.mixin"]
 
+    def _get_stock_moves(self):
+        """The stock moves an invoice line accounts for.
+
+        Odoo 19 had this as a hook on ``account.move.line``: ``stock_account``
+        returned an empty recordset and ``purchase_stock`` / ``sale_stock``
+        extended it with the moves of their order line. Odoo 20 dropped the hook
+        altogether, so the Romanian stock accounting -- which needs the move to
+        decide the account and the storno direction -- keeps it here, over the
+        same two paths.
+        """
+        moves = self.env["stock.move"]
+        if "purchase_line_id" in self._fields:
+            moves |= self.purchase_line_id.move_ids
+        if "sale_line_ids" in self._fields:
+            moves |= self.sale_line_ids.move_ids
+        return moves
+
     def _compute_account_id(self):
         # For Romania, we need to set the account based on the stock
         # move accounts, if the product is storable and if the move is

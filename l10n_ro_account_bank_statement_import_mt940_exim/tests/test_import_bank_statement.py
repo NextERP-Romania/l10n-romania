@@ -126,15 +126,15 @@ class TestImport(TestMT940BankStatementImport):
         currency, account_number, statements = wizard._parse_file(self._data_file())
         self._assert_parsed(currency, account_number, statements)
 
-    def _wizard_for_new_company(self, acc_number=None):
+    def _wizard_for_new_company(self, account_number=None):
         """A wizard bound to a fresh company, optionally owning a single bank
         account. Lets us drive both branches of the account remapping without
         touching the trusted account created in `setUp`."""
         company = self.env["res.company"].create({"name": "EXIM remap test"})
-        if acc_number:
+        if account_number:
             self.env["res.partner.bank"].create(
                 {
-                    "acc_number": acc_number,
+                    "account_number": account_number,
                     "partner_id": company.partner_id.id,
                     "company_id": company.id,
                 }

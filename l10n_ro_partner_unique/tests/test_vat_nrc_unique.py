@@ -29,7 +29,7 @@ class TestVatUnique(TransactionCase):
         """
         Test if it is possible to create two partners with the same vat
         """
-        set_para = self.env["ir.config_parameter"].sudo().set_param
+        set_para = self.env["ir.config_parameter"].sudo().set_str
         set_para("l10n_ro_partner_unique.vat_nrc_unique", "vat_nrc")
         with self.assertRaises(ValidationError):
             self.env["res.partner"].create(
@@ -54,7 +54,7 @@ class TestVatUnique(TransactionCase):
         """
         Test if it is possible to create two partners with the same vat
         """
-        set_para = self.env["ir.config_parameter"].sudo().set_param
+        set_para = self.env["ir.config_parameter"].sudo().set_str
         set_para("l10n_ro_partner_unique.vat_nrc_unique", "vat")
         with self.assertRaises(ValidationError):
             self.env["res.partner"].create(

@@ -202,7 +202,7 @@ class TestCreatePartner(TestCreatePartnerBase):
 
     def test_anaf_exception(self):
         """Check anaf exception."""
-        set_param = self.env["ir.config_parameter"].sudo().set_param
+        set_param = self.env["ir.config_parameter"].sudo().set_str
         anaf_url = "https://webservicesp.anaf.ro/PlatitorTvaRest/api/v7/ws/tvaERROR"
         set_param("l10n_ro_partner_create_by_vat.anaf_url", anaf_url)
         cod = "20603502"

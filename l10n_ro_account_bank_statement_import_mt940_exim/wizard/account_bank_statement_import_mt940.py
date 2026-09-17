@@ -21,9 +21,9 @@ class AccountBankStatementImport(models.TransientModel):
             if data:
                 account_number = data[1]
                 bank = self.env.company.bank_ids.filtered(
-                    lambda b: account_number in b.sanitized_acc_number
+                    lambda b: account_number in b.sanitized_account_number
                 )
                 if bank:
-                    return (data[0], bank.sanitized_acc_number, data[2])
+                    return (data[0], bank.sanitized_account_number, data[2])
                 return data
         return super()._parse_file(data_file)
