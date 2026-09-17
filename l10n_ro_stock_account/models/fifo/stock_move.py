@@ -142,7 +142,7 @@ class StockMove(models.Model):
             and m.product_id.cost_method == "fifo"
             and m.company_id.fifo_per_location
             and not m.product_id.lot_valuated
-            and m.product_uom.compare(m.quantity, 0) != 0
+            and m.uom_id.compare(m.quantity, 0) != 0
         )
         res = super(StockMove, self - ro_fifo_moves_out)._action_done(
             cancel_backorder=cancel_backorder
@@ -296,7 +296,7 @@ class StockMove(models.Model):
         self.invalidate_recordset(["product_uom_qty", "quantity", "product_qty"])
         fifo_split_vals_list = []
         for move in self:
-            quantity_to_ship = move.product_uom._compute_quantity(
+            quantity_to_ship = move.uom_id._compute_quantity(
                 move.quantity, move.product_id.uom_id, round=False
             )
             fifo_list = move.product_id.with_context(
@@ -317,7 +317,7 @@ class StockMove(models.Model):
                 vals.get("quantity", 0.0) for vals in fifo_split_vals_list[vals_before:]
             )
             accounted_for = move.quantity + split_qty_for_move
-            if move.product_uom.compare(accounted_for, quantity_to_ship):
+            if move.uom_id.compare(accounted_for, quantity_to_ship):
                 raise UserError(
                     self.env._(
                         "Verificare de consistență FIFO eșuată la transferul"
