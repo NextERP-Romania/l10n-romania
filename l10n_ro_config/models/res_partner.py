@@ -97,10 +97,3 @@ class ResPartner(models.Model):
         ):
             self.vat = self._get_ro_vat()
 
-    @api.depends("nrc", "vat", "country_id")
-    def _compute_company_registry(self):
-        res = super()._compute_company_registry()
-        for partner in self:
-            if partner.is_l10n_ro_record and partner.nrc:
-                partner.company_registry = partner.nrc
-        return res
