@@ -43,7 +43,7 @@ class TestBankAccount(common.TransactionCase):
     #     journal = self.env["account.journal"].create(
     #         {
     #             "name": "Bank Journal",
-    #             "code": "TBNKCAMT",
+    #             "code": "TBNKCAM",
     #             "type": "bank",
     #             "bank_account_id": self.bank.id,
     #             "l10n_ro_print_report": True,
@@ -58,7 +58,7 @@ class TestBankAccount(common.TransactionCase):
     #     journal = self.env["account.journal"].create(
     #         {
     #             "name": "Bank Journal",
-    #             "code": "TBNKCAMT",
+    #             "code": "TBNKCAM",
     #             "type": "bank",
     #             "bank_account_id": self.bank.id,
     #         }

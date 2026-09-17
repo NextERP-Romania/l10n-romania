@@ -289,8 +289,13 @@ class StockMove(models.Model):
                 res |= move_line
         return res
 
-    def _set_value(self, correction_quantity=None):
-        """Set the value of the move"""
+    def _set_value(self, recompute_date=None, skip_check=False):
+        """Set the value of the move.
+
+        Odoo 20 replaced ``correction_quantity`` with the ``recompute_date`` /
+        ``skip_check`` pair that drives its valuation replay; both are passed
+        straight through.
+        """
         # Dropship moves gain nothing from core's own _set_value (they never
         # satisfy its is_in/_is_out branches), but core still adds their
         # product to `products_to_recompute` (keyed on `is_dropship or
@@ -305,7 +310,7 @@ class StockMove(models.Model):
             and m.l10n_ro_move_type in ("dropshipped", "dropshipped_return")
         )
         res = super(StockMove, self - ro_dropship_moves)._set_value(
-            correction_quantity=correction_quantity
+            recompute_date=recompute_date, skip_check=skip_check
         )
         ro_internal_moves = self.filtered(
             lambda m: m.is_l10n_ro_record and m.l10n_ro_move_type == "internal_transfer"
