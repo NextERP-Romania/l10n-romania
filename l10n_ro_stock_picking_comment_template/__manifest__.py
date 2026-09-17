@@ -23,7 +23,9 @@
     "version": "20.0.1.2.0",
     "author": "NextERP Romania,Odoo Community Association (OCA)",
     "website": "https://github.com/OCA/l10n-romania",
-    "installable": True,
+    # Not installable on 20.0: depends on base_comment_template (OCA), which has no Odoo 20
+    # counterpart yet. Flip back once it is available.
+    "installable": False,
     "development_status": "Beta",
     "maintainers": ["feketemihai"],
 }
