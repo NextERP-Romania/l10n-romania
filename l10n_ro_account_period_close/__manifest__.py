@@ -9,7 +9,7 @@
         "views/account_period_close_view.xml",
         "wizards/wizard_account_period_closing_view.xml",
         "security/account_security.xml",
-        "security/ir.model.access.csv",
+        "security/ir.access.csv",
     ],
     "license": "AGPL-3",
     "version": "20.0.1.1.0",

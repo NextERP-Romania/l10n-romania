@@ -151,7 +151,7 @@ class StockMove(models.Model):
                     self.env.cr,
                     "stock_move",
                     "l10n_ro_transfer_account_id",
-                    "integer",
+                    "int4",
                 )
                 self.env.cr.execute(
                     """

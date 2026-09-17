@@ -17,7 +17,7 @@
         "views/base_comment_template_view.xml",
         "views/report_delivery_document.xml",
         "views/report_picking.xml",
-        "security/ir.model.access.csv",
+        "security/ir.access.csv",
     ],
     "license": "AGPL-3",
     "version": "20.0.1.3.0",

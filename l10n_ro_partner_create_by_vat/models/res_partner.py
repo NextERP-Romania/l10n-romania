@@ -238,7 +238,6 @@ class ResPartner(models.Model):
         res = {
             "name": odoo_result["denumire"].upper(),
             "l10n_ro_vat_subjected": odoo_result.get("scpTVA"),
-            "company_type": "company",
         }
 
         odoo_result = self.get_result_address(odoo_result)

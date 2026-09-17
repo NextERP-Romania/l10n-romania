@@ -11,7 +11,7 @@
     "data": [
         "report/stock_report_view.xml",
         "report/stock_report_template.xml",
-        "security/ir.model.access.csv",
+        "security/ir.access.csv",
     ],
     "installable": True,
     "development_status": "Mature",

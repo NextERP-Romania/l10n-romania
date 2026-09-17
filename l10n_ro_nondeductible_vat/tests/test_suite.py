@@ -207,19 +207,19 @@ class TestNonDeductibleVAT(TestNondeductibleCommon):
     def test_invoice_line_nondeductible_percent_compute(self):
         invoice = self.nd_invoice
 
-        invoice.line_ids.deductible_amount = 100
+        invoice.line_ids.deductible_percentage = 1
         self.assertTrue(
             invoice.invoice_line_ids.l10n_ro_nondeductible_percent == "0",
             "Deductible amount should be 100 for deductible line",
         )
 
-        invoice.line_ids.deductible_amount = 50
+        invoice.line_ids.deductible_percentage = 0.5
         self.assertTrue(
             invoice.invoice_line_ids.l10n_ro_nondeductible_percent == "50",
             "Deductible amount should be 50 for 50% non-deductible line",
         )
 
-        invoice.line_ids.deductible_amount = 0
+        invoice.line_ids.deductible_percentage = 0
         self.assertTrue(
             invoice.invoice_line_ids.l10n_ro_nondeductible_percent == "100",
             "Deductible amount should be 0 for 100% non-deductible line",
@@ -230,19 +230,19 @@ class TestNonDeductibleVAT(TestNondeductibleCommon):
 
         invoice.line_ids.l10n_ro_nondeductible_percent = "0"
         self.assertTrue(
-            invoice.invoice_line_ids.deductible_amount == 100,
+            invoice.invoice_line_ids.deductible_percentage == 1,
             "Deductible amount should be 100 for deductible line",
         )
 
         invoice.line_ids.l10n_ro_nondeductible_percent = "50"
         self.assertTrue(
-            invoice.invoice_line_ids.deductible_amount == 50,
+            invoice.invoice_line_ids.deductible_percentage == 0.5,
             "Deductible amount should be 50 for 50% non-deductible line",
         )
 
         invoice.line_ids.l10n_ro_nondeductible_percent = "100"
         self.assertTrue(
-            invoice.invoice_line_ids.deductible_amount == 0,
+            invoice.invoice_line_ids.deductible_percentage == 0,
             "Deductible amount should be 0 for 100% non-deductible line",
         )
 
@@ -250,7 +250,7 @@ class TestNonDeductibleVAT(TestNondeductibleCommon):
         line = self.nd_invoice.invoice_line_ids[0]
         # Try to set an invalid deductible amount
         with self.assertRaises(ValidationError):
-            line.deductible_amount = 37  # Not 0, 50, 100
+            line.deductible_percentage = 0.37  # Not 0, 0.5, 1
 
     def test_sales_document_forbidden(self):
         sale_journal = self.env["account.journal"].search(
@@ -277,9 +277,9 @@ class TestNonDeductibleVAT(TestNondeductibleCommon):
             }
         )
         line = invoice.invoice_line_ids[0]
-        # Try to set deductible_amount < 100 on a sale
+        # Try to set deductible_percentage < 1 on a sale
         with self.assertRaises(ValidationError):
-            line.deductible_amount = 50
+            line.deductible_percentage = 0.5
 
     def test_wrong_stock_move_type_forbidden(self):
         # Simulate a stock move type not in allowed list
@@ -318,7 +318,7 @@ class TestNonDeductibleVAT(TestNondeductibleCommon):
                             "account_id": self.account_expense.id,
                             "price_unit": 100,
                             "quantity": 1,
-                            "deductible_amount": 50.00,
+                            "deductible_percentage": 0.5,
                             "tax_ids": [Command.set(self.tax.ids)],
                         }
                     )
@@ -336,7 +336,7 @@ class TestNonDeductibleVAT(TestNondeductibleCommon):
                 "tax_tag_ids": self.tag_base,
                 "tax_line_id": self.env["account.tax"],  # noqa
                 "l10n_ro_non_deductible_line_id": self.env["account.move.line"],
-                "deductible_amount": 50,  # noqa
+                "deductible_percentage": 0.5,  # noqa
                 "debit": 100,
                 "credit": 0,
                 "amount_currency": 100,
@@ -350,7 +350,7 @@ class TestNonDeductibleVAT(TestNondeductibleCommon):
                 "tax_tag_ids": self.tag_base,  # noqa
                 "tax_line_id": self.env["account.tax"],
                 "l10n_ro_non_deductible_line_id": invoice.invoice_line_ids,  # noqa
-                "deductible_amount": 100,
+                "deductible_percentage": 1,
                 "debit": -50,
                 "credit": 0,
                 "amount_currency": -50,  # noqa
@@ -364,7 +364,7 @@ class TestNonDeductibleVAT(TestNondeductibleCommon):
                 "tax_tag_ids": self.tag_base_nd,  # noqa
                 "tax_line_id": self.env["account.tax"],
                 "l10n_ro_non_deductible_line_id": invoice.invoice_line_ids,  # noqa
-                "deductible_amount": 100,
+                "deductible_percentage": 1,
                 "debit": 50,
                 "credit": 0,
                 "amount_currency": 50,  # noqa
@@ -378,7 +378,7 @@ class TestNonDeductibleVAT(TestNondeductibleCommon):
                 "tax_tag_ids": self.tag_vat,
                 "tax_line_id": self.tax,  # noqa
                 "l10n_ro_non_deductible_line_id": self.env["account.move.line"],
-                "deductible_amount": 100,  # noqa
+                "deductible_percentage": 1,  # noqa
                 "debit": 21,
                 "credit": 0,
                 "amount_currency": 21,  # noqa
@@ -392,7 +392,7 @@ class TestNonDeductibleVAT(TestNondeductibleCommon):
                 "tax_tag_ids": self.env["account.account.tag"],  # noqa
                 "tax_line_id": self.env["account.tax"],
                 "l10n_ro_non_deductible_line_id": self.env["account.move.line"],  # noqa
-                "deductible_amount": 100,
+                "deductible_percentage": 1,
                 "debit": 0,
                 "credit": 121,
                 "amount_currency": -121,  # noqa
@@ -406,7 +406,7 @@ class TestNonDeductibleVAT(TestNondeductibleCommon):
                 "tax_tag_ids": self.tag_vat,  # noqa
                 "tax_line_id": self.env["account.tax"],
                 "l10n_ro_non_deductible_line_id": invoice.invoice_line_ids,  # noqa
-                "deductible_amount": 100,
+                "deductible_percentage": 1,
                 "debit": -10.5,
                 "credit": 0,
                 "amount_currency": -10.5,  # noqa
@@ -420,7 +420,7 @@ class TestNonDeductibleVAT(TestNondeductibleCommon):
                 "tax_tag_ids": self.tag_vat_nd,  # noqa
                 "tax_line_id": self.env["account.tax"],
                 "l10n_ro_non_deductible_line_id": invoice.invoice_line_ids,  # noqa
-                "deductible_amount": 100,
+                "deductible_percentage": 1,
                 "debit": 10.5,
                 "credit": 0,
                 "amount_currency": 10.5,  # noqa
@@ -448,7 +448,7 @@ class TestNonDeductibleVAT(TestNondeductibleCommon):
     # --- test_vatp.py ---
     def _post_and_pay(self, percent):
         inv = self.vatp_nd_invoice
-        inv.invoice_line_ids.deductible_amount = 100 - int(percent)
+        inv.invoice_line_ids.deductible_percentage = (100 - int(percent)) / 100
         inv.action_post()
         invoice_sig = self._aml_signature(inv)
         self.env["account.payment.register"].with_context(
@@ -542,7 +542,7 @@ class TestNonDeductibleVAT(TestNondeductibleCommon):
                             "account_id": self.account_expense.id,
                             "quantity": 1,
                             "price_unit": price,
-                            "deductible_amount": deductible,
+                            "deductible_percentage": deductible / 100,
                             "tax_ids": [Command.set(self.vatp_tax.ids)],
                         }
                     )
@@ -630,7 +630,7 @@ class TestNonDeductibleVAT(TestNondeductibleCommon):
                             "account_id": self.account_expense.id,
                             "quantity": 1,
                             "price_unit": 200.0,
-                            "deductible_amount": 100,
+                            "deductible_percentage": 1,
                             "tax_ids": [Command.set(self.vatp_tax_deductible.ids)],
                         }
                     ),
@@ -641,7 +641,7 @@ class TestNonDeductibleVAT(TestNondeductibleCommon):
                             "account_id": self.account_expense.id,
                             "quantity": 1,
                             "price_unit": 100.0,
-                            "deductible_amount": 50,
+                            "deductible_percentage": 0.5,
                             "tax_ids": [Command.set(self.vatp_tax.ids)],
                         }
                     ),

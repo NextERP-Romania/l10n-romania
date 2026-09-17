@@ -20,13 +20,12 @@ class TestAccountPayment(TransactionCase):
         self.partner_person = self.env["res.partner"].create(
             {
                 "name": "Test Partner",
-                "company_type": "person",
             }
         )
         self.partner_company = self.env["res.partner"].create(
             {
                 "name": "Test Partner",
-                "company_type": "company",
+                "vat": "RO39187746",
             }
         )
         self.journal = self.env["account.journal"].create(
