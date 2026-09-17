@@ -20,9 +20,9 @@
                         <strong>Bank:</strong>
                         <span t-field="bank.bank_name" />
                     </div>
-                    <div t-if="bank.acc_number">
+                    <div t-if="bank.account_number">
                         <strong>Account:</strong>
-                        <span t-field="bank.acc_number" />
+                        <span t-field="bank.account_number" />
                     </div>
                     <t t-set="counts" t-value="counts+1" />
                 </t>

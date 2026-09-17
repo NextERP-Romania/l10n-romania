@@ -58,7 +58,12 @@ repos:
           - --if-source-changed
           - --keep-source-digest
           - --convert-fragments-to-markdown
-      - id: oca-gen-external-dependencies
+      # Parked on 20.0: whool resolves an addon's series through
+      # manifestoo-core, whose OdooSeries enum ends at 19.0, so on this branch
+      # every addon fails to build, the generated requirements come back empty
+      # and the hook deletes requirements.txt. Re-enable once manifestoo-core
+      # ships 20.0.
+      # - id: oca-gen-external-dependencies
   - repo: https://github.com/OCA/odoo-pre-commit-hooks
     rev: v0.1.6
     hooks:

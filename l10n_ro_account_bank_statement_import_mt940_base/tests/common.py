@@ -21,10 +21,10 @@ class TestMT940BankStatementImport(TransactionCase):
     def create_partner_bank(self, bank_acc):
         bank = self.env["res.partner.bank"].create(
             {
-                "acc_number": bank_acc,
+                "account_number": bank_acc,
                 "partner_id": self.env.company.partner_id.id,
                 "company_id": self.env.company.id,
-                "bank_id": self.env.ref("base.res_bank_1").id,
+                "bank_name": "Test Bank",
             }
         )
         return bank
@@ -32,7 +32,7 @@ class TestMT940BankStatementImport(TransactionCase):
     def create_journal(self, code, partner_bank, currency):
         journal = self.env["account.journal"].create(
             {
-                "name": partner_bank.acc_number,
+                "name": partner_bank.account_number,
                 "code": code,
                 "type": "bank",
                 "bank_account_id": partner_bank.id,

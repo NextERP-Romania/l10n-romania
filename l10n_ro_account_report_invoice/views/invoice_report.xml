@@ -23,9 +23,9 @@
                             <strong>Bank:</strong>
                             <span t-field="bank.bank_name" />
                         </div>
-                        <div t-if="bank.acc_number">
+                        <div t-if="bank.account_number">
                             <strong>Account:</strong>
-                            <span t-field="bank.acc_number" />
+                            <span t-field="bank.account_number" />
                             -
                             <strong t-if="bank.currency_id">
                             <span t-field="bank.currency_id" />
@@ -54,9 +54,9 @@
                             <strong>Bank:</strong>
                             <span t-field="bank.bank_name" />
                         </div>
-                        <div t-if="bank.acc_number">
+                        <div t-if="bank.account_number">
                             <strong>Account:</strong>
-                            <span t-field="bank.acc_number" />
+                            <span t-field="bank.account_number" />
                             -
                             <strong t-if="bank.currency_id">
                             <span t-field="bank.currency_id" />
@@ -85,9 +85,9 @@
                             <strong>Bank:</strong>
                             <span t-field="bank.bank_name" />
                         </div>
-                        <div t-if="bank.acc_number">
+                        <div t-if="bank.account_number">
                             <strong>Account:</strong>
-                            <span t-field="bank.acc_number" />
+                            <span t-field="bank.account_number" />
                             -
                             <strong t-if="bank.currency_id">
                             <span t-field="bank.currency_id" />

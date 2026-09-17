@@ -58,7 +58,7 @@ def migrate(cr, version):
     )
     attachment_ids = [row[0] for row in cr.fetchall()]
     env = api.Environment(cr, SUPERUSER_ID, {})
-    get_param = env["ir.config_parameter"].sudo().get_param
+    get_param = env["ir.config_parameter"].sudo().get_str
     BATCH_SIZE = int(get_param(BATCH_SIZE_PARAM, DEFAULT_BATCH_SIZE))
     for start in range(0, len(attachment_ids), BATCH_SIZE):
         batch = attachment_ids[start : start + BATCH_SIZE]
