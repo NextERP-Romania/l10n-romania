@@ -15,7 +15,9 @@
     "category": "Localization",
     "depends": ["l10n_ro_account_bank_statement_import_mt940_base"],
     "data": ["views/res_bank_view.xml"],
-    "installable": True,
+    # Not installable on 20.0: depends on account_statement_import_file (OCA), which has no Odoo 20
+    # counterpart yet. Flip back once it is available.
+    "installable": False,
     "development_status": "Mature",
     "maintainers": ["feketemihai", "dhongu"],
 }
