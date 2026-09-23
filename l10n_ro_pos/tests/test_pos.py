@@ -15,11 +15,14 @@ class TestReportPoSOrder(CommonPosTest):
 
         cls.env.user.group_ids += cls.env.ref("point_of_sale.group_pos_manager")
 
+        # A CUI of its own (see l10n_ro_account/tests/test_payment.py): the one
+        # of NextERP Romania SRL belongs to the partner the enterprise demo
+        # data ships.
         cls.ro_partner = cls.env["res.partner"].create(
             {
                 "name": "RO Partner",
                 "country_id": cls.env.ref("base.ro").id,
-                "vat": "RO39187746",
+                "vat": "RO12345674",
             }
         )
         # Configurare conturi și locații pentru testele RO
@@ -126,7 +129,10 @@ class TestReportPoSOrder(CommonPosTest):
 
         # Seedam stoc (receptie 10 buc @ cost 60), ca iesirea sa fie valorizata
         # si sa nu cadem pe constraintul de stoc negativ.
-        warehouse = self.company_data["default_warehouse"]
+        # ``company_data["default_warehouse"]`` comes from the valuation
+        # reconciliation common, which CommonPosTest does not build on; the
+        # warehouse of the user is what Odoo's own pos_stock tests take.
+        warehouse = self.env.user._get_default_warehouse_id()
         stock_location = warehouse.lot_stock_id
         supplier_location = self.env.ref("stock.stock_location_suppliers")
         receipt = self.env["stock.move"].create(
@@ -148,11 +154,13 @@ class TestReportPoSOrder(CommonPosTest):
         # Scenariu real: o comanda POS cu un produs cu cost
         self.pos_config_usd.open_ui()
         session = self.pos_config_usd.current_session_id
+        # Two units at 100: the totals and the payment have to say 200 as
+        # well, because Odoo 20 refuses an order that is not fully paid.
         order_data = {
-            "amount_paid": 100.0,
+            "amount_paid": 200.0,
             "amount_return": 0,
             "amount_tax": 0,
-            "amount_total": 100.0,
+            "amount_total": 200.0,
             "date_order": "2024-01-01 10:00:00",
             "name": "Order SD01",
             "partner_id": self.ro_partner.id,
@@ -171,7 +179,7 @@ class TestReportPoSOrder(CommonPosTest):
             "payment_ids": [
                 Command.create(
                     {
-                        "amount": 100.0,
+                        "amount": 200.0,
                         "payment_method_id": self.cash_payment_method.id,
                     }
                 )
@@ -200,8 +208,8 @@ class TestReportPoSOrder(CommonPosTest):
         )
         self.assertGreater(res["total_stock_amount"], 0.0)
 
-    def test_session_accumulate_amounts(self):
-        """Test that the amounts are accumulated correctly in the session."""
+    def test_closing_entry_does_not_repost_the_goods_issue(self):
+        """The closing entry must not book the goods issue a second time."""
         self.pos_config_usd.open_ui()
         session = self.pos_config_usd.current_session_id
 
@@ -243,30 +251,33 @@ class TestReportPoSOrder(CommonPosTest):
 
         # Validare comandă și creare factură
         order.action_pos_order_invoice()
-        data = session._accumulate_amounts({})
-        # Cheile de stoc exista mereu (le pune core-ul), dar nu mai trebuie sa
-        # genereze linii atunci cand descarcarea de gestiune e deja postata pe
-        # miscarea de stoc de l10n_ro_stock_account. "stock_valuation" merge
-        # golit odata cu "stock_expense": e consumat separat de core in
-        # _create_stock_valuation_lines, iar contrapartida sa tocmai a fost
-        # golita, deci ar iesi o linie de valorizare fara contrapartida =>
-        # nota de inchidere dezechilibrata exact cu costul marfii.
-        stock_keys = ["stock_expense", "stock_return", "stock_valuation"]
-        for key in stock_keys:
-            self.assertIn(key, data, "Cheile de stoc trebuie sa existe in date")
+        # Odoo 20 nu mai acumuleaza sume in buckets: pos_stock adauga direct
+        # perechea cheltuiala/stoc pe nota de inchidere, cate una pe miscare.
+        commands = session._prepare_session_closing_extra_line_commands(
+            order, refund=False
+        )
+        accounts = self.product_a.product_tmpl_id._get_product_accounts()
+        goods_issue_accounts = {
+            accounts["expense"].id,
+            accounts["stock_valuation"].id,
+        }
+        posted_by_the_move = order.picking_ids.move_ids.filtered("account_move_id")
 
         if session._l10n_ro_stock_move_posts_goods_issue():
-            for key in stock_keys:
-                self.assertEqual(
-                    data[key],
-                    {},
-                    f"Cheia {key} trebuie golita: nota contabila vine din "
-                    f"miscarea de stoc",
-                )
-                # Sumele raman disponibile pentru raportare.
-                self.assertIn(f"l10n_ro_{key}", data)
+            self.assertTrue(
+                posted_by_the_move,
+                "Miscarea de stoc trebuie sa-si posteze singura descarcarea",
+            )
+            self.assertFalse(
+                [
+                    command
+                    for command in commands
+                    if command[2].get("account_id") in goods_issue_accounts
+                ],
+                "Nota de inchidere nu trebuie sa mai contina descarcarea de "
+                "gestiune: ea vine din miscarea de stoc",
+            )
         else:
             # Fara l10n_ro_stock_account nimeni nu posteaza iesirea din
             # gestiune, deci nota de inchidere ramane singura sursa a ei.
-            for key in stock_keys:
-                self.assertNotIn(f"l10n_ro_{key}", data)
+            self.assertFalse(posted_by_the_move)

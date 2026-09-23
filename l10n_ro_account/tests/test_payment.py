@@ -22,10 +22,14 @@ class TestAccountPayment(TransactionCase):
                 "name": "Test Partner",
             }
         )
+        # A CUI of its own, valid by the Romanian check digit. Borrowing the
+        # one of NextERP Romania SRL collided with the partner the enterprise
+        # demo data ships, which l10n_ro_partner_unique refuses: by default the
+        # VAT alone has to be unique, so no NRC can tell the two apart.
         self.partner_company = self.env["res.partner"].create(
             {
                 "name": "Test Partner",
-                "vat": "RO39187746",
+                "vat": "RO12345674",
             }
         )
         self.journal = self.env["account.journal"].create(

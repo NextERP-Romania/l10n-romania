@@ -158,7 +158,8 @@ class MessageSPV(models.Model):
         if not attachment:
             return False, False
         try:
-            zip_ref = zipfile.ZipFile(io.BytesIO(attachment.raw))
+            # Odoo 20 answers ``raw`` with a LocalBinaryFile, not bytes.
+            zip_ref = zipfile.ZipFile(io.BytesIO(bytes(attachment.raw)))
         except zipfile.BadZipFile:
             return False, False
         xml_files = [f for f in zip_ref.namelist() if "semnatura" not in f]

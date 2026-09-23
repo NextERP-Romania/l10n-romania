@@ -143,18 +143,19 @@ class TestVatUnique(TransactionCase):
             partner.vat = "RO30834857"  # try to fix vat
 
     def test_duplicated_vat_creation_individual(self):
-        """
-        Test if is possible to create an individual with the same
-        vat as a company
-        """
-        partner = self.env["res.partner"].create(
-            {
-                "name": "Second partner",
-                "vat": "RO30834857",
-                "nrc": "J35/2622/2012",
-                "is_company": False,
-            }
-        )
+        """A partner carrying the VAT of an existing company is refused.
 
+        Odoo 20 computes ``is_company`` from the VAT and stores it read-only,
+        so an individual cannot hold a valid one and be promoted afterwards:
+        it is a company from the moment it is created, and the duplicate is
+        caught there rather than on the promotion 19.0 asked for.
+        """
         with self.assertRaises(ValidationError):
-            partner.is_company = True
+            self.env["res.partner"].create(
+                {
+                    "name": "Second partner",
+                    "vat": "RO30834857",
+                    "nrc": "J35/2622/2012",
+                    "is_company": False,
+                }
+            )

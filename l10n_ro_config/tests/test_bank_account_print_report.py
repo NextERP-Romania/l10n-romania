@@ -85,7 +85,6 @@ class TestBankAccount(common.TransactionCase):
                 "partner_id": self.partner1.id,
                 "company_id": company.id,
                 "bank_name": "Bank 1",
-                "acc_type": "iban",
             }
         )
         self.env["res.partner.bank"].create(
@@ -94,7 +93,6 @@ class TestBankAccount(common.TransactionCase):
                 "partner_id": self.partner2.id,
                 "company_id": company.id,
                 "bank_name": "Bank 1",
-                "acc_type": "iban",
             }
         )
 

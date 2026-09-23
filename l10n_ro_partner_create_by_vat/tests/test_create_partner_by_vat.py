@@ -28,7 +28,7 @@ class TestCreatePartnerBase(TransactionCase):
         cls.mainpartner = cls.mainpartner.with_context(anaf_data=cls.anaf_data)
 
     @staticmethod
-    def _check_vies_iap(record):
+    def _check_vies_validity_iap(record):
         return "valid" if record.vat == "BE0477472701" else "unassigned"
 
     @classmethod
@@ -222,9 +222,21 @@ class TestCreatePartner(TestCreatePartnerBase):
             self.assertTrue(res.get("warning"))
 
     def test_vat_vies(self):
+        # Odoo 20 folded base_vat away: the VIES check lives in
+        # l10n_eu_account_vies, and _check_vies_iap is _check_vies_validity_iap.
+        # That module is optional, so the test only runs where it is installed.
+        if (
+            not self.env["ir.module.module"]
+            .sudo()
+            .search_count(
+                [("name", "=", "l10n_eu_account_vies"), ("state", "=", "installed")]
+            )
+        ):
+            self.skipTest("l10n_eu_account_vies is not installed")
         with patch(
-            "odoo.addons.base_vat.models.res_partner.ResPartner._check_vies_iap",
-            TestCreatePartnerBase._check_vies_iap,
+            "odoo.addons.l10n_eu_account_vies.models.res_partner.ResPartner"
+            "._check_vies_validity_iap",
+            TestCreatePartnerBase._check_vies_validity_iap,
         ):
             self.env.company.vat_check_vies = True
             partner_odoo = Form(self.env["res.partner"])
