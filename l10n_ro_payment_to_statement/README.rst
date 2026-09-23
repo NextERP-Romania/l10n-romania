@@ -24,10 +24,10 @@ Romania - Payment to Statement
     :target: https://github.com/OCA/l10n-romania/tree/20.0/l10n_ro_payment_to_statement
     :alt: OCA/l10n-romania
 .. |badge4| image:: https://img.shields.io/badge/weblate-Translate%20me-F47D42.png
-    :target: https://translation.odoo-community.org/projects/l10n-romania-19-0/l10n-romania-19-0-l10n_ro_payment_to_statement
+    :target: https://translation.odoo-community.org/projects/l10n-romania-20-0/l10n-romania-20-0-l10n_ro_payment_to_statement
     :alt: Translate me on Weblate
 .. |badge5| image:: https://img.shields.io/badge/runboat-Try%20me-875A7B.png
-    :target: https://runboat.odoo-community.org/builds?repo=OCA/l10n-romania&target_branch=19.0
+    :target: https://runboat.odoo-community.org/builds?repo=OCA/l10n-romania&target_branch=20.0
     :alt: Try me on Runboat
 
 |badge1| |badge2| |badge3| |badge4| |badge5|
@@ -86,23 +86,23 @@ A cash journal of a romanian company is set up when it is created:
 - it is given the sequences of its documents, named after the code of
   the journal:
 
-  +---------------------------+--------+---------------------------------+
-  | sequence                  | suffix | numbers                         |
-  +===========================+========+=================================+
-  | Customer sequence cash in | CH     | customer payments (chitanta)    |
-  +---------------------------+--------+---------------------------------+
-  | Cash in sequence          | DI     | money in from a supplier        |
-  |                           |        | (dispozitie de incasare)        |
-  +---------------------------+--------+---------------------------------+
-  | Cash out sequence         | DP     | money out to a customer         |
-  |                           |        | (dispozitie de plata)           |
-  +---------------------------+--------+---------------------------------+
-  | Statement sequence        | RC     | the register itself (registru   |
-  |                           |        | de casa)                        |
-  +---------------------------+--------+---------------------------------+
-  | Journal sequence          | none   | supplier payments and the other |
-  |                           |        | entries                         |
-  +---------------------------+--------+---------------------------------+
+  +------------------------------+--------+------------------------------+
+  | sequence                     | suffix | numbers                      |
+  +==============================+========+==============================+
+  | Customer sequence cash in    | CH     | customer payments (chitanta) |
+  +------------------------------+--------+------------------------------+
+  | Cash in sequence             | DI     | money in from a supplier     |
+  |                              |        | (dispozitie de incasare)     |
+  +------------------------------+--------+------------------------------+
+  | Cash out sequence            | DP     | money out to a customer      |
+  |                              |        | (dispozitie de plata)        |
+  +------------------------------+--------+------------------------------+
+  | Statement sequence           | RC     | the register itself          |
+  |                              |        | (registru de casa)           |
+  +------------------------------+--------+------------------------------+
+  | Journal sequence             | none   | supplier payments and the    |
+  |                              |        | other entries                |
+  +------------------------------+--------+------------------------------+
 
 - *Romania - Auto Statement* is ticked, which is what makes the journal
   keep a register. Untick it on a journal which should not have one, or

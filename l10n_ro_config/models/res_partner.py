@@ -96,4 +96,3 @@ class ResPartner(models.Model):
             and self.country_id.code == "RO"
         ):
             self.vat = self._get_ro_vat()
-

@@ -574,9 +574,7 @@ class StockMove(models.Model):
         company_currency = self.company_id.currency_id
         po_line = self.purchase_line_id if "purchase_line_id" in self._fields else False
         if po_line and po_line.currency_id and po_line.currency_id != company_currency:
-            qty = self.uom_id._compute_quantity(
-                self.quantity, po_line.uom_id
-            )
+            qty = self.uom_id._compute_quantity(self.quantity, po_line.uom_id)
             return po_line.currency_id, po_line.price_unit * qty
         return company_currency, value
 
