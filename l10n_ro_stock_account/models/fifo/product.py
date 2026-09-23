@@ -42,15 +42,20 @@ class ProductProduct(models.Model):
             )
         return res
 
-    def _get_remaining_moves_ro(self, lot=None, at_date=None, location=None):
+    def _get_remaining_moves_ro(
+        self, lot=None, at_date=None, location=None, stack_size_extra_qty=0
+    ):
         """Returns a dictionary of stock moves and their remaining quantities
         for each product in self."""
         moves_qty_by_product = {}
         for product in self:
             if location:
                 product = product.with_context(location=location.ids)
-            moves, remaining_qty = product._run_fifo_get_stack(
-                lot=lot, at_date=at_date, location=location
+            moves, remaining_qty = product._get_fifo_stack(
+                lot=lot,
+                at_date=at_date,
+                stack_size_extra_qty=stack_size_extra_qty,
+                location=location,
             )
             moves = self.env["stock.move"].concat(*moves)
             if not moves:
@@ -70,27 +75,36 @@ class ProductProduct(models.Model):
         ro_fifo_products._run_fifo_value(quantity)
         return res
 
-    def _run_fifo_value(self, quantity, lot=None, at_date=None, location=None):
+    def _run_fifo_value(
+        self, quantity, lot=None, at_date=None, location=None, stack_size_extra_qty=0
+    ):
         """Returns the total value for the next outgoing product base on the
         qty give as argument."""
         fifo_list = self._run_fifo_layers(
-            quantity, lot=lot, at_date=at_date, location=location
+            quantity,
+            lot=lot,
+            at_date=at_date,
+            location=location,
+            stack_size_extra_qty=stack_size_extra_qty,
         )
         total_value = sum(item["value"] for item in fifo_list)
         return total_value
 
-    def _run_fifo(self, quantity, lot=None, at_date=None, location=None):
+    def _get_fifo_value(
+        self, quantity, lot=None, stack_size_extra_qty=0, at_date=None, location=None
+    ):
         """Returns the total *value* (float) for the next outgoing product
         based on the qty given as argument.
 
-        This keeps the core ``_run_fifo`` contract: core callers
-        (``_run_fifo_batch``, ``account.move.line``, ``stock.move``,
-        ``stock.lot``) divide or assign the result as a float. The RO
-        ``fifo_per_location`` flow derives that value from the per-location
-        FIFO layers (see ``_run_fifo_layers``); every other case falls back
-        to core. This must not return a list, otherwise a RO product reaching
-        a core caller (e.g. in a multi-company read where the active company
-        has ``fifo_per_location`` set) crashes with ``list / float``.
+        This is what Odoo 19 called ``_run_fifo``; Odoo 20 kept the contract
+        and renamed it, and its ``_run_fifo`` is now the batch method that
+        re-prices a whole recordset. Core callers (``account.move.line``,
+        ``stock.move``, the POS) divide or assign the result as a float. The
+        RO ``fifo_per_location`` flow derives that value from the per-location
+        FIFO layers (see ``_run_fifo_layers``); every other case falls back to
+        core. This must not return a list, otherwise a RO product reaching a
+        core caller (e.g. in a multi-company read where the active company has
+        ``fifo_per_location`` set) crashes with ``list / float``.
         """
         self.ensure_one()
         is_ro_fifo = (
@@ -99,14 +113,20 @@ class ProductProduct(models.Model):
             and not self.lot_valuated
         )
         if not is_ro_fifo:
-            return super()._run_fifo(
-                quantity, lot=lot, at_date=at_date, location=location
+            return super()._get_fifo_value(
+                quantity, lot=lot, stack_size_extra_qty=stack_size_extra_qty
             )
         return self._run_fifo_value(
-            quantity, lot=lot, at_date=at_date, location=location
+            quantity,
+            lot=lot,
+            at_date=at_date,
+            location=location,
+            stack_size_extra_qty=stack_size_extra_qty,
         )
 
-    def _run_fifo_layers(self, quantity, lot=None, at_date=None, location=None):
+    def _run_fifo_layers(
+        self, quantity, lot=None, at_date=None, location=None, stack_size_extra_qty=0
+    ):
         """Returns the list of quantity/value slices (dicts with ``move_id``,
         ``quantity``, ``value`` and ``description``) consumed to satisfy the
         given outgoing ``quantity``. Used by ``_run_fifo_value`` and by the
@@ -127,8 +147,8 @@ class ProductProduct(models.Model):
                 {
                     "move_id": False,
                     "quantity": quantity,
-                    "value": super()._run_fifo(
-                        quantity, lot=lot, at_date=at_date, location=location
+                    "value": super()._get_fifo_value(
+                        quantity, lot=lot, stack_size_extra_qty=stack_size_extra_qty
                     ),
                     "description": self.display_name,
                 }
@@ -147,7 +167,10 @@ class ProductProduct(models.Model):
 
         fifo_list = []
         remaining_moves = self._get_remaining_moves_ro(
-            lot=lot, at_date=at_date, location=location
+            lot=lot,
+            at_date=at_date,
+            location=location,
+            stack_size_extra_qty=stack_size_extra_qty,
         ).get(self, {})
         fifo_stack = sorted(remaining_moves.keys(), key=lambda sm: (sm.date, sm.id))
         # Going up to get the quantity in the argument
@@ -160,7 +183,9 @@ class ProductProduct(models.Model):
                 "description": move.display_name,
             }
             if at_date:
-                move_values = move._get_value_data(at_date=at_date)
+                move_values = move.with_context(
+                    l10n_ro_valuation_date=at_date
+                )._get_value_data()
                 move_values["move_id"] = move.id
             rem_qty = move_values["quantity"]
             move_value = move_values["value"]
@@ -201,15 +226,35 @@ class ProductProduct(models.Model):
             )
         return fifo_list
 
-    def _run_fifo_get_stack(self, lot=None, at_date=None, location=None):
+    def _get_fifo_stack(
+        self,
+        lot=None,
+        at_date=None,
+        allow_negative=False,
+        stack_size_extra_qty=0,
+        location=None,
+    ):
+        """The stack of incoming moves the next outgoing quantity eats into.
+
+        ``location`` is the RO addition: with ``fifo_per_location`` the stack
+        belongs to one location, not to the whole company. Odoo 20 dropped the
+        ``location`` argument core carried in 19 and scopes valuation through
+        ``_with_valuation_context`` instead, so the parameter lives on here
+        and core is called without it.
+        """
         ro_fifo_products = self.filtered(
             lambda p: self.env.company.fifo_per_location
             and p.cost_method == "fifo"
             and not p.lot_valuated
         )
-        if not ro_fifo_products:
-            return super()._run_fifo_get_stack(
-                lot=lot, at_date=at_date, location=location
+        if not ro_fifo_products or (allow_negative and not location):
+            # An oversold stack is made of out moves, which the per-location
+            # walk below has no notion of: leave that case to core.
+            return super()._get_fifo_stack(
+                lot=lot,
+                at_date=at_date,
+                allow_negative=allow_negative,
+                stack_size_extra_qty=stack_size_extra_qty,
             )
 
         # Request-scoped cache. Callers (reports, batched _compute_value)
@@ -223,6 +268,7 @@ class ProductProduct(models.Model):
                 location.id if location else None,
                 lot.id if lot else None,
                 at_date,
+                stack_size_extra_qty,
             )
             if cache_key in cache:
                 return cache[cache_key]
@@ -252,6 +298,9 @@ class ProductProduct(models.Model):
                 .with_context(to_date=at_date)
                 .qty_available
             )
+        # qty_available no longer answers for the valuation moment when several
+        # moves are validated together, so the caller corrects the stack size.
+        fifo_stack_size += stack_size_extra_qty
         # Use UoM rounding for the comparison so fractional quantities
         # (kg, m, etc.) are handled correctly.
         if self.uom_id.compare(fifo_stack_size, 0) <= 0:

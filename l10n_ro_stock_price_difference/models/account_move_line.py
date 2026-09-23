@@ -36,7 +36,7 @@ class AccountMoveLine(models.Model):
         if line.purchase_line_id.product_id.purchase_method != "receive":
             return res
 
-        if not line._eligible_for_stock_account():
+        if not line._use_inventory_valuation():
             return res
 
         if line.product_id.cost_method == "standard":

@@ -14,7 +14,7 @@ class StockMove(models.Model):
     _inherit = ["stock.move", "l10n.ro.mixin"]
 
     # Partial composite index that backs the per-location FIFO stack lookup
-    # (_run_fifo_get_stack). Cuts ~200ms searches down to ~3-5ms on large
+    # (_get_fifo_stack). Cuts ~200ms searches down to ~3-5ms on large
     # histories. Partial WHERE keeps it small.
     _fifo_stack_idx = models.Index(
         "(product_id, location_dest_id, date DESC, id DESC) "
@@ -61,7 +61,7 @@ class StockMove(models.Model):
             return res
         # Share a request-scoped cache across the batch (e.g. list view
         # showing N moves of the same product/location). Reduces one
-        # _run_fifo_get_stack call per (product, location) pair instead of
+        # _get_fifo_stack call per (product, location) pair instead of
         # one per move. Without this, a 80-row view takes ~4s; with it,
         # under 0.5s for typical groupings.
         cache = self.env.context.get("fifo_stack_cache")
@@ -120,7 +120,7 @@ class StockMove(models.Model):
                 )
             locations = self.env["stock.location"].search(
                 [
-                    ("is_valued_internal", "=", True),
+                    ("is_valued", "=", True),
                     ("company_id", "=", company.id),
                 ]
             )
@@ -163,9 +163,10 @@ class StockMove(models.Model):
         Odoo 20 replaced the ``correction_quantity`` argument -- the quantity
         delta of an edit made after validation -- with ``recompute_date``, the
         point from which core replays the whole valuation timeline. There is no
-        delta to scale by any more, so a corrected move is simply valued again
-        over the layers it consumes, which lands on the same figure: the layers
-        are read at the move's own date either way.
+        delta to scale by any more, so a corrected move is valued again at the
+        unit cost it was given at validation: the FIFO layers it consumed were
+        used up then and cannot be walked a second time, which is why 19.0
+        scaled the value it already carried rather than re-reading the stack.
         """
         ro_fifo_out_moves = self.filtered(
             lambda move: move.company_id.fifo_per_location
@@ -178,8 +179,17 @@ class StockMove(models.Model):
         )
         if ro_fifo_out_moves:
             for move in ro_fifo_out_moves:
+                if recompute_date:
+                    # A quantity edited after the move was done. ``price_unit``
+                    # is the FIFO unit cost the split wrote at validation, so
+                    # the corrected quantity is valued at the same cost.
+                    if move.price_unit:
+                        move.value = -(move.price_unit * move._get_valued_qty())
+                    continue
                 if move.value_manual:
-                    move.value = move.value_manual
+                    # The split carries the FIFO slice as a magnitude; these
+                    # are all outgoing moves, which Odoo 20 stores negative.
+                    move.value = -move.value_manual
                     continue
                 value = 0
                 for move_line in move.move_line_ids:
@@ -189,7 +199,9 @@ class StockMove(models.Model):
                         at_date=move.date,
                         location=move_line.location_dest_id,
                     )
-                move.value = value
+                # Odoo 20 stores the value of an outgoing move negative, the
+                # way core does two lines up in its own FIFO branch.
+                move.value = -value
         # AVG: mark outgoing moves that consumed more than the on-hand qty
         # at the source location, so they get compensated on the next IN.
         # For FIFO this is handled by the explicit split into FIFO layers.
@@ -209,13 +221,18 @@ class StockMove(models.Model):
             valued_qty = move._get_valued_qty()
             if not valued_qty:
                 continue
-            # Deficit = how much of this OUT exceeded the on-hand stock at
-            # the source. (qty_available is measured BEFORE state=done, so
-            # it does not yet include this OUT's effect.)
+            # Deficit = how much of this OUT exceeded the on-hand stock at the
+            # source. Odoo 20 values the move once it is done, so what is on
+            # hand already counts this move out and its quantity is added back
+            # to read the position it left from. Without that the whole
+            # quantity looked like a deficit, and the next incoming move
+            # re-priced units that were never short.
+            if move.state == "done":
+                qty_avail_before += valued_qty
             deficit = valued_qty - max(0, qty_avail_before)
             if move.product_id.uom_id.compare(deficit, 0) <= 0:
                 continue
-            unit_price = move.value / valued_qty if valued_qty else 0
+            unit_price = -move.value / valued_qty if valued_qty else 0
             move.write(
                 {
                     "fifo_neg_pending_qty": deficit,
@@ -238,14 +255,12 @@ class StockMove(models.Model):
         self,
         quantity,
         forced_std_price=False,
-        at_date=False,
         ignore_manual_update=False,
     ):
         if self.move_orig_ids:
             move_origin = self.move_orig_ids[0]
             origin_data = move_origin._get_value_data(
                 forced_std_price=forced_std_price,
-                at_date=at_date,
                 ignore_manual_update=ignore_manual_update,
             )
             proportion = (
@@ -262,7 +277,7 @@ class StockMove(models.Model):
             }
         return {}
 
-    def _get_value_from_std_price(self, quantity, std_price=False, at_date=None):
+    def _get_value_from_std_price(self, quantity, std_price=False):
         res = super()._get_value_from_std_price(quantity=quantity, std_price=std_price)
         ro_fifo_move_with_origin = self.filtered(
             lambda move: move.company_id.fifo_per_location
@@ -273,7 +288,7 @@ class StockMove(models.Model):
         )
         if ro_fifo_move_with_origin:
             res = ro_fifo_move_with_origin._get_value_from_origin_move(
-                quantity=quantity, at_date=at_date
+                quantity=quantity
             )
         return res
 
@@ -465,7 +480,9 @@ class StockMove(models.Model):
             delta = new_value_for_qty - old_value_for_qty
             out_move.write(
                 {
-                    "value": out_move.value + delta,
+                    # The out move carries its value negative, so raising what
+                    # it is worth by ``delta`` subtracts here.
+                    "value": out_move.value - delta,
                     "fifo_neg_pending_qty": out_move.fifo_neg_pending_qty - consume_qty,
                     "fifo_neg_origin_value": out_move.fifo_neg_origin_value
                     - old_value_for_qty,
