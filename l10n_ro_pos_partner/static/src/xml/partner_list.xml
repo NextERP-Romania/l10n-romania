@@ -20,13 +20,13 @@
             position="after"
         >
             <t t-if="l10nRoVatSearchQuery">
-                <p class="mt-3" t-esc="l10nRoNoPartnerMessage" />
+                <p class="mt-3" t-out="l10nRoNoPartnerMessage" />
                 <button
                     class="btn btn-primary btn-lg mt-2"
                     t-on-click="() => this.l10nRoCreatePartnerFromAnaf()"
                 >
                     <i class="fa fa-download me-2" />
-                    <t t-esc="l10nRoCreateFromAnafLabel" />
+                    <t t-out="l10nRoCreateFromAnafLabel" />
                 </button>
             </t>
         </xpath>

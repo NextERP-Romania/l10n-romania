@@ -80,7 +80,7 @@ class TestL10nRoPosPartner(CommonPosTest):
         partner = self.Partner.search([("vat", "=", "RO" + CUI)])
         self.assertEqual(len(partner), 1)
         self.assertEqual(partner.name, "FOREST AND BIOMASS ROMÂNIA S.A.")
-        self.assertEqual(partner.company_type, "company")
+        self.assertTrue(partner.is_company)
         self.assertEqual(partner.country_id, self.env.ref("base.ro"))
         self.assertEqual(partner.state_id, self.env.ref("base.RO_TM"))
         self.assertEqual(partner.nrc, "J2012002622359")
