@@ -48,13 +48,13 @@
                                 <tr>
                                     <td>
                                         <span
-                                            t-esc="abs(o.amount)"
+                                            t-out="abs(o.amount)"
                                             t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"
                                         />
                                     </td>
                                     <td>
                                              (<span
-                                        t-esc="o.currency_id.amount_to_text(abs(o.amount))"
+                                        t-out="o.currency_id.amount_to_text(abs(o.amount))"
                                     />)
                                         </td>
                                 </tr>
@@ -150,7 +150,7 @@
                                         <t t-if="o.amount&lt;0">
                                         <span
                                             style="padding-left:140px;"
-                                            t-esc="abs(o.amount)"
+                                            t-out="abs(o.amount)"
                                             t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"
                                         />
                                     </t>
@@ -162,7 +162,7 @@
                                     <span style="padding-left:100px;">
                                         <t t-if="o.amount&lt;0">
                                             <span style="padding-left:150px;">(<t
-                                                t-esc="o.currency_id.amount_to_text(abs(o.amount))"
+                                                t-out="o.currency_id.amount_to_text(abs(o.amount))"
                                             />)</span>
                                         </t>
                                         <t t-else="">
@@ -230,7 +230,7 @@
                                         <t t-if="o.amount">
                                         <span
                                             style="padding-left:140px;"
-                                            t-esc="abs(o.amount)"
+                                            t-out="abs(o.amount)"
                                             t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"
                                         />
                                     </t>
@@ -242,7 +242,7 @@
                                     <span style="padding-left:150px;">
                                         <t t-if="o.amount">
                                             <span style="padding-left:150px;">(<t
-                                                t-esc="o.currency_id.amount_to_text(abs(o.amount))"
+                                                t-out="o.currency_id.amount_to_text(abs(o.amount))"
                                             />)</span>
                                         </t>
                                         <t t-else="">
