@@ -18,7 +18,7 @@ class StockMove(models.Model):
 
     def _get_value_from_extra(self, quantity, at_date=None):
         self.ensure_one()
-        accounting_data = super()._get_value_from_extra(quantity, at_date=at_date)
+        accounting_data = super()._get_value_from_extra(quantity)
         # Add landed costs value
         lcs = self._get_l10n_ro_distrib_landed_cost(at_date=at_date)
         lcs = lcs.get(self)
@@ -58,7 +58,7 @@ class StockMove(models.Model):
         For landed cost distribution will take real value, not value from standard
         price, which can be different.
         """
-        valuation_data = super()._get_value_from_account_move(quantity, at_date=at_date)
+        valuation_data = super()._get_value_from_account_move(quantity)
         if not (self.is_l10n_ro_record and self.account_move_id and self._is_out()):
             return valuation_data
 

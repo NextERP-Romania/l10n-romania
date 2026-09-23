@@ -263,9 +263,7 @@ class StockMove(models.Model):
         return {}
 
     def _get_value_from_std_price(self, quantity, std_price=False, at_date=None):
-        res = super()._get_value_from_std_price(
-            quantity=quantity, std_price=std_price, at_date=at_date
-        )
+        res = super()._get_value_from_std_price(quantity=quantity, std_price=std_price)
         ro_fifo_move_with_origin = self.filtered(
             lambda move: move.company_id.fifo_per_location
             and move.product_id.cost_method == "fifo"

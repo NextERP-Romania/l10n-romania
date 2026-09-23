@@ -427,9 +427,7 @@ class StockMove(models.Model):
                         uom=self.product_id.uom_id.name,
                     ),
                 }
-        return super()._get_value_from_std_price(
-            quantity, std_price=std_price, at_date=at_date
-        )
+        return super()._get_value_from_std_price(quantity, std_price=std_price)
 
     def _get_valued_qty(self, lot=None):
         self.ensure_one()
