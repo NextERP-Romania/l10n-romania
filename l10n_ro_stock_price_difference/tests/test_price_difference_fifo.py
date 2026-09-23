@@ -67,7 +67,7 @@ class TestStockFifo(TestROStockCommon):
                         {
                             "product_id": self.product_kg.id,
                             "product_qty": qty,
-                            "product_uom_id": self.kg.id,
+                            "uom_id": self.kg.id,
                             "price_unit": price,
                         },
                     )

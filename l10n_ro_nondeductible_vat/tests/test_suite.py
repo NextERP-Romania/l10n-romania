@@ -205,21 +205,24 @@ class TestNonDeductibleVAT(TestNondeductibleCommon):
 
     # --- test_invoice.py ---
     def test_invoice_line_nondeductible_percent_compute(self):
+        # Written on the product lines: Odoo 20 rebuilds the tax lines when
+        # the deductible share changes, so writing over the whole line_ids
+        # touches records the write itself deletes.
         invoice = self.nd_invoice
 
-        invoice.line_ids.deductible_percentage = 1
+        invoice.invoice_line_ids.deductible_percentage = 1
         self.assertTrue(
             invoice.invoice_line_ids.l10n_ro_nondeductible_percent == "0",
             "Deductible amount should be 100 for deductible line",
         )
 
-        invoice.line_ids.deductible_percentage = 0.5
+        invoice.invoice_line_ids.deductible_percentage = 0.5
         self.assertTrue(
             invoice.invoice_line_ids.l10n_ro_nondeductible_percent == "50",
             "Deductible amount should be 50 for 50% non-deductible line",
         )
 
-        invoice.line_ids.deductible_percentage = 0
+        invoice.invoice_line_ids.deductible_percentage = 0
         self.assertTrue(
             invoice.invoice_line_ids.l10n_ro_nondeductible_percent == "100",
             "Deductible amount should be 0 for 100% non-deductible line",
@@ -228,19 +231,19 @@ class TestNonDeductibleVAT(TestNondeductibleCommon):
     def test_invoice_line_nondeductible_percent_inverse(self):
         invoice = self.nd_invoice
 
-        invoice.line_ids.l10n_ro_nondeductible_percent = "0"
+        invoice.invoice_line_ids.l10n_ro_nondeductible_percent = "0"
         self.assertTrue(
             invoice.invoice_line_ids.deductible_percentage == 1,
             "Deductible amount should be 100 for deductible line",
         )
 
-        invoice.line_ids.l10n_ro_nondeductible_percent = "50"
+        invoice.invoice_line_ids.l10n_ro_nondeductible_percent = "50"
         self.assertTrue(
             invoice.invoice_line_ids.deductible_percentage == 0.5,
             "Deductible amount should be 50 for 50% non-deductible line",
         )
 
-        invoice.line_ids.l10n_ro_nondeductible_percent = "100"
+        invoice.invoice_line_ids.l10n_ro_nondeductible_percent = "100"
         self.assertTrue(
             invoice.invoice_line_ids.deductible_percentage == 0,
             "Deductible amount should be 0 for 100% non-deductible line",
