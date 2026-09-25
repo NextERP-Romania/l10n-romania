@@ -66,12 +66,17 @@ class TestPartnerVAT(TestPartnerVATSubjected):
                 "name": "Test Company",
             }
         )
+        # A VAT of its own: Odoo 20 computes ``is_company`` from it and stores
+        # it read-only, so a partner without one is a person and the Romanian
+        # fields -- which the view shows only to companies -- stay invisible.
         partner = self.env["res.partner"].create(
             {
                 "name": "Test Partner",
-                "is_company": True,
+                "country_id": self.env.ref("base.ro").id,
+                "vat": "11111110",
             }
         )
+        self.assertTrue(partner.is_company)
 
         partner_form = Form(partner)
         partner_form.name = "Test Partner"

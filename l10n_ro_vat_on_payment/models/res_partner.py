@@ -120,7 +120,7 @@ class ResPartner(models.Model):
             ]
         )
         batch_size = int(
-            ir_config.get_param(
+            ir_config.get_str(
                 "l10n_ro_vat_on_payment.partner_batch_size", default="1000"
             )
         )

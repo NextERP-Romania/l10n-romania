@@ -489,7 +489,7 @@ class AccountDVILine(models.Model):
         readonly=True,
         check_company=True,
     )
-    name = fields.Char(related="invoice_line_id.name", readonly=True)
+    name = fields.Text(related="invoice_line_id.name", readonly=True)
     product_id = fields.Many2one(related="invoice_line_id.product_id", readonly=True)
     product_uom_id = fields.Many2one(
         related="invoice_line_id.product_uom_id", readonly=True

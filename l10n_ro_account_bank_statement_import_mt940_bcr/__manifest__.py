@@ -4,13 +4,15 @@
 
 {
     "name": "MT940 BCR Format Bank Statements Import",
-    "version": "19.0.0.3.0",
+    "version": "20.0.0.3.0",
     "license": "AGPL-3",
     "author": "NextERP Romania SRL,Terrabit,Odoo Community Association (OCA)",
     "website": "https://github.com/OCA/l10n-romania",
     "category": "Localization",
     "depends": ["l10n_ro_account_bank_statement_import_mt940_base"],
-    "installable": True,
+    # Not installable on 20.0: depends on account_statement_import_file (OCA), which has no Odoo 20
+    # counterpart yet. Flip back once it is available.
+    "installable": False,
     "development_status": "Mature",
     "maintainers": ["feketemihai", "dhongu"],
 }

@@ -17,13 +17,15 @@
         "views/base_comment_template_view.xml",
         "views/report_delivery_document.xml",
         "views/report_picking.xml",
-        "security/ir.model.access.csv",
+        "security/ir.access.csv",
     ],
     "license": "AGPL-3",
-    "version": "19.0.1.3.0",
+    "version": "20.0.1.3.0",
     "author": "NextERP Romania,Odoo Community Association (OCA)",
     "website": "https://github.com/OCA/l10n-romania",
-    "installable": True,
+    # Not installable on 20.0: depends on base_comment_template (OCA), which has no Odoo 20
+    # counterpart yet. Flip back once it is available.
+    "installable": False,
     "development_status": "Beta",
     "maintainers": ["feketemihai"],
 }

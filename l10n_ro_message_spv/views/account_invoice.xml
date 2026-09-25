@@ -9,7 +9,7 @@
             <!-- Codul de articol al furnizorului, asa cum a venit din XML-ul SPV:
                  il vede utilizatorul care corecteaza produsul de pe linie. -->
             <xpath
-                expr="//field[@name='invoice_line_ids']/list/field[@name='name']"
+                expr="//field[@name='invoice_line_ids']/list//field[@name='name']"
                 position="after"
             >
                 <field

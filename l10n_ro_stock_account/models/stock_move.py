@@ -151,7 +151,7 @@ class StockMove(models.Model):
                     self.env.cr,
                     "stock_move",
                     "l10n_ro_transfer_account_id",
-                    "integer",
+                    "int4",
                 )
                 self.env.cr.execute(
                     """
@@ -289,8 +289,13 @@ class StockMove(models.Model):
                 res |= move_line
         return res
 
-    def _set_value(self, correction_quantity=None):
-        """Set the value of the move"""
+    def _set_value(self, recompute_date=None, skip_check=False):
+        """Set the value of the move.
+
+        Odoo 20 replaced ``correction_quantity`` with the ``recompute_date`` /
+        ``skip_check`` pair that drives its valuation replay; both are passed
+        straight through.
+        """
         # Dropship moves gain nothing from core's own _set_value (they never
         # satisfy its is_in/_is_out branches), but core still adds their
         # product to `products_to_recompute` (keyed on `is_dropship or
@@ -305,7 +310,7 @@ class StockMove(models.Model):
             and m.l10n_ro_move_type in ("dropshipped", "dropshipped_return")
         )
         res = super(StockMove, self - ro_dropship_moves)._set_value(
-            correction_quantity=correction_quantity
+            recompute_date=recompute_date, skip_check=skip_check
         )
         ro_internal_moves = self.filtered(
             lambda m: m.is_l10n_ro_record and m.l10n_ro_move_type == "internal_transfer"
@@ -392,7 +397,17 @@ class StockMove(models.Model):
             return None
         return unit_cost
 
-    def _get_value_from_std_price(self, quantity, std_price=False, at_date=None):
+    def _l10n_ro_valuation_date(self):
+        """The date a valuation is asked to answer for, or None for now.
+
+        Odoo 20 took ``at_date`` off the whole ``_get_value_*`` family, so the
+        Romanian valuation carries it in the context instead: the argument was
+        only ever set by Romanian callers, and core has no place left to pass
+        it through.
+        """
+        return self.env.context.get("l10n_ro_valuation_date")
+
+    def _get_value_from_std_price(self, quantity, std_price=False):
         """Value an internal transfer at the cost held by the source warehouse.
 
         Only the last step of ``_get_value_data`` is replaced, so a value coming
@@ -405,7 +420,7 @@ class StockMove(models.Model):
         """
         if (
             not std_price
-            and not at_date
+            and not self._l10n_ro_valuation_date()
             and self.is_l10n_ro_record
             and self.l10n_ro_move_type == "internal_transfer"
             and self.product_id.cost_method != "fifo"
@@ -422,15 +437,17 @@ class StockMove(models.Model):
                         uom=self.product_id.uom_id.name,
                     ),
                 }
-        return super()._get_value_from_std_price(
-            quantity, std_price=std_price, at_date=at_date
-        )
+        return super()._get_value_from_std_price(quantity, std_price=std_price)
 
-    def _get_valued_qty(self, lot=None):
+    def _get_valued_qty(self, lot=None, signed=False):
         self.ensure_one()
         if self.is_l10n_ro_record and self.l10n_ro_move_type == "internal_transfer":
-            return self.product_qty
-        return super()._get_valued_qty(lot=lot)
+            # An internal transfer is valued as a whole; ``signed`` still has to
+            # answer, because Odoo 20 pairs the quantity with a value that is
+            # negative on the way out.
+            qty = self.product_qty
+            return -qty if signed and self._is_out() else qty
+        return super()._get_valued_qty(lot=lot, signed=signed)
 
     def _should_create_account_move(self):
         # For Romania we should create account moves for all stock moves
@@ -571,9 +588,7 @@ class StockMove(models.Model):
         company_currency = self.company_id.currency_id
         po_line = self.purchase_line_id if "purchase_line_id" in self._fields else False
         if po_line and po_line.currency_id and po_line.currency_id != company_currency:
-            qty = self.product_uom._compute_quantity(
-                self.quantity, po_line.product_uom_id
-            )
+            qty = self.uom_id._compute_quantity(self.quantity, po_line.uom_id)
             return po_line.currency_id, po_line.price_unit * qty
         return company_currency, value
 
@@ -615,7 +630,15 @@ class StockMove(models.Model):
     def _get_l10n_ro_value(self, price_type):
         self.ensure_one()
         if price_type == "value":
-            return self.value
+            # Odoo 20 signs the move value: negative on the way out, where 19.0
+            # stored the magnitude. The Romanian account table carries a sign of
+            # its own per move type (delivery 1, delivery_return -1, ...), so it
+            # is the magnitude it wants; handing it a signed value turns every
+            # delivery into a storno entry.
+            # A move that is both in and out - an internal transfer between two
+            # valued locations - is valued as an incoming one, the way core
+            # settles that tie in its own ``_set_value``.
+            return -self.value if self._is_out() and not self._is_in() else self.value
         if price_type == "sale_price":
             if hasattr(self, "sale_line_id") and self.sale_line_id is not None:
                 sale_value = self.sale_line_id.currency_id._convert(

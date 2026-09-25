@@ -171,7 +171,7 @@ class ResPartner(models.Model):
             if result:
                 return anaf_error, test_data[cod]
 
-        get_param = self.env["ir.config_parameter"].sudo().get_param
+        get_param = self.env["ir.config_parameter"].sudo().get_str
         anaf_url = get_param("l10n_ro_partner_create_by_vat.anaf_url", ANAF_URL)
         anaf_api_key_header_tag = get_param(
             "l10n_ro_partner_create_by_vat.anaf_api_key_header_tag", "x-api-key"
@@ -238,7 +238,6 @@ class ResPartner(models.Model):
         res = {
             "name": odoo_result["denumire"].upper(),
             "l10n_ro_vat_subjected": odoo_result.get("scpTVA"),
-            "company_type": "company",
         }
 
         odoo_result = self.get_result_address(odoo_result)
