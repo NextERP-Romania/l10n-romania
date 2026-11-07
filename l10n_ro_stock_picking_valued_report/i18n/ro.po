@@ -4,19 +4,18 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 16.0+e\n"
+"Project-Id-Version: Odoo Server 19.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-05-22 16:15+0000\n"
-"PO-Revision-Date: 2024-12-22 08:06+0000\n"
-"Last-Translator: Dorin Hongu <dhongu@gmail.com>\n"
-"Language-Team: \n"
+"PO-Revision-Date: 2026-11-07 00:00+0000\n"
+"Last-Translator: NextERP Romania\n"
+"Language-Team: Romanian\n"
 "Language: ro\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
 "20)) ? 1 : 2;\n"
-"X-Generator: Weblate 5.6.2\n"
 
 #. module: l10n_ro_stock_picking_valued_report
 #: model_terms:ir.ui.view,arch_db:l10n_ro_stock_picking_valued_report.report_delivery_document
@@ -26,7 +25,7 @@ msgstr "<strong>Costuri suplimentare</strong>"
 #. module: l10n_ro_stock_picking_valued_report
 #: model_terms:ir.ui.view,arch_db:l10n_ro_stock_picking_valued_report.report_delivery_document
 msgid "<strong>Qty Reserved</strong>"
-msgstr "<strong>Cantitate rezervat??</strong>"
+msgstr "<strong>Cantitate rezervată</strong>"
 
 #. module: l10n_ro_stock_picking_valued_report
 #: model_terms:ir.ui.view,arch_db:l10n_ro_stock_picking_valued_report.report_delivery_document
@@ -46,18 +45,18 @@ msgstr "<strong>Total</strong>"
 #. module: l10n_ro_stock_picking_valued_report
 #: model_terms:ir.ui.view,arch_db:l10n_ro_stock_picking_valued_report.report_delivery_document
 msgid "<strong>Unit Price</strong>"
-msgstr "<strong>Pre?? Unitar</strong>"
+msgstr "<strong>Preț unitar</strong>"
 
 #. module: l10n_ro_stock_picking_valued_report
 #: model:ir.model.fields,field_description:l10n_ro_stock_picking_valued_report.field_stock_picking__l10n_ro_currency_id
 msgid "Currency"
-msgstr "Moned??"
+msgstr "Monedă"
 
 #. module: l10n_ro_stock_picking_valued_report
 #: model:ir.model.fields,field_description:l10n_ro_stock_picking_valued_report.field_stock_move_line__is_l10n_ro_record
 #: model:ir.model.fields,field_description:l10n_ro_stock_picking_valued_report.field_stock_picking__is_l10n_ro_record
 msgid "Is Romanian Record"
-msgstr "Este o ??nregistrare rom??neasc??"
+msgstr "Este o înregistrare românească"
 
 #. module: l10n_ro_stock_picking_valued_report
 #: model:ir.model.fields,field_description:l10n_ro_stock_picking_valued_report.field_stock_move_line__l10n_ro_additional_charges
@@ -67,7 +66,7 @@ msgstr "Costuri suplimentare"
 #. module: l10n_ro_stock_picking_valued_report
 #: model:ir.model.fields,field_description:l10n_ro_stock_picking_valued_report.field_stock_move_line__l10n_ro_currency_id
 msgid "L10N Ro Currency"
-msgstr "Moned?? L10N Ro"
+msgstr "Monedă L10N Ro"
 
 #. module: l10n_ro_stock_picking_valued_report
 #: model:ir.model.fields,field_description:l10n_ro_stock_picking_valued_report.field_stock_picking__l10n_ro_is_internal
@@ -77,37 +76,37 @@ msgstr "Este intern L10N Ro"
 #. module: l10n_ro_stock_picking_valued_report
 #: model:ir.model.fields,field_description:l10n_ro_stock_picking_valued_report.field_stock_move_line__l10n_ro_price_subtotal
 msgid "L10N Ro Price Subtotal"
-msgstr "Pre?? Subtotal"
+msgstr "Preț subtotal"
 
 #. module: l10n_ro_stock_picking_valued_report
 #: model:ir.model.fields,field_description:l10n_ro_stock_picking_valued_report.field_stock_move_line__l10n_ro_price_tax
 msgid "L10N Ro Price Tax"
-msgstr "Pre?? Taxa"
+msgstr "Preț taxă"
 
 #. module: l10n_ro_stock_picking_valued_report
 #: model:ir.model.fields,field_description:l10n_ro_stock_picking_valued_report.field_stock_move_line__l10n_ro_price_total
 msgid "L10N Ro Price Total"
-msgstr "Pre?? total L10N Ro"
+msgstr "Preț total L10N Ro"
 
 #. module: l10n_ro_stock_picking_valued_report
 #: model:ir.model.fields,field_description:l10n_ro_stock_picking_valued_report.field_stock_move_line__l10n_ro_price_unit
 msgid "L10N Ro Price Unit"
-msgstr "Unitate de pre?? L10N Ro"
+msgstr "Preț unitar L10N Ro"
 
 #. module: l10n_ro_stock_picking_valued_report
 #: model:ir.model,name:l10n_ro_stock_picking_valued_report.model_stock_move_line
 msgid "Product Moves (Stock Move Line)"
-msgstr "Mi??c??ri de produs (linie mi??care stoc)"
+msgstr "Mișcări de produs (linie mișcare stoc)"
 
 #. module: l10n_ro_stock_picking_valued_report
 #: model:ir.model.fields,field_description:l10n_ro_stock_picking_valued_report.field_stock_move_line__l10n_ro_sale_line_id
 msgid "Related order line"
-msgstr "Linia de comand?? aferent??"
+msgstr "Linia de comandă aferentă"
 
 #. module: l10n_ro_stock_picking_valued_report
 #: model:ir.model.fields,field_description:l10n_ro_stock_picking_valued_report.field_stock_move_line__l10n_ro_purchase_line_id
 msgid "Related purchase line"
-msgstr "Linie de achizi??ie aferent??"
+msgstr "Linie de achiziție aferentă"
 
 #. module: l10n_ro_stock_picking_valued_report
 #: model:ir.model.fields,field_description:l10n_ro_stock_picking_valued_report.field_stock_picking__l10n_ro_amount_tax
@@ -127,4 +126,4 @@ msgstr "Transfer"
 #. module: l10n_ro_stock_picking_valued_report
 #: model:ir.model.fields,field_description:l10n_ro_stock_picking_valued_report.field_stock_picking__l10n_ro_amount_untaxed
 msgid "Untaxed Amount"
-msgstr "Valoare f??r?? taxe"
+msgstr "Valoare fără taxe"

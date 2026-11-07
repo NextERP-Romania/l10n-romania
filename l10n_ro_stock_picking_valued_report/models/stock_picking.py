@@ -34,6 +34,42 @@ class StockPicking(models.Model):
     )
     l10n_ro_is_internal = fields.Boolean(compute="_compute_l10n_ro_is_internal")
 
+    def _l10n_ro_show_valued_columns(self):
+        """Whether the plain valued columns belong on this picking's slip.
+
+        A more specific layout - the retail reception note - replaces the
+        valued money columns (unit price, additional charges, subtotal, taxes,
+        total) with its own cost/markup/shelf-price columns and turns this off,
+        so the two do not both print and leave the table with two sets of money
+        columns. Base behaviour is to show them; the retail picking report
+        overrides this."""
+        self.ensure_one()
+        return True
+
+    def _get_report_lang(self):
+        """Print the stock documents of a Romanian company in Romanian.
+
+        The delivery slip (NIR, aviz, bon de consum) is rendered in the
+        partner's language, so a receipt from a foreign vendor, or a
+        partnerless internal transfer or consume voucher, comes out in English.
+        For a Romanian company these are legal documents that must read
+        Romanian. ``ir.actions.report`` flags the render of this one report with
+        ``l10n_ro_force_picking_report_lang``; we honour the flag here so every
+        other report, and every non-RO company, keeps the partner's language.
+        The Romanian language has to be installed, otherwise rendering with it
+        raises ``Invalid language code`` - a RO company without it keeps the
+        partner's language rather than crashing the slip."""
+        lang = super()._get_report_lang()
+        if (
+            self.env.context.get("l10n_ro_force_picking_report_lang")
+            and self.company_id.country_id.code == "RO"
+            and any(
+                code == "ro_RO" for code, _name in self.env["res.lang"].get_installed()
+            )
+        ):
+            return "ro_RO"
+        return lang
+
     def _compute_l10n_ro_is_internal(self):
         for pick in self:
             pick.l10n_ro_is_internal = pick.move_ids and not (

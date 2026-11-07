@@ -16,7 +16,7 @@
                             <strong>Subtotal</strong>
                         </th>
                     </t>
-                    <t t-else="">
+                    <t t-elif="o._l10n_ro_show_valued_columns()">
                         <t t-if="o.state != 'done'">
                             <th class="text-end">
                                 <strong>Qty Reserved</strong>
@@ -72,7 +72,7 @@
                             </div>
                         </div>
                     </t>
-                    <t t-else="">
+                    <t t-elif="o._l10n_ro_show_valued_columns()">
                         <table class="table table-sm mt32">
                             <thead>
                                 <tr>
@@ -127,7 +127,7 @@
                             />
                         </td>
                     </t>
-                    <t t-else="">
+                    <t t-elif="o._l10n_ro_show_valued_columns()">
                         <t t-if="o.state != 'done'">
                             <td class="text-end">
                                 <span
@@ -187,7 +187,7 @@
                             <span t-esc="'%.2f' % move_line.l10n_ro_price_subtotal" />
                         </td>
                     </t>
-                    <t t-else="">
+                    <t t-elif="move_line.picking_id._l10n_ro_show_valued_columns()">
                         <td class="text-end">
                             <span t-esc="'%.2f' % move_line.l10n_ro_price_unit" />
                         </td>

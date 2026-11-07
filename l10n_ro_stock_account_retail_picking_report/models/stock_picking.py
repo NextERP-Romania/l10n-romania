@@ -43,3 +43,15 @@ class StockPicking(models.Model):
                 and not move.location_id.l10n_ro_retail
                 for move in picking.move_ids
             )
+
+    def _l10n_ro_show_valued_columns(self):
+        """Hide the plain valued columns on a retail reception.
+
+        The retail note prints its own money columns (purchase price/value,
+        markup, shelf price with and without VAT, deferred VAT). Left on, the
+        valued columns (unit price, additional charges, subtotal, taxes, total)
+        print alongside them and the table grows to a dozen-odd columns of
+        which half are zero. The retail layout wins whenever goods enter a
+        shop."""
+        res = super()._l10n_ro_show_valued_columns()
+        return res and not self.l10n_ro_retail_incoming

@@ -53,7 +53,12 @@ class TestRetailPickingReport(TestRetailCommon):
 
     def test_reception_note_renders(self):
         """Render the note. An xpath that no longer matches its anchor only
-        fails here, never at install."""
+        fails here, never at install.
+
+        The source terms are asserted because the Romanian language is not
+        loaded in the test database; on a real RO instance the slip renders in
+        Romanian (see ``test_reception_note_hides_the_valued_columns`` and
+        ``test_delivery_slip_is_forced_to_romanian``)."""
         self._set_initial_stock(self.location, self.product_retail, 10)
         move = self._do_transfer(self.location, self.loc_mag1, self.product_retail, 4)
         html = self.env["ir.actions.report"]._render_qweb_html(
@@ -63,6 +68,63 @@ class TestRetailPickingReport(TestRetailCommon):
         self.assertIn("Goods Receipt and Discrepancy Note", html)
         self.assertIn("Markup %", html)
         self.assertIn("Deferred VAT", html)
+
+    def test_reception_note_hides_the_valued_columns(self):
+        """On a retail reception only the retail money columns print.
+
+        The plain valued columns and the retail columns used to print side by
+        side, leaving a dozen-odd columns half of which were zero."""
+        self._set_initial_stock(self.location, self.product_retail, 10)
+        move = self._do_transfer(self.location, self.loc_mag1, self.product_retail, 4)
+        picking = move.picking_id
+        self.assertTrue(picking.l10n_ro_retail_incoming)
+        self.assertFalse(picking._l10n_ro_show_valued_columns())
+        html = self.env["ir.actions.report"]._render_qweb_html(
+            "stock.action_report_delivery", picking.ids
+        )[0]
+        html = html.decode() if isinstance(html, bytes) else html
+        # The retail columns are there...
+        self.assertIn("Purchase Unit Price", html)
+        self.assertIn("Markup %", html)
+        # ...and the plain valued column that used to double them is gone.
+        self.assertNotIn("Additional Charges", html)
+
+    def test_plain_transfer_keeps_the_valued_columns(self):
+        """A transfer that touches no shop still shows the valued columns."""
+        shelf = self.env["stock.location"].create(
+            {
+                "name": "Raft depozit",
+                "usage": "internal",
+                "location_id": self.location.id,
+            }
+        )
+        self._set_initial_stock(self.location, self.product_retail, 10)
+        move = self._do_transfer(self.location, shelf, self.product_retail, 4)
+        picking = move.picking_id
+        self.assertFalse(picking.l10n_ro_retail_incoming)
+        self.assertTrue(picking._l10n_ro_show_valued_columns())
+
+    def test_delivery_slip_is_forced_to_romanian(self):
+        """The delivery slip of a RO company prints in Romanian.
+
+        Tested through the report override itself, without forcing the language
+        in the call: the override flags the render and the picking reports
+        Romanian whatever the partner (here none) speaks."""
+        self.assertEqual(self.env.company.country_id.code, "RO")
+        # The forced language must be installed, or rendering with it raises
+        # "Invalid language code" - which is also why the override guards on it.
+        self.env["res.lang"]._activate_lang("ro_RO")
+        move = self._do_transfer(self.location, self.loc_mag1, self.product_retail, 4)
+        picking = move.picking_id
+        Report = self.env["ir.actions.report"]
+        # The delivery slip is flagged...
+        slip_env = Report._l10n_ro_picking_report_env("stock.action_report_delivery")
+        self.assertTrue(slip_env.env.context.get("l10n_ro_force_picking_report_lang"))
+        self.assertEqual(picking.with_env(slip_env.env)._get_report_lang(), "ro_RO")
+        # ...while another report is left on the partner's language.
+        other_env = Report._l10n_ro_picking_report_env("stock.report_return_slip")
+        self.assertFalse(other_env.env.context.get("l10n_ro_force_picking_report_lang"))
+        self.assertNotEqual(picking._get_report_lang(), "ro_RO")
 
     def test_a_row_bought_by_the_dozen_prints_its_whole_cost(self):
         """Goods bought in dozens and stocked in units.
