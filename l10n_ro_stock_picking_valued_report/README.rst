@@ -55,6 +55,12 @@ To install this module, you need to:
 Changelog
 =========
 
+19.0.0.5.0 (2026-11-07)
+-----------------------
+
+- The delivery slip / reception note prints on A4 landscape, so the
+  valued and retail columns stay readable.
+
 19.0.0.4.0 (2026-11-07)
 -----------------------
 

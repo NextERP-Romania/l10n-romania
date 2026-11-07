@@ -1,3 +1,7 @@
+## 19.0.0.5.0 (2026-11-07)
+
+- The delivery slip / reception note prints on A4 landscape, so the valued and retail columns stay readable.
+
 ## 19.0.0.4.0 (2026-11-07)
 
 - The delivery slip of a Romanian company is now printed in Romanian whatever the partner's language is, so a receipt from a foreign vendor, or a partnerless internal transfer or consume voucher, no longer comes out in English. Other reports and non-RO companies keep the partner's language.
