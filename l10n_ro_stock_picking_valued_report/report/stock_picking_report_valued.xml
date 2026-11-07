@@ -6,16 +6,11 @@
         priority="100"
     >
         <!-- Goods receipt note (NIR): a Romanian company's incoming transfer
-             prints as a single-title reception note, not the delivery-style
-             slip. Hide the delivery header, the order/date/operator block and
-             the standard move tables for it; the clean NIR header and table
-             below replace them. -->
-        <xpath expr="//div[hasclass('page')]/h2" position="attributes">
-            <attribute name="t-if">not o.l10n_ro_is_nir</attribute>
-        </xpath>
-        <xpath expr="//div[@id='informations']" position="attributes">
-            <attribute name="t-if">not o.l10n_ro_is_nir</attribute>
-        </xpath>
+             keeps the STANDARD delivery header (vendor/warehouse address blocks
+             from the layout, the title with the picking number, and the
+             order/date informations block) and the before/after-lines comments.
+             Only the standard move tables are swapped for the valued NIR table
+             below, so nothing is duplicated. -->
         <xpath expr="//table[@name='stock_move_table']" position="attributes">
             <attribute
                 name="t-if"
@@ -27,84 +22,16 @@
             >o.move_line_ids and o.state == 'done' and not o.l10n_ro_is_nir</attribute>
         </xpath>
 
-        <!-- The NIR header and table. -->
-        <xpath expr="//div[@id='informations']" position="after">
+        <!-- NIR valued table: replaces only the standard move tables. The
+             standard header (address blocks, title with number, informations)
+             and the before/after-lines comments stay in place. Anchored before
+             the standard move table (not after informations) so the before-lines
+             comment, inserted by the lower-priority comment view, stays above
+             this table. -->
+        <xpath expr="//table[@name='stock_move_table']" position="before">
             <t t-if="o.l10n_ro_is_nir">
                 <t t-set="nir_lines" t-value="o._l10n_ro_nir_report_lines()" />
-                <t t-set="nir_doc" t-value="o._l10n_ro_nir_doc_info()" />
                 <t t-set="nir_num" t-value="lambda x: '{:,.2f}'.format(x or 0.0)" />
-                <div class="text-center mb-2" name="nir_title">
-                    <h3 class="mb-0">
-                        <strong>Goods Receipt Note</strong>
-                    </h3>
-                    <div>(Goods receipt and inspection note)</div>
-                </div>
-                <div class="row mb-2" name="nir_header">
-                    <div class="col-4">
-                        <div>
-                            <strong>Company</strong>
-                        </div>
-                        <div t-field="o.company_id.name" />
-                        <div t-if="o.company_id.company_registry">
-                            <span t-field="o.company_id.company_registry" />
-                        </div>
-                        <div t-if="o.company_id.vat">
-                            <span t-field="o.company_id.vat" />
-                        </div>
-                    </div>
-                    <div class="col-4">
-                        <div>
-                            <strong>No.:</strong>
-                            <span t-out="o.l10n_ro_nir_number or o.name" />
-                        </div>
-                        <div>
-                            <strong>Date:</strong>
-                            <span
-                                t-if="o.date_done"
-                                t-field="o.date_done"
-                                t-options='{"widget": "date"}'
-                            />
-                            <span
-                                t-else=""
-                                t-field="o.scheduled_date"
-                                t-options='{"widget": "date"}'
-                            />
-                        </div>
-                        <div t-if="nir_doc['origin']">
-                            <strong>Source Document:</strong>
-                            <span t-out="nir_doc['origin']" />
-                        </div>
-                    </div>
-                    <div class="col-4">
-                        <div>
-                            <strong>Supplier</strong>
-                            <span t-if="o.partner_id">
-                                (<span t-field="o.l10n_ro_supplier_type" />)
-                            </span>
-                        </div>
-                        <div
-                            t-if="o.partner_id"
-                            t-field="o.partner_id.commercial_partner_id"
-                            t-options='{"widget": "contact", "fields": ["name", "country_id", "vat"], "no_marker": True}'
-                        />
-                    </div>
-                </div>
-                <div class="row mb-2">
-                    <div class="col-8">
-                        <t t-if="nir_doc['foreign']">
-                            <strong>Purchase order value:</strong>
-                            <span t-out="nir_num(nir_doc['amount'])" />
-                            <span t-out="nir_doc['currency'].name" />
-                            x
-                            <span t-out="'%.4f' % nir_doc['rate']" />
-                            <span t-field="o.company_id.currency_id.name" />
-                        </t>
-                    </div>
-                    <div class="col-4">
-                        <strong>Location:</strong>
-                        <span t-field="o.location_dest_id.display_name" />
-                    </div>
-                </div>
                 <table
                     class="table table-sm o_main_table"
                     name="l10n_ro_nir_table"
@@ -132,9 +59,6 @@
                             </th>
                             <th class="text-end" name="th_nir_purchase">
                                 <strong>Purchase Value</strong>
-                            </th>
-                            <th class="text-end" name="th_nir_packages">
-                                <strong>Packages</strong>
                             </th>
                             <th class="text-end" name="th_nir_charges">
                                 <strong>Additional Charges</strong>
@@ -173,12 +97,6 @@
                             <td class="text-end" name="td_nir_purchase">
                                 <span t-out="nir_num(line['purchase_value'])" />
                             </td>
-                            <td class="text-end" name="td_nir_packages">
-                                <span
-                                    t-if="line['packages']"
-                                    t-out="nir_num(line['packages'])"
-                                />
-                            </td>
                             <td class="text-end" name="td_nir_charges">
                                 <span t-out="nir_num(line['additional_charges'])" />
                             </td>
@@ -207,11 +125,6 @@
                             <td class="text-end" name="tf_nir_purchase">
                                 <strong
                                     t-out="nir_num(sum(line['purchase_value'] for line in nir_lines))"
-                                />
-                            </td>
-                            <td class="text-end" name="tf_nir_packages">
-                                <strong
-                                    t-out="nir_num(sum(line['packages'] for line in nir_lines))"
                                 />
                             </td>
                             <td class="text-end" name="tf_nir_charges">
