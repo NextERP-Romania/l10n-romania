@@ -53,6 +53,14 @@ To use this module, you need to:
 Changelog
 =========
 
+19.0.1.5.2 (2026-11-07)
+-----------------------
+
+- The reception "before lines" comment (its heading and commission
+  introduction) is no longer printed on a goods receipt note (NIR),
+  which carries its own single title, so the slip no longer shows a
+  double title. The committee and signature block below is unchanged.
+
 19.0.1.5.1 (2026-11-07)
 -----------------------
 

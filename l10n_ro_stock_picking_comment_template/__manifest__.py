@@ -23,7 +23,7 @@
         "demo/stock_picking_delegate_demo.xml",
     ],
     "license": "AGPL-3",
-    "version": "19.0.1.5.1",
+    "version": "19.0.1.5.2",
     "author": "NextERP Romania,Odoo Community Association (OCA)",
     "website": "https://github.com/OCA/l10n-romania",
     "installable": True,

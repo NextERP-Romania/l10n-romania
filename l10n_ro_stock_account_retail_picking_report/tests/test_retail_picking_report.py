@@ -57,40 +57,46 @@ class TestRetailPickingReport(TestRetailCommon):
 
         The source terms are asserted because the Romanian language is not
         loaded in the test database; on a real RO instance the slip renders in
-        Romanian (see ``test_reception_note_hides_the_valued_columns`` and
-        ``test_delivery_slip_is_forced_to_romanian``)."""
-        self._set_initial_stock(self.location, self.product_retail, 10)
-        move = self._do_transfer(self.location, self.loc_mag1, self.product_retail, 4)
-        html = self.env["ir.actions.report"]._render_qweb_html(
-            "stock.action_report_delivery", move.picking_id.ids
-        )[0]
-        html = html.decode() if isinstance(html, bytes) else html
-        self.assertIn("Goods Receipt and Discrepancy Note", html)
-        self.assertIn("Markup %", html)
-        self.assertIn("Deferred VAT", html)
-
-    def test_reception_note_hides_the_valued_columns(self):
-        """On a retail reception only the retail money columns print.
-
-        The plain valued columns and the retail columns used to print side by
-        side, leaving a dozen-odd columns half of which were zero."""
+        Romanian (see ``test_delivery_slip_is_forced_to_romanian``)."""
         self._set_initial_stock(self.location, self.product_retail, 10)
         move = self._do_transfer(self.location, self.loc_mag1, self.product_retail, 4)
         picking = move.picking_id
+        # Goods entering a shop print as a NIR, by internal transfer too.
         self.assertTrue(picking.l10n_ro_retail_incoming)
-        self.assertFalse(picking._l10n_ro_show_valued_columns())
+        self.assertTrue(picking.l10n_ro_is_nir)
         html = self.env["ir.actions.report"]._render_qweb_html(
             "stock.action_report_delivery", picking.ids
         )[0]
         html = html.decode() if isinstance(html, bytes) else html
-        # The retail columns are there...
-        self.assertIn("Purchase Unit Price", html)
-        self.assertIn("Markup %", html)
-        # ...and the plain valued column that used to double them is gone.
-        self.assertNotIn("Additional Charges", html)
+        self.assertIn("Goods Receipt Note", html)
+        # Retail columns appended on the right of the NIR table.
+        self.assertIn("Deferred VAT", html)
+        self.assertIn("Retail Sale Value", html)
 
-    def test_plain_transfer_keeps_the_valued_columns(self):
-        """A transfer that touches no shop still shows the valued columns."""
+    def test_reception_note_shows_base_and_retail_columns(self):
+        """A retail reception prints the base NIR columns AND the retail ones.
+
+        The two sets live in one coherent table now: the common columns the
+        depot note already shows, with the markup, deferred VAT and shelf value
+        appended on the right."""
+        self._set_initial_stock(self.location, self.product_retail, 10)
+        move = self._do_transfer(self.location, self.loc_mag1, self.product_retail, 4)
+        picking = move.picking_id
+        self.assertTrue(picking.l10n_ro_retail_incoming)
+        html = self.env["ir.actions.report"]._render_qweb_html(
+            "stock.action_report_delivery", picking.ids
+        )[0]
+        html = html.decode() if isinstance(html, bytes) else html
+        # The base NIR columns are present (additive, not hidden any more)...
+        self.assertIn("Purchase Value", html)
+        self.assertIn("Additional Charges", html)
+        # ...alongside the retail columns.
+        self.assertIn("Deferred VAT", html)
+        self.assertIn("Retail Sale Value", html)
+
+    def test_plain_transfer_is_not_a_nir(self):
+        """A transfer that touches no shop keeps the plain valued columns and
+        is not turned into a NIR."""
         shelf = self.env["stock.location"].create(
             {
                 "name": "Raft depozit",
@@ -102,6 +108,7 @@ class TestRetailPickingReport(TestRetailCommon):
         move = self._do_transfer(self.location, shelf, self.product_retail, 4)
         picking = move.picking_id
         self.assertFalse(picking.l10n_ro_retail_incoming)
+        self.assertFalse(picking.l10n_ro_is_nir)
         self.assertTrue(picking._l10n_ro_show_valued_columns())
 
     def test_delivery_slip_is_forced_to_romanian(self):

@@ -13,8 +13,8 @@ class StockPicking(models.Model):
         compute="_compute_l10n_ro_retail_incoming",
         store=True,
         help="At least one line brings goods into a retail location from "
-        "outside it. Such a transfer prints as a reception note showing the "
-        "cost, the markup and the shelf price.",
+        "outside it. Such a transfer prints as a reception note (NIR) showing "
+        "the cost, the markup and the shelf price.",
     )
 
     @api.depends(
@@ -44,14 +44,27 @@ class StockPicking(models.Model):
                 for move in picking.move_ids
             )
 
-    def _l10n_ro_show_valued_columns(self):
-        """Hide the plain valued columns on a retail reception.
+    @api.depends(
+        "l10n_ro_retail_incoming",
+        "picking_type_id.code",
+        "company_id.country_id.code",
+        "is_l10n_ro_record",
+    )
+    def _compute_l10n_ro_is_nir(self):
+        """Goods entering a shop print as a NIR too.
 
-        The retail note prints its own money columns (purchase price/value,
-        markup, shelf price with and without VAT, deferred VAT). Left on, the
-        valued columns (unit price, additional charges, subtotal, taxes, total)
-        print alongside them and the table grows to a dozen-odd columns of
-        which half are zero. The retail layout wins whenever goods enter a
-        shop."""
-        res = super()._l10n_ro_show_valued_columns()
-        return res and not self.l10n_ro_retail_incoming
+        The base module flags a NIR on an incoming transfer of a Romanian
+        company. Goods reach a shop that way (a purchase received straight into
+        the store) but just as often by an internal transfer from the
+        warehouse, which the base rule does not catch. Opt those transfers into
+        the NIR layout so the retail columns have the reception table to attach
+        to."""
+        res = super()._compute_l10n_ro_is_nir()
+        for pick in self:
+            if (
+                pick.l10n_ro_retail_incoming
+                and pick.is_l10n_ro_record
+                and pick.company_id.country_id.code == "RO"
+            ):
+                pick.l10n_ro_is_nir = True
+        return res

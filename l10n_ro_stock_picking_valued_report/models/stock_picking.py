@@ -33,6 +33,190 @@ class StockPicking(models.Model):
         currency_field="l10n_ro_currency_id",
     )
     l10n_ro_is_internal = fields.Boolean(compute="_compute_l10n_ro_is_internal")
+    l10n_ro_is_nir = fields.Boolean(
+        compute="_compute_l10n_ro_is_nir",
+        string="Is NIR",
+        help="Romanian goods receipt note (Nota de intrare-receptie) - an "
+        "incoming transfer registered by a Romanian company. Printed as a NIR "
+        "instead of the standard delivery-style reception slip.",
+    )
+    l10n_ro_supplier_type = fields.Selection(
+        [
+            ("intern", "Internal supplier"),
+            ("ue", "EU supplier"),
+            ("import", "Import supplier"),
+        ],
+        compute="_compute_l10n_ro_supplier_type",
+        string="Supplier Type",
+    )
+    l10n_ro_nir_number = fields.Char(
+        string="NIR Number",
+        copy=False,
+        index=True,
+        help="Own sequential number of the goods receipt note, assigned when "
+        "the receipt is validated.",
+    )
+    l10n_ro_nir_excise_total = fields.Monetary(
+        compute="_compute_l10n_ro_nir_excise_total",
+        string="NIR Excise",
+        currency_field="l10n_ro_currency_id",
+        help="Total excise of the receipt lines, computed from the products' "
+        "excise category when the excise module is installed.",
+    )
+
+    @api.depends(
+        "picking_type_id.code", "company_id.country_id.code", "is_l10n_ro_record"
+    )
+    def _compute_l10n_ro_is_nir(self):
+        for pick in self:
+            pick.l10n_ro_is_nir = bool(
+                pick.is_l10n_ro_record
+                and pick.company_id.country_id.code == "RO"
+                and pick.picking_type_id.code == "incoming"
+            )
+
+    @api.depends("partner_id.commercial_partner_id.country_id")
+    def _compute_l10n_ro_supplier_type(self):
+        europe = self.env.ref("base.europe", raise_if_not_found=False)
+        eu_countries = europe.country_ids if europe else self.env["res.country"]
+        for pick in self:
+            country = pick.partner_id.commercial_partner_id.country_id
+            if not country or country.code == "RO":
+                pick.l10n_ro_supplier_type = "intern"
+            elif country in eu_countries:
+                pick.l10n_ro_supplier_type = "ue"
+            else:
+                pick.l10n_ro_supplier_type = "import"
+
+    @api.depends("move_line_ids", "move_line_ids.quantity")
+    def _compute_l10n_ro_nir_excise_total(self):
+        for pick in self:
+            total = 0.0
+            for move in pick.move_ids:
+                qty = sum(
+                    ml.product_uom_id._compute_quantity(
+                        ml.quantity, move.product_id.uom_id, round=False
+                    )
+                    for ml in move.move_line_ids
+                )
+                total += pick._l10n_ro_nir_line_excise(move, qty)
+            pick.l10n_ro_nir_excise_total = total
+
+    def _l10n_ro_nir_line_excise(self, move, qty):
+        """Excise amount of ``qty`` of the move product, when the excise
+        module is installed. Returns 0 otherwise (soft dependency)."""
+        product = move.product_id
+        if not qty or not hasattr(product, "compute_ro_excise"):
+            return 0.0
+        date = move.date or fields.Date.context_today(self)
+        return product.with_context(
+            tax_computation_context={"date": date}
+        ).compute_ro_excise(qty)
+
+    def _l10n_ro_nir_report_lines(self):
+        """Build the NIR table rows, one per receipt move, with the valued
+        fields aggregated from the move lines and expressed in the product's
+        reference UoM."""
+        self.ensure_one()
+        lines = []
+        moves = self.move_ids.filtered(lambda m: m.quantity or m.product_uom_qty)
+        for index, move in enumerate(moves, start=1):
+            mls = move.move_line_ids
+            qty = sum(
+                ml.product_uom_id._compute_quantity(
+                    ml.quantity, move.product_id.uom_id, round=False
+                )
+                for ml in mls
+            )
+            if not qty:
+                qty = move.product_uom._compute_quantity(
+                    move.quantity or move.product_uom_qty,
+                    move.product_id.uom_id,
+                    round=False,
+                )
+            subtotal = sum(mls.mapped("l10n_ro_price_subtotal"))
+            charges = sum(mls.mapped("l10n_ro_additional_charges"))
+            tax = sum(mls.mapped("l10n_ro_price_tax"))
+            # Packages are expressed in the move's packaging UoM when it
+            # differs from the product UoM, falling back to the product's own
+            # packaging (the first secondary ``uom_ids``).
+            packaging_uom = move.packaging_uom_id
+            if not packaging_uom or packaging_uom == move.product_id.uom_id:
+                packaging_uom = move.product_id.uom_ids[:1]
+            packages = 0.0
+            if packaging_uom and packaging_uom != move.product_id.uom_id:
+                packages = move.product_id.uom_id._compute_quantity(
+                    qty, packaging_uom, round=False
+                )
+            currency = mls[:1].l10n_ro_currency_id or self.company_id.currency_id
+            # Subtotal = goods value + landed charges (net, excl. VAT);
+            # Total = subtotal + VAT.
+            net = subtotal + charges
+            lines.append(
+                {
+                    "move": move,
+                    "position": index,
+                    "product": move.product_id,
+                    "code": move.product_id.default_code or "",
+                    "name": move.product_id.name,
+                    "uom": move.product_id.uom_id,
+                    "quantity": qty,
+                    "currency": currency,
+                    "price_unit": (subtotal / qty) if qty else 0.0,
+                    "purchase_value": subtotal,
+                    "packages": packages,
+                    "packaging_uom": packaging_uom if packages else False,
+                    "additional_charges": charges,
+                    "subtotal": net,
+                    "tax": tax,
+                    "total": net + tax,
+                    "excise": self._l10n_ro_nir_line_excise(move, qty),
+                    "weight": move.product_id.weight * qty,
+                }
+            )
+        return lines
+
+    def _l10n_ro_nir_doc_info(self):
+        """Source document of the receipt and, for a foreign-currency purchase
+        order, the order total and its exchange rate booked in RON.
+
+        The vendor bill is not required: the reference is the picking origin
+        (the PO name), and the currency/rate line is shown only when the
+        purchase order is in a currency other than the company's."""
+        self.ensure_one()
+        company_currency = self.company_id.currency_id
+        info = {
+            "origin": self.origin or "",
+            "currency": company_currency,
+            "foreign": False,
+            "amount": 0.0,
+            "rate": 0.0,
+        }
+        po = self.purchase_id if "purchase_id" in self._fields else False
+        if po and po.currency_id and po.currency_id != company_currency:
+            date = self.date_done or self.scheduled_date
+            date = date.date() if date else fields.Date.context_today(self)
+            info.update(
+                {
+                    "foreign": True,
+                    "currency": po.currency_id,
+                    "amount": po.amount_total,
+                    "rate": po.currency_id._convert(
+                        1.0, company_currency, self.company_id, date
+                    ),
+                }
+            )
+        return info
+
+    def _action_done(self):
+        res = super()._action_done()
+        sequence = self.env["ir.sequence"]
+        for pick in self:
+            if pick.l10n_ro_is_nir and not pick.l10n_ro_nir_number:
+                pick.l10n_ro_nir_number = (
+                    sequence.next_by_code("l10n.ro.nir") or pick.name
+                )
+        return res
 
     def _l10n_ro_show_valued_columns(self):
         """Whether the plain valued columns belong on this picking's slip.
