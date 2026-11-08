@@ -106,7 +106,6 @@
         <field
             name="text"
         ><![CDATA[
-            <h2><span>Reception Note and Differences</span></h2>
             <span>The undersigned, members of the reception commission, I received the material values provided by:
             <t t-esc="object.partner_id.name"/>,
             delegate: <t t-esc="object.l10n_ro_delegate_id.name if object.l10n_ro_delegate_id else '.'*60"/>,
