@@ -56,14 +56,6 @@ class StockPicking(models.Model):
         help="Own sequential number of the goods receipt note, assigned when "
         "the receipt is validated.",
     )
-    l10n_ro_nir_excise_total = fields.Monetary(
-        compute="_compute_l10n_ro_nir_excise_total",
-        string="NIR Excise",
-        currency_field="l10n_ro_currency_id",
-        help="Total excise of the receipt lines, computed from the products' "
-        "excise category when the excise module is installed.",
-    )
-
     @api.depends(
         "picking_type_id.code", "company_id.country_id.code", "is_l10n_ro_record"
     )
@@ -88,30 +80,34 @@ class StockPicking(models.Model):
             else:
                 pick.l10n_ro_supplier_type = "import"
 
-    @api.depends("move_line_ids", "move_line_ids.quantity")
-    def _compute_l10n_ro_nir_excise_total(self):
-        for pick in self:
-            total = 0.0
-            for move in pick.move_ids:
-                qty = sum(
-                    ml.product_uom_id._compute_quantity(
-                        ml.quantity, move.product_id.uom_id, round=False
-                    )
-                    for ml in move.move_line_ids
-                )
-                total += pick._l10n_ro_nir_line_excise(move, qty)
-            pick.l10n_ro_nir_excise_total = total
+    def _l10n_ro_nir_charge_breakdown(self):
+        """Split the receipt's additional costs (landed costs) by type, for the
+        breakdown printed under the NIR table.
 
-    def _l10n_ro_nir_line_excise(self, move, qty):
-        """Excise amount of ``qty`` of the move product, when the excise
-        module is installed. Returns 0 otherwise (soft dependency)."""
-        product = move.product_id
-        if not qty or not hasattr(product, "compute_ro_excise"):
-            return 0.0
-        date = move.date or fields.Date.context_today(self)
-        return product.with_context(
-            tax_computation_context={"date": date}
-        ).compute_ro_excise(qty)
+        The amounts come from the landed-cost valuation adjustments booked on
+        the receipt moves, grouped by the landed cost's own type
+        (``l10n_ro_cost_type``: transport, excise, dvi, price difference...).
+        The sum equals the ``Additional Charges`` column total, and the excise
+        is taken only from a landed cost of type ``excise`` - never recomputed
+        from the product excise category. Returns a list of
+        ``(translated label, amount)`` in the selection's order, non-zero only."""
+        self.ensure_one()
+        landed_cost = self.env["stock.landed.cost"]
+        labels = dict(
+            landed_cost._fields["l10n_ro_cost_type"]._description_selection(self.env)
+        )
+        totals = {}
+        adjustments = self.env["stock.valuation.adjustment.lines"].search(
+            [("move_id", "in", self.move_ids.ids)]
+        )
+        for adj in adjustments:
+            ctype = adj.cost_id.l10n_ro_cost_type or "normal"
+            totals[ctype] = totals.get(ctype, 0.0) + adj.additional_landed_cost
+        return [
+            (labels.get(ctype, ctype), amount)
+            for ctype, amount in totals.items()
+            if amount
+        ]
 
     def _l10n_ro_nir_report_lines(self):
         """Build the NIR table rows, one per receipt move, with the valued
@@ -170,7 +166,6 @@ class StockPicking(models.Model):
                     "subtotal": net,
                     "tax": tax,
                     "total": net + tax,
-                    "excise": self._l10n_ro_nir_line_excise(move, qty),
                     "weight": move.product_id.weight * qty,
                 }
             )

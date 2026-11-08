@@ -48,8 +48,8 @@ msgstr "<strong>Denumire</strong>"
 
 #. module: l10n_ro_stock_picking_valued_report
 #: model_terms:ir.ui.view,arch_db:l10n_ro_stock_picking_valued_report.report_delivery_document
-msgid "<strong>Excise value:</strong>"
-msgstr "<strong>Valoare accize:</strong>"
+msgid "of which"
+msgstr "din care"
 
 #. module: l10n_ro_stock_picking_valued_report
 #: model_terms:ir.ui.view,arch_db:l10n_ro_stock_picking_valued_report.report_delivery_document
@@ -265,3 +265,13 @@ msgstr "Valoare fără taxe"
 #: model_terms:ir.ui.view,arch_db:l10n_ro_stock_picking_valued_report.report_delivery_document
 msgid "x"
 msgstr "x"
+
+#. module: l10n_ro_stock_picking_valued_report
+#: model:ir.model.fields.selection,name:l10n_ro_stock_picking_valued_report.selection__stock_landed_cost__l10n_ro_cost_type__transport
+msgid "Transport"
+msgstr "Transport"
+
+#. module: l10n_ro_stock_picking_valued_report
+#: model:ir.model.fields.selection,name:l10n_ro_stock_picking_valued_report.selection__stock_landed_cost__l10n_ro_cost_type__excise
+msgid "Excise"
+msgstr "Accize"

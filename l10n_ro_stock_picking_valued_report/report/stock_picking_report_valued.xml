@@ -159,9 +159,16 @@
                         <strong>Net weight:</strong>
                         <span t-out="nir_num(nir_net_weight)" /> Kg
                     </div>
-                    <div t-if="o.l10n_ro_nir_excise_total">
-                        <strong>Excise value:</strong>
-                        <span t-out="nir_num(o.l10n_ro_nir_excise_total)" />
+                    <!-- Additional-costs breakdown: the single "Additional
+                         Charges" column, split by the landed cost's own type
+                         (transport / excise / dvi / price difference...). -->
+                    <t
+                        t-set="nir_charges"
+                        t-value="o._l10n_ro_nir_charge_breakdown()"
+                    />
+                    <div t-foreach="nir_charges" t-as="chg" name="nir_charge_row">
+                        <strong>of which <span t-out="chg[0]" />:</strong>
+                        <span t-out="nir_num(chg[1])" />
                         <span t-field="o.company_id.currency_id.name" />
                     </div>
                 </div>
