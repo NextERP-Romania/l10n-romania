@@ -33,6 +33,11 @@ msgstr "<strong>Preț vânzare fără TVA</strong>"
 
 #. module: l10n_ro_stock_account_retail_picking_report
 #: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail_picking_report.report_delivery_document
+msgid "<strong>Retail Price incl. VAT</strong>"
+msgstr "<strong>Preț vânzare cu TVA</strong>"
+
+#. module: l10n_ro_stock_account_retail_picking_report
+#: model_terms:ir.ui.view,arch_db:l10n_ro_stock_account_retail_picking_report.report_delivery_document
 msgid "<strong>Retail Sale Value</strong>"
 msgstr "<strong>Valoare vânzare</strong>"
 

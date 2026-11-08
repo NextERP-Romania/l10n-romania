@@ -33,5 +33,6 @@ class StockMove(models.Model):
             "markup_percent": (markup / cost * 100) if cost else 0.0,
             "vat": vat,
             "retail_price_no_vat_unit": ((cost + markup) / qty) if qty else 0.0,
+            "retail_price_vat_unit": (retail_value / qty) if qty else 0.0,
             "retail_value": retail_value,
         }

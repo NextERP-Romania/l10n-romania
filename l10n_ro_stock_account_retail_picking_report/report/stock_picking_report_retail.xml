@@ -17,6 +17,9 @@
                 <th class="text-end" name="th_nir_retail_no_vat">
                     <strong>Retail Price excl. VAT</strong>
                 </th>
+                <th class="text-end" name="th_nir_retail_vat">
+                    <strong>Retail Price incl. VAT</strong>
+                </th>
                 <th class="text-end" name="th_nir_deferred_vat">
                     <strong>Deferred VAT</strong>
                 </th>
@@ -41,6 +44,9 @@
                 <td class="text-end" name="td_nir_retail_no_vat">
                     <span t-out="'%.4f' % rv['retail_price_no_vat_unit']" />
                 </td>
+                <td class="text-end" name="td_nir_retail_vat">
+                    <span t-out="'%.4f' % rv['retail_price_vat_unit']" />
+                </td>
                 <td class="text-end" name="td_nir_deferred_vat">
                     <span t-out="nir_num(rv['vat'])" />
                 </td>
@@ -62,6 +68,7 @@
                     />
                 </td>
                 <td name="tf_nir_retail_no_vat" />
+                <td name="tf_nir_retail_vat" />
                 <td class="text-end" name="tf_nir_deferred_vat">
                     <strong
                         t-out="nir_num(sum(line['move']._l10n_ro_retail_nir_values()['vat'] for line in nir_lines))"
