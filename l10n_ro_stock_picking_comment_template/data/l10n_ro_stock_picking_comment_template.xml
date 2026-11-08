@@ -18,10 +18,6 @@
         <field
             name="text"
         ><![CDATA[
-            <h2>
-                <span>Delivery Order</span>
-            </h2>
-
             <t t-if="object.picking_type_code == 'internal'">
                 <table class="table table-condensed">
                     <thead>

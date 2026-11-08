@@ -11,6 +11,15 @@
              order/date informations block) and the before/after-lines comments.
              Only the standard move tables are swapped for the valued NIR table
              below, so nothing is duplicated. -->
+        <!-- On a RO outgoing/internal picking the slip is an "aviz de
+             însoțire": rename the title (keeping the picking number) so it does
+             not read "Notă de livrare" / "Mișcare internă". The NIR (incoming)
+             keeps its standard title. -->
+        <xpath expr="//div[hasclass('page')]/h2/span[1]" position="attributes">
+            <attribute
+                name="t-out"
+            >('Aviz de însoțire a mărfii' if (o.is_l10n_ro_record and o.company_id.country_id.code == 'RO' and o.picking_type_id.code in ('outgoing', 'internal')) else o.picking_type_id._get_code_report_name())</attribute>
+        </xpath>
         <xpath expr="//table[@name='stock_move_table']" position="attributes">
             <attribute
                 name="t-if"
