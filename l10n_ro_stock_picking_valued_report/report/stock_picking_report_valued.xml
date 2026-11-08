@@ -32,10 +32,23 @@
             <t t-if="o.l10n_ro_is_nir">
                 <t t-set="nir_lines" t-value="o._l10n_ro_nir_report_lines()" />
                 <t t-set="nir_num" t-value="lambda x: '{:,.2f}'.format(x or 0.0)" />
+                <!-- Smaller text and fixed Code / Description widths so the NIR
+                     stays legible and consistent whether it has the depot
+                     columns or the extra retail ones. -->
+                <style>
+                    table.l10n_ro_nir_table{font-size:.66rem}
+                    table.l10n_ro_nir_table th[name=th_nir_pos],
+                    table.l10n_ro_nir_table td[name=td_nir_pos]{width:7mm}
+                    table.l10n_ro_nir_table th[name=th_nir_code],
+                    table.l10n_ro_nir_table td[name=td_nir_code]{
+                        min-width:15mm;white-space:nowrap}
+                    table.l10n_ro_nir_table th[name=th_nir_name],
+                    table.l10n_ro_nir_table td[name=td_nir_name]{
+                        min-width:34mm;max-width:46mm}
+                </style>
                 <table
-                    class="table table-sm o_main_table"
+                    class="table table-sm o_main_table l10n_ro_nir_table"
                     name="l10n_ro_nir_table"
-                    style="font-size: 0.75rem;"
                 >
                     <thead>
                         <tr>
