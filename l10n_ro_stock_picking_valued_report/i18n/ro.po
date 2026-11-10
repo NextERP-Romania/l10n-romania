@@ -266,12 +266,4 @@ msgstr "Valoare fără taxe"
 msgid "x"
 msgstr "x"
 
-#. module: l10n_ro_stock_picking_valued_report
-#: model:ir.model.fields.selection,name:l10n_ro_stock_picking_valued_report.selection__stock_landed_cost__l10n_ro_cost_type__transport
-msgid "Transport"
-msgstr "Transport"
 
-#. module: l10n_ro_stock_picking_valued_report
-#: model:ir.model.fields.selection,name:l10n_ro_stock_picking_valued_report.selection__stock_landed_cost__l10n_ro_cost_type__excise
-msgid "Excise"
-msgstr "Accize"
