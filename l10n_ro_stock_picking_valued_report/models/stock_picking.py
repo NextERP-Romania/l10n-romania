@@ -49,13 +49,6 @@ class StockPicking(models.Model):
         compute="_compute_l10n_ro_supplier_type",
         string="Supplier Type",
     )
-    l10n_ro_nir_number = fields.Char(
-        string="NIR Number",
-        copy=False,
-        index=True,
-        help="Own sequential number of the goods receipt note, assigned when "
-        "the receipt is validated.",
-    )
     @api.depends(
         "picking_type_id.code", "company_id.country_id.code", "is_l10n_ro_record"
     )
@@ -243,16 +236,6 @@ class StockPicking(models.Model):
                 }
             )
         return info
-
-    def _action_done(self):
-        res = super()._action_done()
-        sequence = self.env["ir.sequence"]
-        for pick in self:
-            if pick.l10n_ro_is_nir and not pick.l10n_ro_nir_number:
-                pick.l10n_ro_nir_number = (
-                    sequence.next_by_code("l10n.ro.nir") or pick.name
-                )
-        return res
 
     def _l10n_ro_show_valued_columns(self):
         """Whether the plain valued columns belong on this picking's slip.

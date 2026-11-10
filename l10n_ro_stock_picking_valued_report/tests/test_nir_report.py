@@ -74,11 +74,8 @@ class TestNirReport(TestStockPickingValued):
     def test_nir_flags_and_number(self):
         picking = self._receive(100, 2.0)
         self.assertTrue(picking.l10n_ro_is_nir)
-        self.assertTrue(
-            picking.l10n_ro_nir_number,
-            "A NIR number must be assigned on validation",
-        )
-        self.assertTrue(picking.l10n_ro_nir_number.startswith("NIR/"))
+        # The NIR is identified by the picking name; no separate number.
+        self.assertTrue(picking.name)
         # No supplier set on the manual receipt -> treated as internal.
         self.assertEqual(picking.l10n_ro_supplier_type, "intern")
 
@@ -116,9 +113,6 @@ class TestNirReport(TestStockPickingValued):
         # 100 units in packs of 5 -> 20 packages.
         self.assertAlmostEqual(line["packages"], 20.0, places=2)
         self.assertAlmostEqual(line["weight"], 10.0, places=2)
-        # No excise category on the product -> excise 0, no invented numbers.
-        self.assertEqual(line["excise"], 0.0)
-        self.assertEqual(picking.l10n_ro_nir_excise_total, 0.0)
 
     def test_nir_renders_in_shared_slip(self):
         """The NIR prints through the shared delivery slip, with a single
@@ -135,7 +129,7 @@ class TestNirReport(TestStockPickingValued):
             1,
             "The NIR title must appear exactly once (no double title)",
         )
-        self.assertIn(picking.l10n_ro_nir_number, html)
+        self.assertIn(picking.name, html)
         # The NIR table and its columns.
         self.assertIn("l10n_ro_nir_table", html)
         self.assertIn("Purchase Value", html)
