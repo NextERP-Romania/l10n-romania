@@ -171,6 +171,47 @@ class StockPicking(models.Model):
             )
         return lines
 
+    def _l10n_ro_aviz_report_lines(self):
+        """Build the aviz (delivery note) rows for a RO outgoing/internal
+        picking: one row per move with JPB's columns (PLU, code, EAN, UoM,
+        quantity, unit price and value), quantities in the product's reference
+        UoM and amounts from the valued move lines. No packaging column."""
+        self.ensure_one()
+        lines = []
+        moves = self.move_ids.filtered(lambda m: m.quantity or m.product_uom_qty)
+        for index, move in enumerate(moves, start=1):
+            mls = move.move_line_ids
+            qty = sum(
+                ml.product_uom_id._compute_quantity(
+                    ml.quantity, move.product_id.uom_id, round=False
+                )
+                for ml in mls
+            )
+            if not qty:
+                qty = move.product_uom._compute_quantity(
+                    move.quantity or move.product_uom_qty,
+                    move.product_id.uom_id,
+                    round=False,
+                )
+            value = sum(mls.mapped("l10n_ro_price_subtotal"))
+            currency = mls[:1].l10n_ro_currency_id or self.company_id.currency_id
+            lines.append(
+                {
+                    "position": index,
+                    "product": move.product_id,
+                    "plu": move.product_id.plu_code or "",
+                    "code": move.product_id.default_code or "",
+                    "ean": move.product_id.barcode or "",
+                    "name": move.product_id.name,
+                    "uom": move.product_id.uom_id,
+                    "quantity": qty,
+                    "currency": currency,
+                    "price_unit": (value / qty) if qty else 0.0,
+                    "value": value,
+                }
+            )
+        return lines
+
     def _l10n_ro_nir_doc_info(self):
         """Source document of the receipt and, for a foreign-currency purchase
         order, the order total and its exchange rate booked in RON.

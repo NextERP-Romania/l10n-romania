@@ -20,15 +20,34 @@
                 name="t-out"
             >('Aviz de însoțire a mărfii' if (o.is_l10n_ro_record and o.company_id.country_id.code == 'RO' and o.picking_type_id.code in ('outgoing', 'internal')) else o.picking_type_id._get_code_report_name())</attribute>
         </xpath>
+        <!-- Etichete adresă în română pe avizul RO -->
+        <xpath
+            expr="//div[@name='outgoing_delivery_address']//strong"
+            position="replace"
+        >
+            <strong>
+                <t
+                    t-out="'Adresă de livrare' if (o.is_l10n_ro_record and o.company_id.country_id.code == 'RO') else 'Delivery Address'"
+                />
+            </strong>
+        </xpath>
+        <xpath expr="//div[@name='customer_address']//strong" position="replace">
+            <strong>
+                <t
+                    t-out="'Client' if (o.is_l10n_ro_record and o.company_id.country_id.code == 'RO') else 'Customer'"
+                />
+            </strong>
+        </xpath>
+
         <xpath expr="//table[@name='stock_move_table']" position="attributes">
             <attribute
                 name="t-if"
-            >o.state != 'done' and not o.l10n_ro_is_nir</attribute>
+            >o.state != 'done' and not (o.is_l10n_ro_record and o.company_id.country_id.code == 'RO')</attribute>
         </xpath>
         <xpath expr="//table[@name='stock_move_line_table']" position="attributes">
             <attribute
                 name="t-elif"
-            >o.move_line_ids and o.state == 'done' and not o.l10n_ro_is_nir</attribute>
+            >o.move_line_ids and o.state == 'done' and not (o.is_l10n_ro_record and o.company_id.country_id.code == 'RO')</attribute>
         </xpath>
 
         <!-- NIR valued table: replaces only the standard move tables. The
@@ -194,6 +213,90 @@
                         <span t-field="o.company_id.currency_id.name" />
                     </div>
                 </div>
+            </t>
+        </xpath>
+
+        <!-- Aviz de însoțire a mărfii (RO outgoing/internal, not NIR): JPB's
+             own line table, replacing the standard delivery table. Columns:
+             Poz, PLU, Cod, EAN, Denumire, U.M., Cant., Preț, Valoare (no
+             packaging column). The value total is printed by the summary block
+             further down. -->
+        <xpath expr="//table[@name='stock_move_table']" position="before">
+            <t
+                t-if="o.is_l10n_ro_record and o.company_id.country_id.code == 'RO' and not o.l10n_ro_is_nir"
+            >
+                <t t-set="aviz_lines" t-value="o._l10n_ro_aviz_report_lines()" />
+                <t t-set="aviz_num" t-value="lambda x: '{:,.2f}'.format(x or 0.0)" />
+                <style>
+                    table.l10n_ro_aviz_table{font-size:.70rem}
+                    table.l10n_ro_aviz_table th[name=th_aviz_cod],
+                    table.l10n_ro_aviz_table td[name=td_aviz_cod]{
+                        min-width:15mm;white-space:nowrap}
+                    table.l10n_ro_aviz_table th[name=th_aviz_name],
+                    table.l10n_ro_aviz_table td[name=td_aviz_name]{
+                        min-width:40mm;max-width:60mm}
+                </style>
+                <table
+                    class="table table-sm o_main_table l10n_ro_aviz_table"
+                    name="l10n_ro_aviz_table"
+                >
+                    <thead>
+                        <tr>
+                            <th class="text-center" name="th_aviz_pos">
+                                <strong>Poz.</strong>
+                            </th>
+                            <th name="th_aviz_plu"><strong>PLU</strong></th>
+                            <th name="th_aviz_cod"><strong>Cod</strong></th>
+                            <th class="text-center" name="th_aviz_ean">
+                                <strong>EAN</strong>
+                            </th>
+                            <th name="th_aviz_name"><strong>Denumire</strong></th>
+                            <th class="text-center" name="th_aviz_uom">
+                                <strong>U.M.</strong>
+                            </th>
+                            <th class="text-end" name="th_aviz_qty">
+                                <strong>Cant.</strong>
+                            </th>
+                            <th class="text-end" name="th_aviz_price">
+                                <strong>Preț</strong>
+                            </th>
+                            <th class="text-end" name="th_aviz_value">
+                                <strong>Valoare</strong>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="aviz_lines" t-as="line" name="aviz_row">
+                            <td class="text-center" name="td_aviz_pos">
+                                <span t-out="line['position']" />
+                            </td>
+                            <td name="td_aviz_plu">
+                                <span t-out="line['plu']" />
+                            </td>
+                            <td name="td_aviz_cod">
+                                <span t-out="line['code']" />
+                            </td>
+                            <td class="text-center" name="td_aviz_ean">
+                                <span t-out="line['ean']" />
+                            </td>
+                            <td name="td_aviz_name">
+                                <span t-out="line['name']" />
+                            </td>
+                            <td class="text-center" name="td_aviz_uom">
+                                <span t-out="line['uom'].name" />
+                            </td>
+                            <td class="text-end" name="td_aviz_qty">
+                                <span t-out="aviz_num(line['quantity'])" />
+                            </td>
+                            <td class="text-end" name="td_aviz_price">
+                                <span t-out="aviz_num(line['price_unit'])" />
+                            </td>
+                            <td class="text-end" name="td_aviz_value">
+                                <span t-out="aviz_num(line['value'])" />
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </t>
         </xpath>
 
