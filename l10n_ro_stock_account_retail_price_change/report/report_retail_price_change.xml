@@ -99,7 +99,10 @@
                             <t t-set="total_old" t-value="total_old + old_value" />
                             <t t-set="total_new" t-value="total_new + new_value" />
                             <t t-set="dc" t-value="line.product_id.default_code" />
-                            <t t-set="pname" t-value="line.product_id.display_name or ''" />
+                            <t
+                                t-set="pname"
+                                t-value="line.product_id.display_name or ''"
+                            />
                             <t
                                 t-if="dc and pname.startswith('[' + dc + ']')"
                                 t-set="pname"
@@ -205,7 +208,10 @@
                                 t-set="total_markup"
                                 t-value="total_markup + line.markup_diff_total"
                             />
-                            <t t-set="total_vat" t-value="total_vat + line.vat_diff_total" />
+                            <t
+                                t-set="total_vat"
+                                t-value="total_vat + line.vat_diff_total"
+                            />
                             <tr>
                                 <td>
                                     <span t-field="line.product_id" />
