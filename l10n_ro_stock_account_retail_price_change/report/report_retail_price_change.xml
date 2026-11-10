@@ -262,18 +262,18 @@
                     <span t-field="doc.notes" />
                 </div>
 
-                <div class="row mt-5">
+                <div class="row mt-4" style="page-break-inside: avoid;">
                     <div class="col-4">
                         <p>Întocmit,</p>
-                        <p class="mt-4">.............................</p>
+                        <p class="mt-5">.............................</p>
                     </div>
                     <div class="col-4">
                         <p>Gestionar,</p>
-                        <p class="mt-4">.............................</p>
+                        <p class="mt-5">.............................</p>
                     </div>
                     <div class="col-4">
                         <p>Aprobat,</p>
-                        <p class="mt-4">.............................</p>
+                        <p class="mt-5">.............................</p>
                     </div>
                 </div>
             </div>
