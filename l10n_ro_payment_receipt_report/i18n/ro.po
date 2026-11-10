@@ -222,7 +222,7 @@ msgstr "Chitanța de plată"
 #. module: l10n_ro_payment_receipt_report
 #: model_terms:ir.ui.view,arch_db:l10n_ro_payment_receipt_report.report_payment_receipt_document
 msgid "We received from:"
-msgstr "Am primti de la:"
+msgstr "Am primit de la:"
 
 #. module: l10n_ro_payment_receipt_report
 #: model_terms:ir.ui.view,arch_db:l10n_ro_payment_receipt_report.report_payment_receipt_document
