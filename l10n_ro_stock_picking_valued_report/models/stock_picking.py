@@ -49,6 +49,7 @@ class StockPicking(models.Model):
         compute="_compute_l10n_ro_supplier_type",
         string="Supplier Type",
     )
+
     @api.depends(
         "picking_type_id.code", "company_id.country_id.code", "is_l10n_ro_record"
     )
