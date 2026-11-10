@@ -6,7 +6,9 @@
         <div class="chit_copy" style="padding:1mm 2mm;">
             <div class="row">
                 <div class="col-7">
-                    <strong><span t-field="o.company_id.name" /></strong>
+                    <strong>
+                        <span t-field="o.company_id.name" />
+                    </strong>
                     <div style="font-size:.72rem;line-height:1.15;">
                         CIF <span t-field="o.company_id.vat" />
                         <t t-if="o.company_id.partner_id.nrc">
@@ -14,9 +16,9 @@
                         </t>
                         <br />
                         <span
-                            t-field="o.company_id.partner_id"
-                            t-options='{"widget": "contact", "fields": ["address"], "no_marker": True, "no_tag_br": True}'
-                        />
+                        t-field="o.company_id.partner_id"
+                        t-options='{"widget": "contact", "fields": ["address"], "no_marker": True, "no_tag_br": True}'
+                    />
                     </div>
                 </div>
                 <div class="col-5 text-end">
@@ -30,25 +32,29 @@
             </div>
             <p style="margin:2mm 0 1mm;">
                 Am primit de la
-                <strong><span t-field="o.partner_id.name" /></strong>
+                <strong>
+                <span t-field="o.partner_id.name" />
+            </strong>
                 <t t-if="o.partner_id.contact_address.strip()">, cu adresa
                     <span
-                        t-field="o.partner_id"
-                        t-options='{"widget": "contact", "fields": ["address"], "no_marker": True, "no_tag_br": True}'
-                    />
+                t-field="o.partner_id"
+                t-options='{"widget": "contact", "fields": ["address"], "no_marker": True, "no_tag_br": True}'
+            />
                 </t>
                 <t t-if="o.partner_id.vat">,
                     <t t-esc="o.partner_id.country_id.vat_label or 'CIF'" />
                     <span t-field="o.partner_id.vat" />
                 </t>
-                <t t-if="o.partner_id.nrc">, NRC <span t-field="o.partner_id.nrc" /></t>,
+                <t t-if="o.partner_id.nrc">, NRC <span
+                t-field="o.partner_id.nrc"
+            /></t>,
                 suma de
                 <strong>
-                    <span
-                        t-field="o.amount"
-                        t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"
-                    />
-                </strong>
+                <span
+                    t-field="o.amount"
+                    t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"
+                />
+            </strong>
                 (<span t-esc="o.currency_id.amount_to_text(o.amount)" />)
                 <t t-if="o.reconciled_invoice_ids">
                     reprezentând contravaloarea
