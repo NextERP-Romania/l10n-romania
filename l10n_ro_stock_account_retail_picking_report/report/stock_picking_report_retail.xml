@@ -18,7 +18,7 @@
                     <strong>Retail Price excl. VAT</strong>
                 </th>
                 <th class="text-end" name="th_nir_retail_vat">
-                    <strong>Retail Price incl. VAT</strong>
+                    <strong>Preț vânzare cu TVA</strong>
                 </th>
                 <th class="text-end" name="th_nir_deferred_vat">
                     <strong>Deferred VAT</strong>

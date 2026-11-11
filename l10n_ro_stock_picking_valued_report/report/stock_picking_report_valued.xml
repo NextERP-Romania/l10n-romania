@@ -64,7 +64,7 @@
                      stays legible and consistent whether it has the depot
                      columns or the extra retail ones. -->
                 <style>
-                    table.l10n_ro_nir_table{font-size:.66rem}
+                    table.l10n_ro_nir_table{font-size:.66rem;font-family:"DejaVu Sans",sans-serif}
                     table.l10n_ro_nir_table th[name=th_nir_pos],
                     table.l10n_ro_nir_table td[name=td_nir_pos]{width:7mm}
                     table.l10n_ro_nir_table th[name=th_nir_code],
@@ -228,7 +228,7 @@
                 <t t-set="aviz_lines" t-value="o._l10n_ro_aviz_report_lines()" />
                 <t t-set="aviz_num" t-value="lambda x: '{:,.2f}'.format(x or 0.0)" />
                 <style>
-                    table.l10n_ro_aviz_table{font-size:.70rem}
+                    table.l10n_ro_aviz_table{font-size:.70rem;font-family:"DejaVu Sans",sans-serif}
                     table.l10n_ro_aviz_table th[name=th_aviz_cod],
                     table.l10n_ro_aviz_table td[name=td_aviz_cod]{
                         min-width:15mm;white-space:nowrap}
