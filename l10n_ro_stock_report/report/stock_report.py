@@ -78,18 +78,6 @@ class StorageSheet(models.TransientModel):
         domain="[('id', 'in', allowed_company_ids)]",
     )
 
-    @api.constrains("company_id")
-    def _check_company_id_allowed(self):
-        for sheet in self:
-            if sheet.company_id and sheet.company_id not in self.env.companies:
-                raise AccessError(
-                    self.env._(
-                        "You are not allowed to access the storage sheet of "
-                        "company %s.",
-                        sheet.company_id.display_name,
-                    )
-                )
-
     @api.model_create_multi
     def create(self, vals_list):
         if any(vals.get("show_inactive") for vals in vals_list):
@@ -104,6 +92,18 @@ class StorageSheet(models.TransientModel):
         ):
             return super(StorageSheet, self.with_context(active_test=False)).write(vals)
         return super().write(vals)
+
+    @api.constrains("company_id")
+    def _check_company_id_allowed(self):
+        for sheet in self:
+            if sheet.company_id and sheet.company_id not in self.env.companies:
+                raise AccessError(
+                    self.env._(
+                        "You are not allowed to access the storage sheet of "
+                        "company %s.",
+                        sheet.company_id.display_name,
+                    )
+                )
 
     one_product = fields.Boolean("One product per page")
     line_product_ids = fields.One2many(
