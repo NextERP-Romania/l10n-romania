@@ -28,6 +28,6 @@ class IrActionsReport(models.Model):
             pickings = self.env["stock.picking"].browse(res_ids).exists()
             if pickings and all(p.l10n_ro_retail_incoming for p in pickings):
                 self = self.with_context(l10n_ro_retail_landscape_pf=_LANDSCAPE_PF)
-        return super(
-            IrActionsReport, self
-        )._render_qweb_pdf_prepare_streams(report_ref, data, res_ids=res_ids)
+        return super()._render_qweb_pdf_prepare_streams(
+            report_ref, data, res_ids=res_ids
+        )
