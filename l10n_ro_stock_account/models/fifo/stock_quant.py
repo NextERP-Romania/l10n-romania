@@ -17,7 +17,8 @@ class StockQuant(models.Model):
         ro_fifo_quants = self.filtered(
             lambda quant: (
                 quant.company_id.fifo_per_location
-                and quant.product_id.cost_method == "fifo"
+                and quant.product_id.with_company(quant.company_id).cost_method
+                == "fifo"
                 and not quant.product_id.lot_valuated
             )
         )
@@ -31,7 +32,7 @@ class StockQuant(models.Model):
             cache = {}
             ro_fifo_quants = ro_fifo_quants.with_context(fifo_stack_cache=cache)
         for quant in ro_fifo_quants:
-            quant.value = quant.product_id._run_fifo_value(
-                quant.quantity, location=quant.location_id
-            )
+            quant.value = quant.product_id.with_company(
+                quant.company_id
+            )._run_fifo_value(quant.quantity, location=quant.location_id)
         return res

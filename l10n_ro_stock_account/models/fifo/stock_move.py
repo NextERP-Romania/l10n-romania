@@ -55,7 +55,7 @@ class StockMove(models.Model):
         ro_fifo_moves = self.filtered(
             lambda move: (
                 move.company_id.fifo_per_location
-                and move.product_id.cost_method == "fifo"
+                and move.product_id.with_company(move.company_id).cost_method == "fifo"
                 and not move.product_id.lot_valuated
             )
         )
@@ -77,9 +77,9 @@ class StockMove(models.Model):
             move.remaining_qty = 0
             if move.location_dest_id._should_be_valued():
                 location = move.location_dest_id
-                remaining_by_product = move.product_id._get_remaining_moves_ro(
-                    location=location
-                )
+                remaining_by_product = move.product_id.with_company(
+                    move.company_id
+                )._get_remaining_moves_ro(location=location)
                 move.remaining_qty = remaining_by_product.get(move.product_id, {}).get(
                     move, 0
                 )
@@ -142,7 +142,7 @@ class StockMove(models.Model):
         ro_fifo_moves_out = self.filtered(
             lambda m: (
                 m._is_out()
-                and m.product_id.cost_method == "fifo"
+                and m.product_id.with_company(m.company_id).cost_method == "fifo"
                 and m.company_id.fifo_per_location
                 and not m.product_id.lot_valuated
                 and m.uom_id.compare(m.quantity, 0) != 0
@@ -176,7 +176,7 @@ class StockMove(models.Model):
             lambda move: (
                 move.company_id.fifo_per_location
                 and move._is_out()
-                and move.product_id.cost_method == "fifo"
+                and move.product_id.with_company(move.company_id).cost_method == "fifo"
                 and not move.product_id.lot_valuated
             )
         )
@@ -199,7 +199,9 @@ class StockMove(models.Model):
                     continue
                 value = 0
                 for move_line in move.move_line_ids:
-                    value += move.product_id._run_fifo_value(
+                    value += move.product_id.with_company(
+                        move.company_id
+                    )._run_fifo_value(
                         move_line.quantity_product_uom,
                         lot=move_line.lot_id,
                         at_date=move.date,
@@ -216,7 +218,7 @@ class StockMove(models.Model):
                 m.company_id.fifo_per_location
                 and m.company_id.fifo_location_negative_compensation
                 and m._is_out()
-                and m.product_id.cost_method == "average"
+                and m.product_id.with_company(m.company_id).cost_method == "average"
                 and not m.product_id.lot_valuated
                 and not m.fifo_neg_pending_qty
             )
@@ -253,7 +255,8 @@ class StockMove(models.Model):
                 m.company_id.fifo_per_location
                 and m.company_id.fifo_location_negative_compensation
                 and m.is_in
-                and m.product_id.cost_method in ("fifo", "average")
+                and m.product_id.with_company(m.company_id).cost_method
+                in ("fifo", "average")
                 and not m.product_id.lot_valuated
             )
         )
@@ -298,7 +301,7 @@ class StockMove(models.Model):
         ro_fifo_move_with_origin = self.filtered(
             lambda move: (
                 move.company_id.fifo_per_location
-                and move.product_id.cost_method == "fifo"
+                and move.product_id.with_company(move.company_id).cost_method == "fifo"
                 and not move.product_id.lot_valuated
                 and move.move_orig_ids
                 and quantity
@@ -330,9 +333,11 @@ class StockMove(models.Model):
             quantity_to_ship = move.uom_id._compute_quantity(
                 move.quantity, move.product_id.uom_id, round=False
             )
-            fifo_list = move.product_id.with_context(
-                location=move.location_id.ids
-            )._run_fifo_layers(quantity_to_ship, location=move.location_id)
+            fifo_list = (
+                move.product_id.with_company(move.company_id)
+                .with_context(location=move.location_id.ids)
+                ._run_fifo_layers(quantity_to_ship, location=move.location_id)
+            )
             quantity = quantity_to_ship
             vals_before = len(fifo_split_vals_list)
             while quantity >= move.quantity and fifo_list:
