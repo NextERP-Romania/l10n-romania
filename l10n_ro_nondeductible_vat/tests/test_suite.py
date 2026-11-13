@@ -2,10 +2,15 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
+from unittest.mock import patch
 
 from odoo import Command, fields
 from odoo.exceptions import ValidationError
 from odoo.tests import tagged
+
+from odoo.addons.l10n_ro_stock_account.models.stock_move import (
+    StockMove as ROStockMove,
+)
 
 from .common import TestNondeductibleCommon
 
@@ -44,6 +49,26 @@ class TestNonDeductibleVAT(TestNondeductibleCommon):
         move.picked = True
         move._action_done()
         return move.account_move_id
+
+    def test_non_ro_move_does_not_apply_romanian_nondeductible_tax(self):
+        company = self.env["res.company"].create(
+            {"name": "Non-RO VAT company", "country_id": self.env.ref("base.us").id}
+        )
+        move = self.env["stock.move"].new(
+            {
+                "company_id": company.id,
+                "l10n_ro_nondeductible_tax_id": self.tax.id,
+                "l10n_ro_nondeductible_percent": "50",
+            }
+        )
+        base_lines = [{"account_id": self.account_expense.id}]
+
+        with patch.object(
+            ROStockMove, "_get_account_move_line_vals", return_value=base_lines
+        ):
+            result = move._get_account_move_line_vals()
+
+        self.assertEqual(result, base_lines)
 
     def test_consum_50_percent(self):
         """A 50% non-deductible consumption of goods valued 100 must not
