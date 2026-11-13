@@ -5,6 +5,7 @@ import logging
 from datetime import timedelta
 
 from odoo import fields
+from odoo.exceptions import AccessError
 from odoo.tests import Form
 from odoo.tests.common import TransactionCase
 
@@ -243,6 +244,66 @@ class TestStockReport(TransactionCase):
         wizard_product.product_ids = [(6, 0, exp_product.ids)]
         # with self.assertRaises(UserError):
         #     wizard_product.get_found_products()
+
+    def test_show_inactive_locations_and_products_option(self):
+        archived_location = self.env["stock.location"].create(
+            {
+                "name": "Archived location",
+                "usage": "internal",
+                "location_id": self.location.id,
+            }
+        )
+        archived_location.action_archive()
+        wizard = self.env["l10n.ro.stock.storage.sheet"].create(
+            {
+                "date_from": fields.Date.today(),
+                "date_to": fields.Date.today(),
+            }
+        )
+
+        self.assertFalse(archived_location.active)
+        self.assertNotIn(archived_location, wizard.location_ids)
+        wizard_with_inactive = self.env["l10n.ro.stock.storage.sheet"].create(
+            {
+                "date_from": fields.Date.today(),
+                "date_to": fields.Date.today(),
+                "show_inactive": True,
+            }
+        )
+        self.assertTrue(wizard_with_inactive.show_inactive)
+        self.assertIn(
+            archived_location,
+            self.env["stock.location"]
+            .with_context(active_test=False)
+            .search([("usage", "=", "internal")]),
+        )
+        self.assertIn(
+            archived_location,
+            wizard_with_inactive.with_context(active_test=False).location_ids,
+        )
+
+        arch = self.env.ref("l10n_ro_stock_report.view_stock_sheet_report_form").arch
+        for field_name in ("location_id", "product_ids", "location_ids"):
+            self.assertIn(
+                f'name="{field_name}"',
+                arch,
+            )
+        self.assertEqual(arch.count("{'active_test': not show_inactive}"), 3)
+
+    def test_storage_sheet_rejects_unallowed_company(self):
+        other_company = self.env["res.company"].create({"name": "Other Report Co"})
+        storage_sheet = self.env["l10n.ro.stock.storage.sheet"].with_context(
+            allowed_company_ids=[self.env.company.id]
+        )
+
+        with self.assertRaises(AccessError):
+            storage_sheet.create(
+                {
+                    "company_id": other_company.id,
+                    "date_from": fields.Date.today(),
+                    "date_to": fields.Date.today(),
+                }
+            )
 
     def test_report_storage_sheet_sublocation(self):
         self.create_po()
