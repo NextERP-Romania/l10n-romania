@@ -157,6 +157,37 @@ class TestStockAccountDate(TestROStockCommon):
         self.assertTrue(stock_move.account_move_id)
         self.assertEqual(stock_move.account_move_id.date, acc_date)
 
+    def test_inventory_accounting_date_is_ignored_outside_romania(self):
+        company = self.env["res.company"].create(
+            {"name": "Non-RO Inventory", "country_id": self.env.ref("base.us").id}
+        )
+        warehouse = (
+            self.env["stock.warehouse"]
+            .with_company(company)
+            .search(
+                [("company_id", "=", company.id)],
+                limit=1,
+            )
+        )
+        location = warehouse.lot_stock_id
+        inventory = (
+            self.env["stock.quant"]
+            .with_company(company)
+            .with_context(inventory_mode=True)
+            .create(
+                {
+                    "location_id": location.id,
+                    "product_id": self.product_fifo.id,
+                    "inventory_quantity": 1,
+                }
+            )
+        )
+        inventory.accounting_date = fields.Date.today() - timedelta(days=1)
+
+        move_values = inventory._get_inventory_move_values(1, location, location)
+
+        self.assertNotEqual(move_values.get("date"), inventory.accounting_date)
+
     def test_transfer_accounting_date_future(self):
         # Test restrictie transfer cu data contabila in viitor
         self.make_purchase()
