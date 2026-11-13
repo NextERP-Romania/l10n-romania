@@ -208,6 +208,18 @@ class TestReportPoSOrder(CommonPosTest):
         )
         self.assertGreater(res["total_stock_amount"], 0.0)
 
+    def test_sale_details_has_no_ro_stock_total_for_non_ro_company(self):
+        company = self.env["res.company"].create(
+            {"name": "Non-RO POS", "country_id": self.env.ref("base.us").id}
+        )
+        report = self.env["report.point_of_sale.report_saledetails"].with_company(
+            company
+        )
+
+        result = report.get_sale_details()
+
+        self.assertNotIn("total_stock_amount", result)
+
     def test_closing_entry_does_not_repost_the_goods_issue(self):
         """The closing entry must not book the goods issue a second time."""
         self.pos_config_usd.open_ui()

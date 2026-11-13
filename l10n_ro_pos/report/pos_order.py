@@ -24,6 +24,8 @@ class ReportSaleDetails(models.AbstractModel):
         res = super().get_sale_details(
             date_start, date_stop, config_ids, session_ids, **kwargs
         )
+        if not self.env.company._check_is_l10n_ro_record():
+            return res
 
         # Valoarea de stoc are sens doar cu valorizarea (stock_account) instalata;
         # campul `value` pe stock.move vine de acolo. Daca lipseste, raportul ramane
