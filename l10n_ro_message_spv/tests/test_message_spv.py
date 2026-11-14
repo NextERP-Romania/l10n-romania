@@ -49,6 +49,63 @@ class TestMessageSPV(TestMessageSPV):
             }
         )
 
+    def test_vendor_code_search_is_ro_only(self):
+        company = self.env["res.company"].create(
+            {"name": "Non-RO SPV", "country_id": self.env.ref("base.us").id}
+        )
+        plan = (
+            self.env["product.product"]
+            .with_company(company)
+            ._get_retrieval_product_search_plan()
+        )
+
+        self.assertNotIn(
+            "_import_retrieve_product_from_vendor_code",
+            [method.__name__ for _sequence, method in plan],
+        )
+
+    def test_invoice_lookup_does_not_cross_company(self):
+        other_company = self.env["res.company"].create(
+            {"name": "Other SPV Company", "country_id": self.env.ref("base.ro").id}
+        )
+        self.env.user.write({"company_ids": [(4, other_company.id)]})
+        self.env["account.journal"].create(
+            {
+                "name": "Other Company Purchases",
+                "code": "SPV2",
+                "type": "purchase",
+                "company_id": other_company.id,
+            }
+        )
+        partner = self.env["res.partner"].create({"name": "Shared invoice partner"})
+        self.env["account.move"].with_company(other_company).create(
+            {
+                "move_type": "in_invoice",
+                "company_id": other_company.id,
+                "partner_id": partner.id,
+                "ref": "SHARED-SPV-REF",
+                "l10n_ro_edi_download": "SHARED-SPV-NAME",
+            }
+        )
+        message = self.env["l10n.ro.message.spv"].create(
+            {
+                "name": "SHARED-SPV-NAME",
+                "request_id": "SHARED-SPV-REQUEST",
+                "ref": "SHARED-SPV-REF",
+                "company_id": self.env.company.id,
+                "partner_id": partner.id,
+                "message_type": "in_invoice",
+            }
+        )
+
+        with (
+            patch.object(type(message), "get_partner"),
+            patch.object(type(message), "get_data_from_invoice"),
+        ):
+            message.get_invoice_from_move()
+
+        self.assertFalse(message.invoice_id)
+
     def _create_message_with_zip(self, name, request_id, xml_bytes, **extra):
         """Create a message holding a ZIP built in memory around xml_bytes."""
         buffer = io.BytesIO()
