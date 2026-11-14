@@ -117,6 +117,23 @@ class TestVATonpayment(AccountTestInvoicingCommon):
 
         return mock_response
 
+    def test_vat_on_payment_check_is_limited_to_romanian_company(self):
+        non_ro_company = self.env["res.company"].create(
+            {"name": "Non-RO VAT", "country_id": self.env.ref("base.us").id}
+        )
+        partner_model = self.partner_model.with_company(non_ro_company)
+        with patch.object(type(partner_model), "check_vat_on_payment") as check:
+            partner = partner_model.create(
+                {
+                    "name": "Romanian partner",
+                    "country_id": self.env.ref("base.ro").id,
+                    "vat": "RO12345674",
+                }
+            )
+            partner.write({"vat": "RO12345674"})
+
+        check.assert_not_called()
+
     @patch("requests.get")
     def test_download_data(self, mock_get):
         """Test download file and partner link."""
