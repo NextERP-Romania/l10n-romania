@@ -11,6 +11,7 @@
     "excludes": ["stock_picking_report_valued"],
     "license": "AGPL-3",
     "data": [
+        "views/res_config_settings_views.xml",
         "report/stock_picking_report_valued.xml",
     ],
     "installable": True,
