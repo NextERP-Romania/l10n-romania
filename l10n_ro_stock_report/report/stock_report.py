@@ -7,7 +7,7 @@ from datetime import UTC
 from dateutil.relativedelta import relativedelta
 
 from odoo import api, fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import AccessError, UserError
 
 from odoo.addons.l10n_ro_stock_account.models.stock_move import MOVE_TYPE
 
@@ -57,7 +57,11 @@ class StorageSheet(models.TransientModel):
 
     date_from = fields.Date("Start Date", required=True, default=fields.Date.today)
     date_to = fields.Date("End Date", required=True, default=fields.Date.today)
-    company_id = fields.Many2one("res.company", default=lambda self: self.env.company)
+    company_id = fields.Many2one(
+        "res.company",
+        default=lambda self: self.env.company,
+        domain="[('id', 'in', allowed_company_ids)]",
+    )
 
     one_product = fields.Boolean("One product per page")
     line_product_ids = fields.One2many(
@@ -66,16 +70,18 @@ class StorageSheet(models.TransientModel):
     sublocation = fields.Boolean("Include Sublocations", default=True)
     detailed_locations = fields.Boolean("Detailed by locations", default=False)
     show_locations = fields.Boolean("Show location", default=False)
+    show_inactive = fields.Boolean("Show inactive locations/products")
     location_ids = fields.Many2many(
         "stock.location", string="Only for locations", compute="_compute_location_ids"
     )
 
-    @api.depends("sublocation", "location_id", "show_locations")
+    @api.depends("sublocation", "location_id", "show_locations", "show_inactive")
     def _compute_location_ids(self):
         if not self.location_id:
-            self.location_ids = self.env["stock.location"].search(
-                [("usage", "=", "internal")]
-            )
+            locations = self.env["stock.location"]
+            if self.show_inactive:
+                locations = locations.with_context(active_test=False)
+            self.location_ids = locations.search([("usage", "=", "internal")])
         else:
             if self.sublocation:
                 children_location = (
@@ -86,6 +92,18 @@ class StorageSheet(models.TransientModel):
                 self.location_ids = self.location_id + children_location
             else:
                 self.location_ids = self.location_id
+
+    @api.constrains("company_id")
+    def _check_company_id_allowed(self):
+        for sheet in self:
+            if sheet.company_id and sheet.company_id not in self.env.companies:
+                raise AccessError(
+                    self.env._(
+                        "You are not allowed to access the storage sheet of "
+                        "company %s.",
+                        sheet.company_id.display_name,
+                    )
+                )
 
     def _get_report_base_filename(self):
         self.ensure_one()
