@@ -4,6 +4,7 @@
 from odoo.tests import tagged
 
 from .common import TestROStockCommon
+from .test_fifo_company_context import FifoCompanyContextCases
 from .test_ro_stock_avg import StockAvgCases
 from .test_ro_stock_fifo import StockFifoCases
 from .test_ro_stock_fifo_correction import FifoCorrectionCases
@@ -19,6 +20,7 @@ class TestROStockAccount(
     StockAvgCases,
     StockFifoCases,
     FifoCorrectionCases,
+    FifoCompanyContextCases,
     FifoMultiOriginCases,
     FifoPartialDeliveryCases,
     FifoZeroQtyCases,

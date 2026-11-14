@@ -1,6 +1,7 @@
 from . import common
 
 from . import test_ro_stock_fifo
+from . import test_fifo_company_context
 from . import test_ro_stock_fifo_correction
 from . import test_ro_stock_fifo_zero_qty
 from . import test_ro_stock_fifo_partial_delivery
