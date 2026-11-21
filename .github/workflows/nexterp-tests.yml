@@ -25,7 +25,7 @@ jobs:
   pre-commit:
     if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, nexterp-public]
-    container: python:3.11
+    container: python:3.12
     steps:
       - uses: actions/checkout@v4
         with:
