@@ -200,8 +200,8 @@ Performance notes
 Changelog
 =========
 
-19.0.1.18.1
------------
+20.0.1.0.1
+----------
 
 - Fix the value of a receipt fed by several origin moves. In a two-step
   transfer the FIFO split cuts the outgoing leg into one move per stock
