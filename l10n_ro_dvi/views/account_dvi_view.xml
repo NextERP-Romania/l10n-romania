@@ -44,8 +44,8 @@
                 <sheet>
                     <div class="oe_button_box" name="button_box">
                         <!-- Only the groups with stock.landed.cost access:
-                            for everyone else, reading this field makes the
-                            form fail with an AccessError. -->
+                             for everyone else, reading this field makes the
+                             form fail with an AccessError. -->
                         <field
                             name="landed_cost_ids"
                             invisible="1"
